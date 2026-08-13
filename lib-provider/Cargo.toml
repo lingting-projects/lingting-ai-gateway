@@ -1,0 +1,15 @@
+[package]
+name = "lib-provider"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+bytes.workspace = true
+futures-util.workspace = true
+lib-core = { path = "../lib-core" }
+reqwest.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

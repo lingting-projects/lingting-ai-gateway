@@ -1,0 +1,32 @@
+[workspace]
+members = ["lib-core", "lib-api", "lib-provider", "lib-store", "lib-db", "bin-server"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.93"
+license = "MIT"
+
+[workspace.dependencies]
+anyhow = "1"
+async-stream = "0.3"
+async-trait = "0.1"
+axum = "0.8"
+bytes = "1"
+futures-util = "0.3"
+hex = "0.4"
+pglite-oxide = "=0.5.1"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "stream"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+framework-core = { path = "../lingting-rust-framework/framework-core" }
+framework-datetime = { path = "../lingting-rust-framework/framework-datetime" }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "json", "migrate", "derive", "macros"] }
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+tower-http = { version = "0.6", features = ["trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
