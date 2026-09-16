@@ -6,11 +6,3 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-anyhow.workspace = true
-axum.workspace = true
-lib-api = { path = "../lib-api" }
-lib-db = { path = "../lib-db" }
-lib-store = { path = "../lib-store" }
-tokio.workspace = true
-tracing.workspace = true
-tracing-subscriber.workspace = true

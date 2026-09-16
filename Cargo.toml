@@ -1,32 +1,74 @@
 [workspace]
-members = ["lib-core", "lib-api", "lib-provider", "lib-store", "lib-db", "bin-server"]
+members = ["bin-server", "lib-core", "lib-db", "lib-provider", "lib-provider-openai", "lib-web", "lib-web-core", "service-admin", "service-provider", "types-admin"]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0"
+version = "2026.9.15"
 edition = "2024"
 rust-version = "1.93"
 license = "MIT"
 
 [workspace.dependencies]
-anyhow = "1"
-async-stream = "0.3"
-async-trait = "0.1"
-axum = "0.8"
-bytes = "1"
-futures-util = "0.3"
-hex = "0.4"
-pglite-oxide = "=0.5.1"
-reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "stream"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-sha2 = "0.10"
 framework-core = { path = "../lingting-rust-framework/framework-core" }
 framework-datetime = { path = "../lingting-rust-framework/framework-datetime" }
-sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "json", "migrate", "derive", "macros"] }
-thiserror = "2"
-tokio = { version = "1", features = ["full"] }
-tokio-stream = "0.1"
-tower-http = { version = "0.6", features = ["trace"] }
+framework-proc-auto = { path = "../lingting-rust-framework/framework-proc-auto" }
+framework-proc-core = { path = "../lingting-rust-framework/framework-proc-core" }
+framework-proc-ts = { path = "../lingting-rust-framework/framework-proc-ts" }
+framework-web = { path = "../lingting-rust-framework/framework-web", features = ["collect"] }
+framework-region = { path = "../lingting-rust-framework/framework-region" }
+aes = { version = "0.8" }
+base64 = { version = "0.22" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+serde_with = { version = "3.21" }
+specta = { version = "=2.0.0-rc.25", features = ["derive", "function", "bytes", "serde_json"] }
+specta-typescript = { version = "0.0.12" }
+specta-serde = { version = "0.0.12" }
+strum = { version = "0.28" }
+strum_macros = { version = "0.28" }
+blake3 = { version = "1.8" }
+url = { version = "2.5", features = ["serde"] }
+tokio = { version = "1.52", features = ["rt-multi-thread", "sync", "time", "macros", "net"] }
+anyhow = "1.0"
+regex = { version = "1.12" }
+chrono = { version = "0.4" }
+log = { version = "0.4" }
+bytes = { version = "1.11" }
+flate2 = { version = "1.1" }
+cbc = { version = "0.1" }
+cipher = { version = "0.4" }
+rand = { version = "0.8" }
+hmac = { version = "0.12" }
+sha1 = { version = "0.10" }
+md-5 = { version = "0.10" }
+wreq = { version = "0.16", features = ["cookies", "form", "json", "webpki-roots"] }
+reqwest = { version = "0.13", features = ["cookies", "form", "json"] }
+rsntp = { version = "4.1", default-features = false, features = ["async"] }
+sha2 = { version = "0.10" }
+async-trait = { version = "0.1" }
+arc-swap = { version = "1.8" }
+dashmap = { version = "6.1" }
+cef = { version = "149.3.0" }
+tao = { version = "0.35" }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
+sqlx = { version = "0.8", default-features = false, features = ["json", "macros", "migrate", "postgres", "runtime-tokio-rustls"] }
+axum = { version = "0.8", features = ["macros"] }
+proc-macro2 = { version = "1.0" }
+quote = { version = "1.0" }
+syn = { version = "2.0", features = ["full", "visit"] }
+toml = "0.9"
+inventory = "0.3"
+futures-util = "0.3"
+pbkdf2 = { version = "0.12", features = ["simple"] }
+subtle = "2.6"
+getrandom = { version = "0.2", features = ["js"] }
+console_error_panic_hook = "0.1.7"
+urlencoding = "2.1"
+hex = "0.4"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+tracing-log = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+futures = "0.3.34"
+lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "tokio1-rustls-tls", "builder"] }
+pglite-oxide = "=0.5.1"
