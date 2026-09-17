@@ -153,7 +153,7 @@ impl ProviderClient for OpenAiClient {
         if !response.status().is_success() {
             return Err(self.response_error(response).await);
         }
-        let bytes: Pin<Box<dyn Stream<Item = Result<Bytes, reqwest::Error>> + Send>> =
+        let bytes: Pin<Box<dyn Stream<Item=Result<Bytes, reqwest::Error>> + Send>> =
             Box::pin(response.bytes_stream());
         Ok(Box::pin(SseStream {
             bytes,
@@ -166,7 +166,7 @@ impl ProviderClient for OpenAiClient {
 
 /// 把 SSE 字节流转成模型分块流。
 struct SseStream {
-    bytes: Pin<Box<dyn Stream<Item = Result<Bytes, reqwest::Error>> + Send>>,
+    bytes: Pin<Box<dyn Stream<Item=Result<Bytes, reqwest::Error>> + Send>>,
     decoder: SseDecoder,
     pending: VecDeque<ProviderResult<ChatStreamChunk>>,
     finished: bool,

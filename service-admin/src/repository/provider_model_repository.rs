@@ -67,9 +67,9 @@ impl ProviderModelRepository {
              WHERE pm.enabled = true AND p.enabled = true
              ORDER BY pm.model ASC",
         )
-        .fetch_all(&self.pool)
-        .await
-        .context("查询可用模型失败")?;
+            .fetch_all(&self.pool)
+            .await
+            .context("查询可用模型失败")?;
 
         Ok(rows.into_iter().map(|row| row.get("model")).collect())
     }
@@ -111,14 +111,14 @@ impl ProviderModelRepository {
              SET display_name = EXCLUDED.display_name,
                  update_time = EXCLUDED.update_time",
         )
-        .bind(provider_id)
-        .bind(model)
-        .bind(display_name)
-        .bind(inference_level.as_str())
-        .bind(now)
-        .execute(&self.pool)
-        .await
-        .context("写入供应商模型失败")?;
+            .bind(provider_id)
+            .bind(model)
+            .bind(display_name)
+            .bind(inference_level.as_str())
+            .bind(now)
+            .execute(&self.pool)
+            .await
+            .context("写入供应商模型失败")?;
 
         Ok(())
     }
@@ -129,12 +129,12 @@ impl ProviderModelRepository {
             "UPDATE provider_model SET enabled = false, update_time = $1
              WHERE provider_id = $2 AND enabled = true AND model <> ALL($3)",
         )
-        .bind(lib_core::current_millis()?)
-        .bind(provider_id)
-        .bind(models)
-        .execute(&self.pool)
-        .await
-        .context("关闭失效供应商模型失败")?;
+            .bind(lib_core::current_millis()?)
+            .bind(provider_id)
+            .bind(models)
+            .execute(&self.pool)
+            .await
+            .context("关闭失效供应商模型失败")?;
 
         Ok(result.rows_affected())
     }
@@ -144,14 +144,14 @@ impl ProviderModelRepository {
             "UPDATE provider_model SET display_name = $1, inference_level = $2, enabled = $3,
                 update_time = $4 WHERE id = $5",
         )
-        .bind(&params.display_name)
-        .bind(params.inference_level.as_str())
-        .bind(params.enabled)
-        .bind(lib_core::current_millis()?)
-        .bind(params.id)
-        .execute(&self.pool)
-        .await
-        .context("更新供应商模型失败")?;
+            .bind(&params.display_name)
+            .bind(params.inference_level.as_str())
+            .bind(params.enabled)
+            .bind(lib_core::current_millis()?)
+            .bind(params.id)
+            .execute(&self.pool)
+            .await
+            .context("更新供应商模型失败")?;
 
         Ok(())
     }

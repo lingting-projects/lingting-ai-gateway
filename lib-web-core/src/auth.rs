@@ -1,7 +1,6 @@
 use std::future::Future;
 
 use anyhow::{Result, anyhow};
-use framework_web::AuthRule;
 
 /// 鉴权类型。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -42,7 +42,7 @@ async fn invoke(db: Arc<DbContext>, route: Arc<WebRoute>) -> Result<WebResponse>
 
         scope_authorization(authorization, async move { Ok(route.invoke().await) }).await
     })
-    .await
+        .await
 }
 
 fn bearer_token() -> Result<String> {

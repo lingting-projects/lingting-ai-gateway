@@ -1,14 +1,14 @@
 use anyhow::{Result, anyhow};
 use framework_web::{Json, WebError, catch_panic, use_web, web_api_post};
-use lib_db::{DbContext, use_db, RequestMainRepository, RequestSubRepository};
-use lib_web_core::{AppContext, AuthRule, use_app, Authorization, AuthType};
-use lib_provider::{ChatRequest, ChatRequestBuilder, ProviderServiceClient, ProviderClientCallbacks};
+use lib_db::{DbContext, RequestMainRepository, RequestSubRepository, use_db};
 use lib_provider::response::{ChatResponse, ErrorResponse};
-use types_admin::entity::{RequestMain, RequestSub, RequestMainStatus, RequestSubStatus, TokenInfo};
-use types_admin::dto::{RequestMainCreatePO, RequestSubCreatePO};
-use std::sync::Arc;
+use lib_provider::{ChatRequest, ChatRequestBuilder, ProviderClientCallbacks, ProviderServiceClient};
+use lib_web_core::{AppContext, AuthRule, AuthType, Authorization, use_app};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
+use types_admin::dto::{RequestMainCreatePO, RequestSubCreatePO};
+use types_admin::entity::{RequestMain, RequestMainStatus, RequestSub, RequestSubStatus, TokenInfo};
 
 /// 聊天接口
 
@@ -22,11 +22,11 @@ pub async fn chat() -> Result<Json<serde_json::Value>> {
     let request_body = web_context.body_json::<ChatRequest>()
         .await
         .map_err(|e| anyhow!("Failed to parse request body: {}", e))?;
-    
+
     // 获取模型名称
     let model = &request_body.model;
     let stream = request_body.stream.unwrap_or(false);
-    
+
     // 记录主请求日志
     let main_request_id = record_main_request(
         &web_context,
@@ -35,7 +35,7 @@ pub async fn chat() -> Result<Json<serde_json::Value>> {
         stream,
         &request_body,
     ).await?;
-    
+
     // 匹配供应商
     let provider_client = match match_provider(model, &app_context).await {
         Ok(client) => client,
@@ -51,11 +51,11 @@ pub async fn chat() -> Result<Json<serde_json::Value>> {
                 None,
                 None,
             ).await?;
-            
+
             return Err(error);
         }
     };
-    
+
     // 记录子请求日志
     let sub_request_id = record_sub_request(
         &db_context,
@@ -64,7 +64,7 @@ pub async fn chat() -> Result<Json<serde_json::Value>> {
         model,
         &request_body,
     ).await?;
-    
+
     // 发送请求
     let response = if stream {
         handle_streaming_request(
@@ -83,14 +83,14 @@ pub async fn chat() -> Result<Json<serde_json::Value>> {
             request_body,
         ).await
     };
-    
+
     // 更新主请求日志
     update_main_request_from_response(
         &db_context,
         main_request_id,
         &response,
     ).await?;
-    
+
     Ok(Json(response))
 }
 
@@ -100,7 +100,7 @@ pub async fn chat() -> Result<Json<serde_json::Value>> {
 pub async fn models() -> Result<Json<serde_json::Value>> {
     let web_context = use_web()?;
     let app_context = use_app()?;
-    
+
     // TODO: 从数据库查询启用的模型
     // 这里返回硬编码的模型列表
     let models = vec![
@@ -110,7 +110,7 @@ pub async fn models() -> Result<Json<serde_json::Value>> {
         "gpt-4-turbo",
         "gpt-4o",
     ];
-    
+
     Ok(Json(serde_json::json!({
         "object": "list",
         "data": models.into_iter().map(|id| {
@@ -135,7 +135,7 @@ async fn record_main_request(
     let client_ip = web_context.client_ip.clone();
     let user_agent = web_context.headers.get("user-agent").cloned();
     let auth = parse_authorization(web_context, app_context).await?;
-    
+
     let request_params = if app_context.get_debug_mode().await {
         serde_json::to_value(request).unwrap_or(serde_json::Value::Null)
     } else {
@@ -149,7 +149,7 @@ async fn record_main_request(
             "tool_choice": request.tool_choice.as_ref().map(|_| "specified"),
         })
     };
-    
+
     let main_request = RequestMainCreatePO {
         client_ip,
         user_agent,
@@ -179,11 +179,11 @@ async fn record_main_request(
         end_time: None,
         duration_ms: None,
     };
-    
+
     let repository = RequestMainRepository::new(use_db()?;
     repository.create(&main_request.into()).await
         .map_err(|e| anyhow!("Failed to create main request: {}", e))?;
-    
+
     Ok(0) // TODO: 返回实际的 ID
 }
 
@@ -196,7 +196,7 @@ async fn match_provider(
     // 1. 查询支持该模型的供应商
     // 2. 按优先级排序
     // 3. 创建客户端
-    
+
     // 这里返回一个模拟的客户端
     let callbacks = ProviderClientCallbacks::new()
         .on_success(|response| {
@@ -206,7 +206,7 @@ async fn match_provider(
         .on_error(|error| {
             tracing::error!("Provider request error: {}", error.message);
         });
-    
+
     Ok(ProviderServiceClient::new(
         "openai".to_string(),
         model.to_string(),
@@ -248,11 +248,11 @@ async fn record_sub_request(
         end_time: None,
         duration_ms: None,
     };
-    
+
     let repository = RequestSubRepository::new(db_context.pool.clone());
     repository.create(&sub_request.into()).await
         .map_err(|e| anyhow!("Failed to create sub request: {}", e))?;
-    
+
     Ok(0) // TODO: 返回实际的 ID
 }
 
@@ -265,14 +265,14 @@ async fn handle_normal_request(
     request: ChatRequest,
 ) -> Result<serde_json::Value> {
     let response = provider_client.chat(&request).await?;
-    
+
     // 更新子请求日志
     update_sub_request(
         db_context,
         sub_request_id,
         &response,
     ).await?;
-    
+
     Ok(serde_json::json!({
         "id": response.id,
         "object": response.object,
@@ -294,9 +294,9 @@ async fn handle_streaming_request(
 ) -> Result<serde_json::Value> {
     let mut accumulated_content = String::new();
     let mut accumulated_tokens = TokenInfo::zero();
-    
+
     let mut stream = provider_client.chat_stream(&request).await?;
-    
+
     while let Some(chunk) = stream.next().await {
         match chunk {
             Ok(chunk) => {
@@ -304,7 +304,7 @@ async fn handle_streaming_request(
                 if let Some(content) = &chunk.content {
                     accumulated_content.push_str(content);
                 }
-                
+
                 // 累积 Token 信息
                 if let Some(ref token_info) = chunk.token_info {
                     accumulated_tokens.input_tokens += token_info.input_tokens;
@@ -316,7 +316,7 @@ async fn handle_streaming_request(
                     accumulated_tokens.write_tokens += token_info.write_tokens;
                     accumulated_tokens.total_tokens += token_info.total_tokens;
                 }
-                
+
                 // TODO: 发送 chunk 给客户端
                 // 这里需要实现流式响应
             }
@@ -325,7 +325,7 @@ async fn handle_streaming_request(
             }
         }
     }
-    
+
     // 更新子请求日志
     update_sub_request(
         db_context,
@@ -340,7 +340,7 @@ async fn handle_streaming_request(
             system_fingerprint: None,
         },
     ).await?;
-    
+
     Ok(serde_json::json!({
         "id": "chatcmpl-" + &lib_core::next_id()?.to_string(),
         "object": "chat.completion",
@@ -372,17 +372,17 @@ async fn update_main_request_status(
     finish_reason: Option<String>,
 ) -> Result<()> {
     let repository = RequestMainRepository::new(db_context.pool.clone());
-    
+
     repository.update_status(main_request_id, status, current_status).await?;
-    
+
     if let Some(ref token_info) = token_info {
         repository.update_token_info(main_request_id, token_info).await?;
     }
-    
+
     if status == RequestMainStatus::Success || status == RequestMainStatus::Failed {
         let end_time = lib_core::current_millis()?;
         let duration_ms = None; // TODO: 计算耗时
-        
+
         repository.update_finish_info(
             main_request_id,
             return_model,
@@ -394,7 +394,7 @@ async fn update_main_request_status(
             duration_ms,
         ).await?;
     }
-    
+
     Ok(())
 }
 
@@ -405,20 +405,20 @@ async fn update_sub_request(
     response: &ChatResponse,
 ) -> Result<()> {
     let repository = RequestSubRepository::new(db_context.pool.clone());
-    
+
     // 更新状态和 Token 信息
     repository.update_status(
         sub_request_id,
         RequestSubStatus::Success,
         Some("请求成功".to_string()),
     ).await?;
-    
+
     repository.update_token_info(sub_request_id, &response.usage).await?;
-    
+
     // 更新完成信息
     let end_time = lib_core::current_millis()?;
     let duration_ms = None; // TODO: 计算耗时
-    
+
     repository.update_finish_info(
         sub_request_id,
         Some(response.model.clone()),
@@ -429,7 +429,7 @@ async fn update_sub_request(
         end_time,
         duration_ms,
     ).await?;
-    
+
     Ok(())
 }
 
@@ -451,7 +451,7 @@ async fn parse_authorization(
     let auth_header = web_context.headers.get("authorization")
         .map(|h| h.clone())
         .unwrap_or_else(|| "".to_string());
-    
+
     if app_context.get_allow_anonymous().await {
         Ok(Some(Authorization::anonymous()))
     } else {
@@ -478,7 +478,7 @@ impl lib_provider::provider::ProviderClient for MockProviderClient {
     async fn chat(&mut self, request: &ChatRequest) -> Result<ChatResponse> {
         // 模拟延迟
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-        
+
         Ok(ChatResponse {
             id: "chatcmpl-" + &lib_core::next_id()?.to_string(),
             object: "chat.completion".to_string(),

@@ -85,17 +85,17 @@ impl ProviderRepository {
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
              RETURNING id",
         )
-        .bind(&params.name)
-        .bind(&params.display_name)
-        .bind(&params.base_url)
-        .bind(&params.api_key)
-        .bind(params.priority)
-        .bind(params.enabled)
-        .bind(&params.config)
-        .bind(now)
-        .fetch_one(&self.pool)
-        .await
-        .context("创建供应商失败")?;
+            .bind(&params.name)
+            .bind(&params.display_name)
+            .bind(&params.base_url)
+            .bind(&params.api_key)
+            .bind(params.priority)
+            .bind(params.enabled)
+            .bind(&params.config)
+            .bind(now)
+            .fetch_one(&self.pool)
+            .await
+            .context("创建供应商失败")?;
 
         Ok(row.get("id"))
     }

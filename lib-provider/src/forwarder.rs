@@ -188,7 +188,7 @@ impl Drop for ForwardingStream {
 /// 在后台执行回调，回调异常不影响请求结果。
 fn spawn_callback<F>(future: F)
 where
-    F: Future<Output = ()> + Send + 'static,
+    F: Future<Output=()> + Send + 'static,
 {
     if tokio::runtime::Handle::try_current().is_err() {
         return;

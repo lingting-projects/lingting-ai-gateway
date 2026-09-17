@@ -1,11 +1,10 @@
 use anyhow::{Result, anyhow};
-use framework_web::{Json, WebError, catch_panic, use_web, web_api_post};
-use lib_db::{DbContext, use_db, RequestMainRepository, RequestSubRepository, ProviderRepository, KvConfigRepository};
-use lib_web_core::{AppContext, AuthRule, AuthRuleExt, use_app, Authorization, AuthType};
-use types_admin::entity::{RequestMain, RequestSub, Provider, KvConfig};
-use types_admin::dto::{RequestMainQO, RequestSubQO, ProviderQO, KvConfigQO};
+use framework_web::{Json, use_web, web_api_post};
+use lib_db::{KvConfigRepository, ProviderRepository, RequestMainRepository, RequestSubRepository, use_db};
+use lib_web_core::{AuthRuleExt, AuthType};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use types_admin::dto::{KvConfigQO, ProviderQO, RequestMainQO, RequestSubQO};
+use types_admin::entity::KvConfig;
 
 /// 请求日志管理
 pub mod request;

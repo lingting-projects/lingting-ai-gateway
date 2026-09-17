@@ -32,18 +32,18 @@ impl RequestSubRepository {
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
              RETURNING id",
         )
-        .bind(params.main_request_id)
-        .bind(params.provider_id)
-        .bind(&params.provider_name)
-        .bind(&params.model)
-        .bind(&params.provider_url)
-        .bind(&params.request_params)
-        .bind(RequestStatus::Processing.as_str())
-        .bind(params.start_time)
-        .bind(now)
-        .fetch_one(&self.pool)
-        .await
-        .context("写入子请求日志失败")?;
+            .bind(params.main_request_id)
+            .bind(params.provider_id)
+            .bind(&params.provider_name)
+            .bind(&params.model)
+            .bind(&params.provider_url)
+            .bind(&params.request_params)
+            .bind(RequestStatus::Processing.as_str())
+            .bind(params.start_time)
+            .bind(now)
+            .fetch_one(&self.pool)
+            .await
+            .context("写入子请求日志失败")?;
 
         Ok(row.get("id"))
     }
@@ -60,29 +60,29 @@ impl RequestSubRepository {
                 end_time = $18, duration_ms = $19
              WHERE id = $20",
         )
-        .bind(params.status.as_str())
-        .bind(&params.error_type)
-        .bind(&params.error_code)
-        .bind(&params.error_message)
-        .bind(&params.return_model)
-        .bind(params.input_tokens)
-        .bind(params.output_tokens)
-        .bind(params.cache_read_tokens)
-        .bind(params.cache_write_tokens)
-        .bind(params.inference_tokens)
-        .bind(params.read_tokens)
-        .bind(params.write_tokens)
-        .bind(params.total_tokens)
-        .bind(params.http_status)
-        .bind(&params.finish_reason)
-        .bind(&params.provider_request_id)
-        .bind(&params.response_content)
-        .bind(params.end_time)
-        .bind(params.duration_ms)
-        .bind(id)
-        .execute(&self.pool)
-        .await
-        .context("更新子请求日志失败")?;
+            .bind(params.status.as_str())
+            .bind(&params.error_type)
+            .bind(&params.error_code)
+            .bind(&params.error_message)
+            .bind(&params.return_model)
+            .bind(params.input_tokens)
+            .bind(params.output_tokens)
+            .bind(params.cache_read_tokens)
+            .bind(params.cache_write_tokens)
+            .bind(params.inference_tokens)
+            .bind(params.read_tokens)
+            .bind(params.write_tokens)
+            .bind(params.total_tokens)
+            .bind(params.http_status)
+            .bind(&params.finish_reason)
+            .bind(&params.provider_request_id)
+            .bind(&params.response_content)
+            .bind(params.end_time)
+            .bind(params.duration_ms)
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .context("更新子请求日志失败")?;
 
         Ok(())
     }

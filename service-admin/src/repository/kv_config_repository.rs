@@ -72,12 +72,12 @@ impl KvConfigRepository {
         sqlx::query(
             "UPDATE kv_config SET config_value = $1, update_time = $2 WHERE config_key = $3",
         )
-        .bind(config_value)
-        .bind(lib_core::current_millis()?)
-        .bind(config_key)
-        .execute(&self.pool)
-        .await
-        .context("更新全局配置失败")?;
+            .bind(config_value)
+            .bind(lib_core::current_millis()?)
+            .bind(config_key)
+            .execute(&self.pool)
+            .await
+            .context("更新全局配置失败")?;
 
         Ok(())
     }
