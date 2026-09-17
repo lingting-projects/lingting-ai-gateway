@@ -2408,6 +2408,7 @@ version = "2026.9.15"
 dependencies = [
  "anyhow",
  "framework-core",
+ "sha1",
 ]
 
 [[package]]
@@ -2485,7 +2486,6 @@ dependencies = [
  "lib-db",
  "serde",
  "serde_json",
- "sha1",
  "tokio",
  "tracing",
  "types-admin",
@@ -4147,9 +4147,9 @@ dependencies = [
  "framework-core",
  "lib-core",
  "lib-db",
+ "lib-web-core",
  "serde",
  "serde_json",
- "sha1",
  "sqlx",
  "tokio",
  "tracing",

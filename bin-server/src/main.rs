@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use framework_core::{ApplicationDirectory, current_millis};
 use lib_db::{DbContext, DbConfig, init_db};
 use lib_web::{WebRouter, WebContext};
-use lib_web_core::{AppContext, AuthorizationService};
+use lib_web_core::AppContext;
 use tracing::{info, error, warn};
 use tracing_appender::{non_blocking, rolling};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
@@ -13,7 +13,6 @@ use serde_json::json;
 /// 应用程序
 pub struct GatewayApplication {
     app_context: Arc<AppContext>,
-    auth_service: Arc<AuthorizationService>,
     db_context: Option<DbContext>,
     router: WebRouter,
 }
@@ -32,22 +31,17 @@ impl GatewayApplication {
         // 创建应用上下文
         let app_context = Arc::new(AppContext::new());
         
-        // 创建鉴权服务
-        let auth_service = Arc::new(AuthorizationService::new());
-        
         // 加载配置
-        Self::load_config(&db_context, &app_context, &auth_service).await?;
+        Self::load_config(&db_context, &app_context).await?;
         
         // 创建路由器
         let router = WebRouter::new(
             app_context.clone(),
-            auth_service.clone(),
             Arc::new(MockProviderFactory::new()),
         );
         
         Ok(Self {
             app_context,
-            auth_service,
             db_context: Some(db_context),
             router,
         })
@@ -104,19 +98,8 @@ impl GatewayApplication {
     async fn load_config(
         db_context: &DbContext,
         app_context: &AppContext,
-        auth_service: &AuthorizationService,
     ) -> Result<()> {
-        // TODO: 从数据库加载配置
-        // 这里暂时使用默认配置
-        
-        // 加载 API Keys
-        // let api_keys = api_key_repository.find_all().await?;
-        // auth_service.set_api_keys(api_keys);
-        
-        // 加载全局配置
-        // let configs = kv_config_repository.find_by_prefix("").await?;
-        // app_context.load_from_kv_configs(configs).await?;
-        
+        // TODO: 由 WebManager 装载鉴权与全局配置，这里暂时使用默认值
         info!("配置加载完成");
         Ok(())
     }

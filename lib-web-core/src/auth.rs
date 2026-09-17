@@ -1,15 +1,12 @@
-//! 统一鉴权：把 Authorization 请求头解析为请求身份，并按接口规则放行。
+//! 统一鉴权：定义请求身份类型与接口鉴权规则，并据此放行接口。
 //!
-//! 数据库只保存 API Key 的 SHA1，请求头同样取 SHA1 后匹配，
-//! 因此原始 key 不会出现在内存以外的任何位置。
+//! 身份的装配（请求头摘要匹配、API Key 与管理员令牌查询）不在这里完成，
+//! 本模块只负责类型定义与规则判定。
 
-use std::collections::HashMap;
 use std::future::Future;
 
 use anyhow::{Result, anyhow};
-use framework_web::{AuthRule, WebError};
-use sha1::Digest;
-use types_admin::ApiKey;
+use framework_web::AuthRule;
 
 /// 管理员接口规则标识。
 pub const ROLE_ADMIN: &str = "admin";
@@ -92,70 +89,6 @@ impl Authorization {
         match self.kind {
             AuthKind::Anonymous => "",
             _ => &self.value,
-        }
-    }
-}
-
-/// 计算字符串的 SHA1 十六进制摘要。
-pub fn sha1_hex(value: &str) -> String {
-    format!(
-        "{:x}",
-        sha1::Sha1::new().chain_update(value.as_bytes()).finalize()
-    )
-}
-
-/// 鉴权服务：持有 API Key 摘要与管理员令牌摘要。
-#[derive(Debug, Default)]
-pub struct AuthorizationService {
-    api_keys: HashMap<String, i64>,
-    admin_token_hash: Option<String>,
-}
-
-impl AuthorizationService {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// 装载 API Key，空摘要不参与匹配。
-    pub fn set_api_keys(&mut self, api_keys: Vec<ApiKey>) {
-        self.api_keys = api_keys
-            .into_iter()
-            .filter(|api_key| !api_key.key_hash.is_empty())
-            .map(|api_key| (api_key.key_hash, api_key.id))
-            .collect();
-    }
-
-    /// 装载管理员令牌摘要，空值表示未配置。
-    pub fn set_admin_token_hash(&mut self, hash: Option<String>) {
-        self.admin_token_hash = hash.filter(|value| !value.is_empty());
-    }
-
-    /// 已装载的 API Key 数量。
-    pub fn api_key_count(&self) -> usize {
-        self.api_keys.len()
-    }
-
-    /// 解析请求头得到请求身份。
-    ///
-    /// - 请求头为空：匿名身份。
-    /// - 摘要命中 API Key：API 身份，value 为密钥 ID。
-    /// - 未配置管理员令牌：直接视为管理员身份。
-    /// - 摘要命中管理员令牌：管理员身份，value 为原始请求头。
-    /// - 其余情况：鉴权失败。
-    pub fn resolve(&self, header: Option<&str>) -> Result<Authorization> {
-        let Some(value) = header.map(str::trim).filter(|value| !value.is_empty()) else {
-            return Ok(Authorization::anonymous());
-        };
-
-        let hash = sha1_hex(value);
-        if let Some(id) = self.api_keys.get(&hash) {
-            return Ok(Authorization::new(AuthKind::Api, id.to_string()));
-        }
-
-        match self.admin_token_hash.as_ref() {
-            None => Ok(Authorization::new(AuthKind::Admin, "")),
-            Some(expected) if expected == &hash => Ok(Authorization::new(AuthKind::Admin, value)),
-            Some(_) => Err(WebError::unauthorized("Authorization 请求头无效").into()),
         }
     }
 }

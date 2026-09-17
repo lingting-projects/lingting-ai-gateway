@@ -1,6 +1,5 @@
-//! 应用级全局上下文：从 kv_config 装载的调试模式、匿名访问与管理员令牌。
+//! 应用级全局上下文：从 kv_config 装载的调试模式与匿名访问开关。
 
-use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
 
@@ -14,42 +13,16 @@ pub const CONFIG_ALLOW_ANONYMOUS: &str = "allow_anonymous";
 /// 全局配置键：管理员令牌，库中保存的是 SHA1。
 pub const CONFIG_ADMIN_TOKEN: &str = "admin_token";
 
-/// 应用全局上下文。
+/// 应用全局上下文，构造完成后只读。
 #[derive(Debug, Clone, Default)]
 pub struct AppContext {
     debug_mode: bool,
     allow_anonymous: bool,
-    admin_token_hash: Option<String>,
-    configs: HashMap<String, String>,
 }
 
 impl AppContext {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    /// 从全局配置装载。
-    pub fn load_from_kv_configs(configs: Vec<KvConfig>) -> Self {
-        let mut context = Self::new();
-        for config in configs {
-            context.set_config(config.config_key, config.config_value);
-        }
-        context
-    }
-
-    /// 写入一项配置，已识别的键同时刷新快捷字段。
-    pub fn set_config(&mut self, key: impl Into<String>, value: impl Into<String>) {
-        let key = key.into();
-        let value = value.into();
-        match key.as_str() {
-            CONFIG_DEBUG_MODE => self.debug_mode = parse_bool(&value),
-            CONFIG_ALLOW_ANONYMOUS => self.allow_anonymous = parse_bool(&value),
-            CONFIG_ADMIN_TOKEN => {
-                self.admin_token_hash = Some(value.clone()).filter(|item| !item.is_empty());
-            }
-            _ => {}
-        }
-        self.configs.insert(key, value);
     }
 
     /// 是否开启调试模式。
@@ -61,24 +34,25 @@ impl AppContext {
     pub fn allow_anonymous(&self) -> bool {
         self.allow_anonymous
     }
-
-    /// 管理员令牌摘要。
-    pub fn admin_token_hash(&self) -> Option<&str> {
-        self.admin_token_hash.as_deref()
-    }
-
-    /// 读取原始配置值。
-    pub fn get_config(&self, key: &str) -> Option<&str> {
-        self.configs.get(key).map(String::as_str)
-    }
 }
 
-/// 解析布尔配置，兼容 true/1/yes/on。
-fn parse_bool(value: &str) -> bool {
-    matches!(
-        value.trim().to_ascii_lowercase().as_str(),
-        "true" | "1" | "yes" | "on"
-    )
+impl From<Vec<KvConfig>> for AppContext {
+    /// 从全局配置装载；未识别或非真值的配置一律保持关闭。
+    fn from(configs: Vec<KvConfig>) -> Self {
+        let mut context = Self::default();
+        for config in configs {
+            match config.config_key.as_str() {
+                CONFIG_DEBUG_MODE => {
+                    context.debug_mode = lib_core::string_is_true(&config.config_value)
+                }
+                CONFIG_ALLOW_ANONYMOUS => {
+                    context.allow_anonymous = lib_core::string_is_true(&config.config_value)
+                }
+                _ => {}
+            }
+        }
+        context
+    }
 }
 
 tokio::task_local! {

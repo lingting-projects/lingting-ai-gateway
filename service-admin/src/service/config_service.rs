@@ -7,34 +7,45 @@ use super::pool;
 use crate::repository::KvConfigRepository;
 
 /// 全局配置业务逻辑。
-pub struct ConfigService;
+pub struct ConfigService {
+    repository: KvConfigRepository,
+}
 
 impl ConfigService {
+    /// 绑定当前请求的数据库连接池。
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            repository: KvConfigRepository::new(pool()?),
+        })
+    }
+
     /// 分页查询全局配置。
     pub async fn page(
+        &self,
         pagination: &PaginationParams,
         conditions: &ConfigQO,
     ) -> Result<PaginationResult<KvConfig>> {
-        KvConfigRepository::new(pool()?)
-            .page(pagination, conditions)
-            .await
+        self.repository.page(pagination, conditions).await
     }
 
     /// 查询全部全局配置。
-    pub async fn find_all() -> Result<Vec<KvConfig>> {
-        KvConfigRepository::new(pool()?).find_all().await
+    pub async fn find_all(&self) -> Result<Vec<KvConfig>> {
+        self.repository.find_all().await
+    }
+
+    /// 按 key 集合批量查询配置，避免逐个 key 查询。
+    pub async fn find_keys(&self, keys: &[&str]) -> Result<Vec<KvConfig>> {
+        self.repository.find_keys(keys).await
     }
 
     /// 读取单个配置值。
-    pub async fn find_value(config_key: &str) -> Result<Option<String>> {
-        KvConfigRepository::new(pool()?)
-            .find_value(config_key)
-            .await
+    pub async fn find_value(&self, config_key: &str) -> Result<Option<String>> {
+        self.repository.find_value(config_key).await
     }
 
     /// 更新配置值。
-    pub async fn update(params: &ConfigUpdatePO) -> Result<()> {
-        KvConfigRepository::new(pool()?)
+    pub async fn update(&self, params: &ConfigUpdatePO) -> Result<()> {
+        self.repository
             .update_value(&params.config_key, &params.config_value)
             .await
     }

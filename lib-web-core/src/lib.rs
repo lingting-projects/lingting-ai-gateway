@@ -7,8 +7,8 @@ pub mod auth;
 pub mod context;
 
 pub use auth::{
-    AuthKind, AuthRuleExt, Authorization, AuthorizationService, ROLE_ADMIN, ROLE_API, allows,
-    scope_authorization, sha1_hex, use_authorization,
+    AuthKind, AuthRuleExt, Authorization, ROLE_ADMIN, ROLE_API, allows, scope_authorization,
+    use_authorization,
 };
 pub use context::{
     AppContext, CONFIG_ADMIN_TOKEN, CONFIG_ALLOW_ANONYMOUS, CONFIG_DEBUG_MODE, scope_app, use_app,

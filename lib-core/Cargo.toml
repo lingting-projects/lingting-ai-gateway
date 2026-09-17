@@ -8,3 +8,4 @@ license.workspace = true
 [dependencies]
 anyhow.workspace = true
 framework-core.workspace = true
+sha1.workspace = true

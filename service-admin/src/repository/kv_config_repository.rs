@@ -40,6 +40,24 @@ impl KvConfigRepository {
         rows.into_iter().map(kv_config_from_row).collect()
     }
 
+    /// 按 key 集合批量查询配置，避免逐个 key 查询。
+    pub async fn find_keys(&self, keys: &[&str]) -> Result<Vec<KvConfig>> {
+        if keys.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let query =
+            format!("SELECT {COLUMNS} FROM kv_config WHERE config_key = ANY($1) ORDER BY id ASC");
+
+        let rows = sqlx::query(&query)
+            .bind(keys)
+            .fetch_all(&self.pool)
+            .await
+            .context("查询全局配置失败")?;
+
+        rows.into_iter().map(kv_config_from_row).collect()
+    }
+
     pub async fn find_value(&self, config_key: &str) -> Result<Option<String>> {
         let row = sqlx::query("SELECT config_value FROM kv_config WHERE config_key = $1 LIMIT 1")
             .bind(config_key)
