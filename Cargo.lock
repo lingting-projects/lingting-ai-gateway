@@ -2415,6 +2415,7 @@ name = "lib-db"
 version = "2026.9.15"
 dependencies = [
  "anyhow",
+ "framework-core",
  "futures-util",
  "pglite-oxide",
  "sqlx",

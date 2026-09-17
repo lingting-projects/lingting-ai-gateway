@@ -171,14 +171,7 @@ impl ProviderModelRepository {
         let mut query =
             QueryBuilder::<Postgres>::new(format!("SELECT {COLUMNS} FROM provider_model"));
         push_provider_model_conditions(&mut query, conditions);
-        query.push(" ORDER BY provider_id ASC, model ASC ");
-
-        let offset = (pagination.current - 1) * pagination.size;
-        query
-            .push(" LIMIT ")
-            .push_bind(pagination.size)
-            .push(" OFFSET ")
-            .push_bind(offset);
+        query.push_pagination(pagination);
 
         let rows = query.build().fetch_all(&self.pool).await?;
         let records = rows

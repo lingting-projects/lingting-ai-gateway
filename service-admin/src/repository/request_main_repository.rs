@@ -156,14 +156,7 @@ impl RequestMainRepository {
         let mut query =
             QueryBuilder::<Postgres>::new(format!("SELECT {COLUMNS} FROM request_main"));
         push_request_main_conditions(&mut query, conditions);
-        query.push(" ORDER BY create_time DESC ");
-
-        let offset = (pagination.current - 1) * pagination.size;
-        query
-            .push(" LIMIT ")
-            .push_bind(pagination.size)
-            .push(" OFFSET ")
-            .push_bind(offset);
+        query.push_pagination(pagination);
 
         let rows = query.build().fetch_all(&self.pool).await?;
         let records = rows
