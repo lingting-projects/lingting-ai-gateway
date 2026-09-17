@@ -3,8 +3,8 @@ use framework_core::types::{PaginationParams, PaginationResult};
 use types_admin::dto::{ConfigQO, ConfigUpdatePO};
 use types_admin::entity::KvConfig;
 
-use super::pool;
 use crate::repository::KvConfigRepository;
+use lib_db::use_pool;
 
 /// 全局配置业务逻辑。
 pub struct ConfigService {
@@ -15,7 +15,7 @@ impl ConfigService {
     /// 绑定当前请求的数据库连接池。
     pub fn new() -> Result<Self> {
         Ok(Self {
-            repository: KvConfigRepository::new(pool()?),
+            repository: KvConfigRepository::new(use_pool()?),
         })
     }
 

@@ -2,30 +2,41 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use framework_core::types::{PaginationParams, PaginationResult};
-use types_admin::dto::{
-    RequestMainDetailVO, RequestMainQO, RequestMainVO, RequestSubVO,
-};
+use types_admin::dto::{RequestMainDetailVO, RequestMainQO, RequestMainVO, RequestSubVO};
 
 use crate::service::RequestService;
 
 /// 请求日志跨表编排：主日志分页并嵌入各自子日志。
-pub struct RequestManager;
+pub struct RequestManager {
+    request_service: RequestService,
+}
 
 impl RequestManager {
+    /// 绑定当前请求的数据库连接池。
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            request_service: RequestService::new()?,
+        })
+    }
+
     /// 主请求日志分页，附带每条主日志下的子请求日志。
     ///
     /// 先查主日志拿到主键集合，再一次性查出全部子日志后按主键归组，避免逐条查询。
     pub async fn page_detail(
+        &self,
         pagination: &PaginationParams,
         conditions: &RequestMainQO,
     ) -> Result<PaginationResult<RequestMainDetailVO>> {
-        let page = RequestService::main_page(pagination, conditions).await?;
+        let page = self
+            .request_service
+            .main_page(pagination, conditions)
+            .await?;
         let ids: Vec<i64> = page.records.iter().map(|main| main.id).collect();
 
         let subs = if ids.is_empty() {
             Vec::new()
         } else {
-            RequestService::find_sub_by_mains(&ids).await?
+            self.request_service.find_sub_by_mains(&ids).await?
         };
 
         let mut grouped: HashMap<i64, Vec<RequestSubVO>> = HashMap::new();

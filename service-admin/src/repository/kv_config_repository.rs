@@ -118,10 +118,7 @@ fn kv_config_from_row(row: sqlx::postgres::PgRow) -> Result<KvConfig> {
     })
 }
 
-fn push_config_conditions<'a>(
-    query: &mut QueryBuilder<'a, Postgres>,
-    conditions: &'a ConfigQO,
-) {
+fn push_config_conditions<'a>(query: &mut QueryBuilder<'a, Postgres>, conditions: &'a ConfigQO) {
     query.push(" WHERE 1 = 1");
     query.like("config_key", conditions.config_key.as_deref());
 }

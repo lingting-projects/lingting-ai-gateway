@@ -16,11 +16,7 @@ async fn main() -> Result<()> {
     logging_config.directory = Some(directory.logs);
     let logging_guard = lib_core::logging::init(&logging_config)?;
 
-    let db_config = DbConfig {
-        path: Some(directory.data.join("pgsql")),
-        username: "pgsql".to_string(),
-        database: "pgsql".to_string(),
-    };
+    let db_config = DbConfig::new(directory.data.join("pgsql"));
     let db = lib_db::init(&db_config).await?;
     let db_context = Arc::new(DbContext::new(db.pool().clone()));
     let server = axum_builder("127.0.0.1", 0).bind().await?;

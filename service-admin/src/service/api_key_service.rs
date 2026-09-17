@@ -4,8 +4,8 @@ use lib_core::{current_millis, hash, next_id};
 use types_admin::dto::{ApiKeyCreatePO, ApiKeyQO, ApiKeyUpdatePO};
 use types_admin::entity::ApiKey;
 
-use super::pool;
 use crate::repository::ApiKeyRepository;
+use lib_db::use_pool;
 
 /// API Key 业务逻辑；库中只保存原始 key 的 sha1。
 pub struct ApiKeyService {
@@ -16,7 +16,7 @@ impl ApiKeyService {
     /// 绑定当前请求的数据库连接池。
     pub fn new() -> Result<Self> {
         Ok(Self {
-            repository: ApiKeyRepository::new(pool()?),
+            repository: ApiKeyRepository::new(use_pool()?),
         })
     }
 

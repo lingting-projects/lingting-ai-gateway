@@ -46,9 +46,8 @@ impl ProviderModelRepository {
 
     /// 查询所有启用模型；用于可用模型列表与路由匹配。
     pub async fn find_enabled(&self) -> Result<Vec<ProviderModel>> {
-        let query = format!(
-            "SELECT {COLUMNS} FROM provider_model WHERE enabled = true ORDER BY model ASC"
-        );
+        let query =
+            format!("SELECT {COLUMNS} FROM provider_model WHERE enabled = true ORDER BY model ASC");
 
         let rows = sqlx::query(&query)
             .fetch_all(&self.pool)
@@ -206,7 +205,10 @@ fn push_provider_model_conditions<'a>(
     query.like("model", conditions.model.as_deref());
     query.eq(
         "inference_level",
-        conditions.inference_level.as_ref().map(|level| level.as_str()),
+        conditions
+            .inference_level
+            .as_ref()
+            .map(|level| level.as_str()),
     );
     query.eq("enabled", conditions.enabled);
 }

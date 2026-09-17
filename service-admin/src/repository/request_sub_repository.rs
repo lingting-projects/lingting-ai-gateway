@@ -125,8 +125,7 @@ impl RequestSubRepository {
         let total_row = count.build().fetch_one(&self.pool).await?;
         let total: i64 = total_row.get("total");
 
-        let mut query =
-            QueryBuilder::<Postgres>::new(format!("SELECT {COLUMNS} FROM request_sub"));
+        let mut query = QueryBuilder::<Postgres>::new(format!("SELECT {COLUMNS} FROM request_sub"));
         push_request_sub_conditions(&mut query, conditions);
         query.push_pagination(pagination);
 

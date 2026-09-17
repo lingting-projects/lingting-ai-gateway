@@ -1,5 +1,3 @@
-//! Web 层跨表编排：把请求头与全局配置装配为请求身份和应用上下文。
-
 use anyhow::Result;
 use lib_core::hash;
 use lib_web_core::{

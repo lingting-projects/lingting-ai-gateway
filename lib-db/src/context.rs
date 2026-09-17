@@ -48,3 +48,8 @@ pub fn use_db() -> Result<Arc<DbContext>> {
         .try_with(Arc::clone)
         .map_err(|error| anyhow!("当前调用不在数据库上下文作用域内：{error}"))
 }
+
+/// 取当前任务的数据库连接池。
+pub fn use_pool() -> Result<PgPool> {
+    Ok(use_db()?.pool().clone())
+}

@@ -10,8 +10,7 @@ pub struct ProviderRepository {
     pool: PgPool,
 }
 
-const COLUMNS: &str =
-    "id, name, display_name, base_url, api_key, priority, enabled, config, create_time, update_time";
+const COLUMNS: &str = "id, name, display_name, base_url, api_key, priority, enabled, config, create_time, update_time";
 
 impl ProviderRepository {
     pub fn new(pool: PgPool) -> Self {

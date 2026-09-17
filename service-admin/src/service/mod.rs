@@ -11,11 +11,3 @@ pub use config_service::ConfigService;
 pub use provider_model_service::ProviderModelService;
 pub use provider_service::ProviderService;
 pub use request_service::RequestService;
-
-use anyhow::Result;
-use lib_db::{PgPool, use_db};
-
-/// 取当前请求的数据库连接池。
-pub(crate) fn pool() -> Result<PgPool> {
-    Ok(use_db()?.pool().clone())
-}

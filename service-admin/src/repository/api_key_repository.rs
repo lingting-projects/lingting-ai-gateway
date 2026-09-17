@@ -145,10 +145,7 @@ fn api_key_from_row(row: sqlx::postgres::PgRow) -> Result<ApiKey> {
     })
 }
 
-fn push_api_key_conditions<'a>(
-    query: &mut QueryBuilder<'a, Postgres>,
-    conditions: &'a ApiKeyQO,
-) {
+fn push_api_key_conditions<'a>(query: &mut QueryBuilder<'a, Postgres>, conditions: &'a ApiKeyQO) {
     query.push(" WHERE deleted = false");
     query.like("name", conditions.name.as_deref());
     query.eq("id", conditions.id);
