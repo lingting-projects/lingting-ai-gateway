@@ -54,11 +54,7 @@ impl ChatUsage {
         info.output_tokens = self.completion_tokens;
         info.cache_read_tokens = cache_read;
         info.inference_tokens = inference;
-        info.total_tokens = if self.total_tokens > 0 {
-            self.total_tokens
-        } else {
-            info.total()
-        };
+        info.total_tokens = self.total_tokens;
         info
     }
 

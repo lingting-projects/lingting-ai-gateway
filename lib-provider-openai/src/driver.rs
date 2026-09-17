@@ -63,7 +63,7 @@ impl Default for OpenAiDriver {
 }
 
 #[async_trait]
-impl ProviderDriver for OpenAiDriver {
+impl  OpenAiDriver {
     fn name(&self) -> &str {
         "openai"
     }

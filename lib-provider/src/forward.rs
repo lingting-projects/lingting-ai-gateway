@@ -1,5 +1,6 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use bytes::Bytes;
 use types_admin::TokenInfo;
 
 use crate::response::ProviderResponse;
@@ -9,8 +10,8 @@ use crate::response::ProviderResponse;
 pub struct ForwardOutcome {
     /// 输入、输出、缓存读、缓存写、推理与总量。
     pub token_info: TokenInfo,
-    /// 返回内容，仅调试模式下需要落库。
-    pub content: String,
+    /// 返回内容的原始字节，仅在调试模式下设置。
+    pub content: Option<Bytes>,
     /// 供应商实际返回的模型名。
     pub return_model: String,
     /// 结束原因。
@@ -26,7 +27,7 @@ impl ForwardOutcome {
     pub fn from_response(result: ProviderResponse) -> Self {
         Self {
             token_info: result.response.token_info(),
-            content: result.response.content(),
+            content: None,
             return_model: result.response.model.clone(),
             finish_reason: result.response.finish_reason(),
             provider_request_id: result.response.id.clone(),

@@ -2,5 +2,6 @@
 
 mod driver;
 mod sse;
+mod client;
 
 pub use driver::OpenAiDriver;

@@ -7,13 +7,18 @@ license.workspace = true
 
 [dependencies]
 framework-core.workspace = true
+lib-core.workspace = true
 lib-db.workspace = true
 lib-provider.workspace = true
 lib-provider-openai.workspace = true
+lib-web-core.workspace = true
 service-admin.workspace = true
 types-admin.workspace = true
 
 anyhow.workspace = true
+async-trait.workspace = true
+bytes.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
 tracing.workspace = true

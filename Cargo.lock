@@ -2487,6 +2487,7 @@ dependencies = [
  "serde",
  "serde_json",
  "service-admin",
+ "service-provider",
  "tokio",
  "tracing",
  "types-admin",
@@ -4178,10 +4179,15 @@ name = "service-provider"
 version = "2026.9.15"
 dependencies = [
  "anyhow",
+ "async-trait",
+ "bytes",
  "framework-core",
+ "lib-core",
  "lib-db",
  "lib-provider",
  "lib-provider-openai",
+ "lib-web-core",
+ "serde",
  "serde_json",
  "service-admin",
  "tokio",

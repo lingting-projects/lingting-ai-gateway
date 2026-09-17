@@ -55,10 +55,12 @@ impl ChunkSink {
         }
     }
 
-    /// 追加累积内容。
-    pub fn append_content(&self, content: &str) {
+    /// 追加累积内容的原始字节。
+    pub fn append_content(&self, content: impl AsRef<[u8]>) {
         if let Ok(mut current) = self.outcome.lock() {
-            current.content.push_str(content);
+            let mut buffer = current.content.take().unwrap_or_default().to_vec();
+            buffer.extend_from_slice(content.as_ref());
+            current.content = Some(Bytes::from(buffer));
         }
     }
 
