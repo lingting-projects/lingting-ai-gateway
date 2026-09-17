@@ -2,10 +2,10 @@ use super::*;
 
 /// API Key 列表
 
-#[web_api_post(path = "/___/api-key/list", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/api-key/list")]
 pub async fn list() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // TODO: 实现 API Key 列表查询
     let repository = KvConfigRepository::new(db_context.pool.clone());
@@ -33,10 +33,10 @@ pub async fn list() -> Result<Json<serde_json::Value>> {
 
 /// API Key 创建
 
-#[web_api_post(path = "/___/api-key/create", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/api-key/create")]
 pub async fn create() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析请求体
     let body = web_context.body_json::<serde_json::Value>()
@@ -80,10 +80,10 @@ pub async fn create() -> Result<Json<serde_json::Value>> {
 
 /// API Key 更新
 
-#[web_api_post(path = "/___/api-key/update", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/api-key/update")]
 pub async fn update() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析请求体
     let body = web_context.body_json::<serde_json::Value>()
@@ -122,10 +122,10 @@ pub async fn update() -> Result<Json<serde_json::Value>> {
 
 /// API Key 删除
 
-#[web_api_post(path = "/___/api-key/delete", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/api-key/delete")]
 pub async fn delete() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析请求体
     let body = web_context.body_json::<serde_json::Value>()

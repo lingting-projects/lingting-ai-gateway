@@ -2,10 +2,10 @@ use super::*;
 
 /// 请求日志列表
 
-#[web_api_post(path = "/___/request/list", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/request/list")]
 pub async fn list() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析查询参数
     let query_params = web_context.query_json::<RequestMainQO>()
@@ -24,10 +24,10 @@ pub async fn list() -> Result<Json<serde_json::Value>> {
 
 /// 请求日志详情
 
-#[web_api_post(path = "/___/request/detail", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/request/detail")]
 pub async fn detail() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析请求体
     let body = web_context.body_json::<serde_json::Value>()
@@ -58,10 +58,10 @@ pub async fn detail() -> Result<Json<serde_json::Value>> {
 
 /// 子请求日志列表
 
-#[web_api_post(path = "/___/request/sub-list", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/request/sub-list")]
 pub async fn sub_list() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析查询参数
     let query_params = web_context.query_json::<RequestSubQO>()

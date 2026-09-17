@@ -2,10 +2,10 @@ use super::*;
 
 /// 配置列表
 
-#[web_api_post(path = "/___/config/list", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/config/list")]
 pub async fn list() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     let repository = KvConfigRepository::new(db_context.pool.clone());
     let configs = repository.find_by_prefix("").await?;
@@ -33,10 +33,10 @@ pub async fn list() -> Result<Json<serde_json::Value>> {
 
 /// 配置更新
 
-#[web_api_post(path = "/___/config/update", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/config/update")]
 pub async fn update() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析请求体
     let body = web_context.body_json::<serde_json::Value>()

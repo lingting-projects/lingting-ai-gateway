@@ -285,6 +285,7 @@ dependencies = [
  "axum",
  "framework-core",
  "framework-web",
+ "framework-web-axum",
  "lib-core",
  "lib-db",
  "lib-provider",
@@ -1521,6 +1522,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "framework-web-axum"
+version = "26.8.14"
+dependencies = [
+ "anyhow",
+ "axum",
+ "framework-core",
+ "framework-web",
+ "futures-util",
+ "log",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "fs_extra"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2465,11 +2480,13 @@ dependencies = [
  "framework-core",
  "framework-proc-ts",
  "framework-web",
+ "framework-web-axum",
  "lib-db",
  "lib-provider",
  "lib-web-core",
  "serde",
  "serde_json",
+ "service-admin",
  "tokio",
  "tracing",
  "types-admin",

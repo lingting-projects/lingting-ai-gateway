@@ -2,10 +2,10 @@ use super::*;
 
 /// 供应商列表
 
-#[web_api_post(path = "/___/provider/list", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/provider/list")]
 pub async fn list() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析查询参数
     let query_params = web_context.query_json::<ProviderQO>()
@@ -24,10 +24,10 @@ pub async fn list() -> Result<Json<serde_json::Value>> {
 
 /// 供应商创建
 
-#[web_api_post(path = "/___/provider/create", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/provider/create")]
 pub async fn create() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析请求体
     let body = web_context.body_json::<serde_json::Value>()
@@ -51,10 +51,10 @@ pub async fn create() -> Result<Json<serde_json::Value>> {
 
 /// 供应商更新
 
-#[web_api_post(path = "/___/provider/update", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/provider/update")]
 pub async fn update() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析请求体
     let body = web_context.body_json::<serde_json::Value>()
@@ -85,10 +85,10 @@ pub async fn update() -> Result<Json<serde_json::Value>> {
 
 /// 供应商删除
 
-#[web_api_post(path = "/___/provider/delete", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/provider/delete")]
 pub async fn delete() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
 
     // 解析请求体
     let body = web_context.body_json::<serde_json::Value>()
@@ -111,7 +111,7 @@ pub async fn delete() -> Result<Json<serde_json::Value>> {
 
 /// 供应商模型更新
 
-#[web_api_post(path = "/___/provider/model-update", auth = AuthRule::admin())]
+#[web_api_post(path = "/___/provider/model-update")]
 pub async fn model_update() -> Result<Json<serde_json::Value>> {
     // TODO: 实现供应商模型更新逻辑
     Ok(Json(serde_json::json!({

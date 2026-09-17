@@ -14,6 +14,7 @@ lib-core.workspace = true
 types-admin.workspace = true
 framework-core.workspace = true
 framework-web.workspace = true
+framework-web-axum.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-appender.workspace = true

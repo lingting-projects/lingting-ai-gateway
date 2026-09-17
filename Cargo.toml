@@ -15,6 +15,7 @@ framework-proc-auto = { path = "../lingting-rust-framework/framework-proc-auto" 
 framework-proc-core = { path = "../lingting-rust-framework/framework-proc-core" }
 framework-proc-ts = { path = "../lingting-rust-framework/framework-proc-ts" }
 framework-web = { path = "../lingting-rust-framework/framework-web", features = ["collect"] }
+framework-web-axum = { path = "../lingting-rust-framework/framework-web-axum", features = ["collect"] }
 framework-region = { path = "../lingting-rust-framework/framework-region" }
 
 # Internal crates

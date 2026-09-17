@@ -12,11 +12,11 @@ use std::collections::HashMap;
 
 /// 聊天接口
 
-#[web_api_post(path = "/chat", auth = AuthRule::anonymous())]
+#[web_api_post(path = "/chat")]
 pub async fn chat() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
-    let app_context = use_app().ok_or_else(|| anyhow!("App context not found"))?;
+    let web_context = use_web()?;
+    let db_context = use_db()?;
+    let app_context = use_app()?;
     
     // 解析请求参数
     let request_body = web_context.body_json::<ChatRequest>()
@@ -96,10 +96,10 @@ pub async fn chat() -> Result<Json<serde_json::Value>> {
 
 /// 模型列表接口
 
-#[web_api_post(path = "/models", auth = AuthRule::anonymous())]
+#[web_api_post(path = "/models")]
 pub async fn models() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
-    let app_context = use_app().ok_or_else(|| anyhow!("App context not found"))?;
+    let web_context = use_web()?;
+    let app_context = use_app()?;
     
     // TODO: 从数据库查询启用的模型
     // 这里返回硬编码的模型列表
@@ -180,7 +180,7 @@ async fn record_main_request(
         duration_ms: None,
     };
     
-    let repository = RequestMainRepository::new(use_db().ok_or_else(|| anyhow!("Database context not found"))?);
+    let repository = RequestMainRepository::new(use_db()?;
     repository.create(&main_request.into()).await
         .map_err(|e| anyhow!("Failed to create main request: {}", e))?;
     
