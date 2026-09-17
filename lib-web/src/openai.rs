@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
-use framework_web::{Json, WebError, catch_panic, use_web};
+use framework_web::{Json, WebError, catch_panic, use_web, web_api_post};
 use lib_db::{DbContext, use_db, RequestMainRepository, RequestSubRepository};
-use lib_web_core::{AppContext, use_app, Authorization, AuthType};
+use lib_web_core::{AppContext, AuthRule, use_app, Authorization, AuthType};
 use lib_provider::{ChatRequest, ChatRequestBuilder, ProviderServiceClient, ProviderClientCallbacks};
 use lib_provider::response::{ChatResponse, ErrorResponse};
 use types_admin::entity::{RequestMain, RequestSub, RequestMainStatus, RequestSubStatus, TokenInfo};
@@ -12,6 +12,7 @@ use std::collections::HashMap;
 
 /// 聊天接口
 
+#[web_api_post(path = "/chat", auth = AuthRule::anonymous())]
 pub async fn chat() -> Result<Json<serde_json::Value>> {
     let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
     let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
@@ -95,6 +96,7 @@ pub async fn chat() -> Result<Json<serde_json::Value>> {
 
 /// 模型列表接口
 
+#[web_api_post(path = "/models", auth = AuthRule::anonymous())]
 pub async fn models() -> Result<Json<serde_json::Value>> {
     let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
     let app_context = use_app().ok_or_else(|| anyhow!("App context not found"))?;

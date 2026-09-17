@@ -2,6 +2,7 @@ use super::*;
 
 /// 请求日志列表
 
+#[web_api_post(path = "/___/request/list", auth = AuthRule::admin())]
 pub async fn list() -> Result<Json<serde_json::Value>> {
     let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
     let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
@@ -23,6 +24,7 @@ pub async fn list() -> Result<Json<serde_json::Value>> {
 
 /// 请求日志详情
 
+#[web_api_post(path = "/___/request/detail", auth = AuthRule::admin())]
 pub async fn detail() -> Result<Json<serde_json::Value>> {
     let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
     let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
@@ -56,6 +58,7 @@ pub async fn detail() -> Result<Json<serde_json::Value>> {
 
 /// 子请求日志列表
 
+#[web_api_post(path = "/___/request/sub-list", auth = AuthRule::admin())]
 pub async fn sub_list() -> Result<Json<serde_json::Value>> {
     let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
     let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;

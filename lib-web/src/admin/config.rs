@@ -2,6 +2,7 @@ use super::*;
 
 /// 配置列表
 
+#[web_api_post(path = "/___/config/list", auth = AuthRule::admin())]
 pub async fn list() -> Result<Json<serde_json::Value>> {
     let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
     let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
@@ -32,6 +33,7 @@ pub async fn list() -> Result<Json<serde_json::Value>> {
 
 /// 配置更新
 
+#[web_api_post(path = "/___/config/update", auth = AuthRule::admin())]
 pub async fn update() -> Result<Json<serde_json::Value>> {
     let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
     let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;

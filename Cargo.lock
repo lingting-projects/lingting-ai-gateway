@@ -2461,6 +2461,7 @@ version = "2026.9.15"
 dependencies = [
  "anyhow",
  "framework-core",
+ "framework-proc-ts",
  "framework-web",
  "lib-db",
  "lib-provider",
