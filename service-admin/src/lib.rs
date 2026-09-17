@@ -1,14 +1,6 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! 管理端业务实现：repository 只做单表原子操作，service 编排单表逻辑，
+//! manager 负责跨表组合。
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub mod manager;
+pub mod repository;
+pub mod service;

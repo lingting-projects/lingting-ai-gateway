@@ -16,6 +16,19 @@ framework-proc-core = { path = "../lingting-rust-framework/framework-proc-core" 
 framework-proc-ts = { path = "../lingting-rust-framework/framework-proc-ts" }
 framework-web = { path = "../lingting-rust-framework/framework-web", features = ["collect"] }
 framework-region = { path = "../lingting-rust-framework/framework-region" }
+
+# Internal crates
+lib-core = { path = "./lib-core" }
+lib-db = { path = "./lib-db" }
+lib-provider = { path = "./lib-provider" }
+lib-provider-openai = { path = "./lib-provider-openai" }
+lib-web = { path = "./lib-web" }
+lib-web-core = { path = "./lib-web-core" }
+service-admin = { path = "./service-admin" }
+service-provider = { path = "./service-provider" }
+types-admin = { path = "./types-admin" }
+
+# External dependencies
 aes = { version = "0.8" }
 base64 = { version = "0.22" }
 serde = { version = "1.0", features = ["derive"] }
@@ -72,3 +85,5 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 futures = "0.3.34"
 lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "tokio1-rustls-tls", "builder"] }
 pglite-oxide = "=0.5.1"
+# pglite-oxide 依赖的 wasmer-wasix 与 virtual-net 0.702.1 不兼容，必须锁定版本
+virtual-net = "=0.702.0-alpha.3"

@@ -6,3 +6,21 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
+lib-web.workspace = true
+lib-web-core.workspace = true
+lib-db.workspace = true
+lib-provider.workspace = true
+lib-core.workspace = true
+types-admin.workspace = true
+framework-core.workspace = true
+framework-web.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-appender.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
+axum.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha1.workspace = true
+async-trait.workspace = true

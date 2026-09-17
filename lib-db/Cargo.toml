@@ -7,6 +7,9 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+futures-util.workspace = true
 pglite-oxide.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
+# 锁定 pglite-oxide 的间接依赖版本，见 workspace 注释
+virtual-net.workspace = true
