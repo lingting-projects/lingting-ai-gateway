@@ -126,7 +126,7 @@ impl WebRouter {
 }
 
 /// AI 聊天接口处理器
-#[catch_panic]
+
 async fn chat_handler() -> Result<Json<serde_json::Value>> {
     let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
     let db_context = use_db().ok_or_else(|| anyhow!("Database context not found"))?;
@@ -177,7 +177,7 @@ async fn chat_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// AI 模型列表接口处理器
-#[catch_panic]
+
 async fn models_handler() -> Result<Json<serde_json::Value>> {
     let web_context = use_web().ok_or_else(|| anyhow!("Web context not found"))?;
     
@@ -206,7 +206,7 @@ async fn models_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// 请求日志列表处理器
-#[catch_panic]
+
 async fn request_list_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现请求日志列表查询
     Ok(Json(serde_json::json!({
@@ -220,7 +220,7 @@ async fn request_list_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// 请求日志详情处理器
-#[catch_panic]
+
 async fn request_detail_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现请求日志详情查询
     Ok(Json(serde_json::json!({
@@ -231,7 +231,7 @@ async fn request_detail_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// 子请求日志列表处理器
-#[catch_panic]
+
 async fn request_sub_list_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现子请求日志列表查询
     Ok(Json(serde_json::json!({
@@ -245,7 +245,7 @@ async fn request_sub_list_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// API Key 列表处理器
-#[catch_panic]
+
 async fn api_key_list_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现 API Key 列表查询
     Ok(Json(serde_json::json!({
@@ -259,7 +259,7 @@ async fn api_key_list_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// API Key 创建处理器
-#[catch_panic]
+
 async fn api_key_create_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现 API Key 创建
     Ok(Json(serde_json::json!({
@@ -270,7 +270,7 @@ async fn api_key_create_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// API Key 更新处理器
-#[catch_panic]
+
 async fn api_key_update_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现 API Key 更新
     Ok(Json(serde_json::json!({
@@ -281,7 +281,7 @@ async fn api_key_update_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// API Key 删除处理器
-#[catch_panic]
+
 async fn api_key_delete_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现 API Key 删除
     Ok(Json(serde_json::json!({
@@ -292,7 +292,7 @@ async fn api_key_delete_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// 配置列表处理器
-#[catch_panic]
+
 async fn config_list_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现配置列表查询
     Ok(Json(serde_json::json!({
@@ -306,7 +306,7 @@ async fn config_list_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// 配置更新处理器
-#[catch_panic]
+
 async fn config_update_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现配置更新
     Ok(Json(serde_json::json!({
@@ -317,7 +317,7 @@ async fn config_update_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// 供应商列表处理器
-#[catch_panic]
+
 async fn provider_list_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现供应商列表查询
     Ok(Json(serde_json::json!({
@@ -331,7 +331,7 @@ async fn provider_list_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// 供应商创建处理器
-#[catch_panic]
+
 async fn provider_create_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现供应商创建
     Ok(Json(serde_json::json!({
@@ -342,7 +342,7 @@ async fn provider_create_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// 供应商更新处理器
-#[catch_panic]
+
 async fn provider_update_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现供应商更新
     Ok(Json(serde_json::json!({
@@ -353,7 +353,7 @@ async fn provider_update_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// 供应商删除处理器
-#[catch_panic]
+
 async fn provider_delete_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现供应商删除
     Ok(Json(serde_json::json!({
@@ -364,7 +364,7 @@ async fn provider_delete_handler() -> Result<Json<serde_json::Value>> {
 }
 
 /// 供应商模型更新处理器
-#[catch_panic]
+
 async fn provider_model_update_handler() -> Result<Json<serde_json::Value>> {
     // TODO: 实现供应商模型更新
     Ok(Json(serde_json::json!({
