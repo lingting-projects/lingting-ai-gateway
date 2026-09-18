@@ -51,9 +51,11 @@ impl RequestManager {
             .records
             .into_iter()
             .map(|main| {
-                let children = grouped.remove(&main.id).unwrap_or_default();
+                let id = main.id;
+                let children = grouped.remove(&id).unwrap_or_default();
                 RequestMainDetailVO {
-                    main: RequestMainVO::from(main),
+                    id,
+                    request: RequestMainVO::from(main),
                     children,
                 }
             })

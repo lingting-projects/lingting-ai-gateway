@@ -1,122 +1,53 @@
-use super::*;
+use anyhow::{Result, anyhow};
+use framework_core::types::{IdPO, PaginationParams, PaginationResult};
+use framework_web::{Json, web_api_post};
+use service_admin::manager::ProviderManager;
+use service_admin::service::ProviderService;
+use types_admin::dto::{
+    ProviderCreatePO, ProviderDetailVO, ProviderQO, ProviderUpdatePO, ProviderVO,
+};
 
-/// 供应商列表
-
-#[web_api_post(path = "/___/provider/list")]
-pub async fn list() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web()?;
-    let db_context = use_db()?;
-
-    // 解析查询参数
-    let query_params = web_context.query_json::<ProviderQO>()
+/// 供应商分页，附带每个供应商下的全部模型。
+#[web_api_post(path = "/___/provider/page")]
+pub async fn provider_page(
+    pagination: PaginationParams,
+    Json(query): Json<ProviderQO>,
+) -> Result<PaginationResult<ProviderDetailVO>> {
+    ProviderManager::new()?
+        .page_detail(&pagination, &query)
         .await
-        .unwrap_or_default();
-
-    let repository = ProviderRepository::new(db_context.pool.clone());
-    let result = repository.page(&query_params.pagination, &query_params).await?;
-
-    Ok(Json(serde_json::json!({
-        "code": 200,
-        "message": "Success",
-        "data": result
-    })))
 }
 
-/// 供应商创建
-
+/// 供应商创建，返回仅此一次可见的明文 key。
 #[web_api_post(path = "/___/provider/create")]
-pub async fn create() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web()?;
-    let db_context = use_db()?;
+pub async fn provider_create(Json(params): Json<ProviderCreatePO>) -> Result<ProviderVO> {
+    let service = ProviderService::new()?;
+    let id = service.create(&params).await?;
+    let provider = service
+        .find_by_id(id)
+        .await?
+        .ok_or_else(|| anyhow!("供应商创建后查询不到记录：{id}"))?;
 
-    // 解析请求体
-    let body = web_context.body_json::<serde_json::Value>()
-        .await
-        .map_err(|e| anyhow!("Failed to parse request body: {}", e))?;
-
-    let create_data = serde_json::from_value::<types_admin::dto::ProviderCreatePO>(body)
-        .map_err(|e| anyhow!("Failed to parse provider data: {}", e))?;
-
-    let repository = ProviderRepository::new(db_context.pool.clone());
-    let id = repository.create(&create_data).await?;
-
-    Ok(Json(serde_json::json!({
-        "code": 200,
-        "message": "Success",
-        "data": {
-            "id": id,
-        }
-    })))
+    let mut vo = ProviderVO::from(provider);
+    vo.api_key = params.api_key;
+    Ok(vo)
 }
 
-/// 供应商更新
-
+/// 供应商更新，仅允许修改展示名、地址、key、优先级、启用状态与扩展配置。
 #[web_api_post(path = "/___/provider/update")]
-pub async fn update() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web()?;
-    let db_context = use_db()?;
-
-    // 解析请求体
-    let body = web_context.body_json::<serde_json::Value>()
-        .await
-        .map_err(|e| anyhow!("Failed to parse request body: {}", e))?;
-
-    let id = body.get("id")
-        .and_then(|id| id.as_i64())
-        .ok_or_else(|| anyhow!("Provider ID is required"))?;
-
-    let update_data = serde_json::from_value::<types_admin::dto::ProviderUpdatePO>(body)
-        .map_err(|e| anyhow!("Failed to parse provider data: {}", e))?;
-
-    let repository = ProviderRepository::new(db_context.pool.clone());
-    repository.update(id, &update_data).await?;
-
-    // 触发供应商模型更新
-    // TODO: 实现供应商模型更新逻辑
-
-    Ok(Json(serde_json::json!({
-        "code": 200,
-        "message": "Success",
-        "data": {
-            "id": id,
-        }
-    })))
+pub async fn provider_update(Json(params): Json<ProviderUpdatePO>) -> Result<()> {
+    ProviderService::new()?.update(&params).await
 }
 
-/// 供应商删除
-
+/// 供应商逻辑删除。
 #[web_api_post(path = "/___/provider/delete")]
-pub async fn delete() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web()?;
-    let db_context = use_db()?;
-
-    // 解析请求体
-    let body = web_context.body_json::<serde_json::Value>()
-        .await
-        .map_err(|e| anyhow!("Failed to parse request body: {}", e))?;
-
-    let id = body.get("id")
-        .and_then(|id| id.as_i64())
-        .ok_or_else(|| anyhow!("Provider ID is required"))?;
-
-    let repository = ProviderRepository::new(db_context.pool.clone());
-    repository.delete(id).await?;
-
-    Ok(Json(serde_json::json!({
-        "code": 200,
-        "message": "Success",
-        "data": null
-    })))
+pub async fn provider_delete(Json(params): Json<IdPO>) -> Result<()> {
+    ProviderService::new()?.delete(params.id).await
 }
 
-/// 供应商模型更新
-
-#[web_api_post(path = "/___/provider/model-update")]
-pub async fn model_update() -> Result<Json<serde_json::Value>> {
-    // TODO: 实现供应商模型更新逻辑
-    Ok(Json(serde_json::json!({
-        "code": 200,
-        "message": "Success",
-        "data": null
-    })))
+/// 供应商模型更新：占位，后续在此启动异步拉取并更新模型的任务。
+#[web_api_post(path = "/___/provider/update-model")]
+pub async fn provider_update_model(Json(_params): Json<IdPO>) -> Result<()> {
+    // TODO: 启动异步的供应商模型拉取与更新任务
+    Ok(())
 }

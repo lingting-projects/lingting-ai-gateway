@@ -1,79 +1,49 @@
-use super::*;
+use anyhow::Result;
+use framework_core::types::{PaginationParams, PaginationResult};
+use framework_web::{Json, web_api_post};
+use service_admin::manager::RequestManager;
+use service_admin::service::RequestService;
+use types_admin::dto::{
+    RequestMainDetailVO, RequestMainQO, RequestMainVO, RequestSubQO, RequestSubVO,
+};
 
-/// 请求日志列表
+/// 主请求日志分页
+#[web_api_post(path = "/___/request/main/page")]
+pub async fn request_main_page(
+    pagination: PaginationParams,
+    Json(query): Json<RequestMainQO>,
+) -> Result<PaginationResult<RequestMainVO>> {
+    let page = RequestService::new()?
+        .main_page(&pagination, &query)
+        .await?;
 
-#[web_api_post(path = "/___/request/list")]
-pub async fn list() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web()?;
-    let db_context = use_db()?;
-
-    // 解析查询参数
-    let query_params = web_context.query_json::<RequestMainQO>()
-        .await
-        .unwrap_or_default();
-
-    let repository = RequestMainRepository::new(db_context.pool.clone());
-    let result = repository.page(&query_params.pagination, &query_params).await?;
-
-    Ok(Json(serde_json::json!({
-        "code": 200,
-        "message": "Success",
-        "data": result
-    })))
+    Ok(PaginationResult {
+        total: page.total,
+        records: page.records.into_iter().map(RequestMainVO::from).collect(),
+    })
 }
 
-/// 请求日志详情
+/// 子请求日志分页
+#[web_api_post(path = "/___/request/sub/page")]
+pub async fn request_sub_page(
+    pagination: PaginationParams,
+    Json(query): Json<RequestSubQO>,
+) -> Result<PaginationResult<RequestSubVO>> {
+    let page = RequestService::new()?.sub_page(&pagination, &query).await?;
 
-#[web_api_post(path = "/___/request/detail")]
-pub async fn detail() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web()?;
-    let db_context = use_db()?;
-
-    // 解析请求体
-    let body = web_context.body_json::<serde_json::Value>()
-        .await
-        .map_err(|e| anyhow!("Failed to parse request body: {}", e))?;
-
-    let id = body.get("id")
-        .and_then(|id| id.as_i64())
-        .ok_or_else(|| anyhow!("Request ID is required"))?;
-
-    let repository = RequestMainRepository::new(db_context.pool.clone());
-    let request = repository.find_by_id(id).await?
-        .ok_or_else(|| anyhow!("Request not found"))?;
-
-    // 查询子请求日志
-    let sub_repository = RequestSubRepository::new(db_context.pool.clone());
-    let sub_requests = sub_repository.find_by_main_request_id(id).await?;
-
-    Ok(Json(serde_json::json!({
-        "code": 200,
-        "message": "Success",
-        "data": {
-            "request": request,
-            "sub_requests": sub_requests,
-        }
-    })))
+    Ok(PaginationResult {
+        total: page.total,
+        records: page.records.into_iter().map(RequestSubVO::from).collect(),
+    })
 }
 
-/// 子请求日志列表
-
-#[web_api_post(path = "/___/request/sub-list")]
-pub async fn sub_list() -> Result<Json<serde_json::Value>> {
-    let web_context = use_web()?;
-    let db_context = use_db()?;
-
-    // 解析查询参数
-    let query_params = web_context.query_json::<RequestSubQO>()
+/// 主请求日志分页，附带每条主日志下的子请求日志。
+#[web_api_post(path = "/___/request/main-info/page")]
+pub async fn request_main_info_page(
+    pagination: PaginationParams,
+    Json(query): Json<RequestMainQO>,
+) -> Result<PaginationResult<RequestMainDetailVO>> {
+    RequestManager::new()?
+        .page_detail(&pagination, &query)
         .await
-        .unwrap_or_default();
-
-    let repository = RequestSubRepository::new(db_context.pool.clone());
-    let result = repository.page(&query_params.pagination, &query_params).await?;
-
-    Ok(Json(serde_json::json!({
-        "code": 200,
-        "message": "Success",
-        "data": result
-    })))
 }

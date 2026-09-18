@@ -49,4 +49,11 @@ impl ConfigService {
             .update_value(&params.config_key, &params.config_value)
             .await
     }
+
+    /// 写入或更新配置：key 存在则更新，不存在则新增。
+    pub async fn upsert(&self, params: &ConfigUpdatePO) -> Result<()> {
+        self.repository
+            .upsert(&params.config_key, &params.config_value)
+            .await
+    }
 }

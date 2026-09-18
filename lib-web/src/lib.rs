@@ -1,7 +1,7 @@
-pub mod router;
-pub mod openai;
 pub mod admin;
+pub mod openai;
+pub mod router;
 
-pub use router::{web_route_wrapper, web_routes};
+pub use admin::{api_key, config, provider, request};
 pub use openai::{chat, models};
-pub use admin::{request, api_key, config, provider};
+pub use router::{web_route_wrapper, web_routes};

@@ -69,14 +69,14 @@ impl ApiKeyRepository {
             "UPDATE api_key SET name = $1, enabled = $2, remark = $3, update_time = $4
              WHERE id = $5",
         )
-            .bind(&params.name)
-            .bind(params.enabled)
-            .bind(&params.remark)
-            .bind(lib_core::current_millis()?)
-            .bind(params.id)
-            .execute(&self.pool)
-            .await
-            .context("更新 API Key 失败")?;
+        .bind(&params.name)
+        .bind(params.enabled)
+        .bind(&params.remark)
+        .bind(lib_core::current_millis()?)
+        .bind(params.id)
+        .execute(&self.pool)
+        .await
+        .context("更新 API Key 失败")?;
 
         Ok(())
     }

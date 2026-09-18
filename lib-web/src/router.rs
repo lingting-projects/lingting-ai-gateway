@@ -28,8 +28,8 @@ async fn invoke(db: Arc<DbContext>, route: Arc<WebRoute>) -> Result<WebResponse>
         let token = bearer_token()?;
         let authorization = manager.build_authorization(&token).await?;
 
-        // 管理接口
-        if route.path.starts_with("/___/") {
+        // 管理接口；路由 path 由框架规范化，不带前导斜杠。
+        if route.path.starts_with("___/") {
             if !authorization.is_admin() {
                 return Err(WebError::forbidden("当前用户没有此接口访问权限").into());
             }
@@ -42,7 +42,7 @@ async fn invoke(db: Arc<DbContext>, route: Arc<WebRoute>) -> Result<WebResponse>
 
         scope_authorization(authorization, async move { Ok(route.invoke().await) }).await
     })
-        .await
+    .await
 }
 
 fn bearer_token() -> Result<String> {

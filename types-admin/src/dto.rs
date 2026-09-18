@@ -129,6 +129,14 @@ impl ProviderModelVO {
     }
 }
 
+/// 供应商分页结果，附带该供应商下的全部模型。
+#[auto_type(default = false)]
+pub struct ProviderDetailVO {
+    pub id: i64,
+    pub provider: ProviderVO,
+    pub models: Vec<ProviderModelVO>,
+}
+
 // ---------------------------------------------------------------------------
 // API Key
 // ---------------------------------------------------------------------------
@@ -403,7 +411,8 @@ impl From<RequestSub> for RequestSubVO {
 /// 主请求日志分页，额外带上该主请求下的所有子请求日志。
 #[auto_type(default = false)]
 pub struct RequestMainDetailVO {
-    pub main: RequestMainVO,
+    pub id: i64,
+    pub request: RequestMainVO,
     pub children: Vec<RequestSubVO>,
 }
 

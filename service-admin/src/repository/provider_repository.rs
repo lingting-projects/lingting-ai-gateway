@@ -10,7 +10,7 @@ pub struct ProviderRepository {
     pool: PgPool,
 }
 
-const COLUMNS: &str = "id, name, display_name, base_url, api_key, priority, enabled, config, create_time, update_time";
+const COLUMNS: &str = "id, name, display_name, base_url, api_key, priority, enabled, config, create_time, update_time, deleted_at";
 
 impl ProviderRepository {
     pub fn new(pool: PgPool) -> Self {
@@ -18,7 +18,8 @@ impl ProviderRepository {
     }
 
     pub async fn find_by_id(&self, id: i64) -> Result<Option<Provider>> {
-        let query = format!("SELECT {COLUMNS} FROM provider WHERE id = $1 LIMIT 1");
+        let query =
+            format!("SELECT {COLUMNS} FROM provider WHERE id = $1 AND deleted_at = 0 LIMIT 1");
 
         let row = sqlx::query(&query)
             .bind(id)
@@ -30,7 +31,8 @@ impl ProviderRepository {
     }
 
     pub async fn find_by_name(&self, name: &str) -> Result<Option<Provider>> {
-        let query = format!("SELECT {COLUMNS} FROM provider WHERE name = $1 LIMIT 1");
+        let query =
+            format!("SELECT {COLUMNS} FROM provider WHERE name = $1 AND deleted_at = 0 LIMIT 1");
 
         let row = sqlx::query(&query)
             .bind(name)
@@ -44,7 +46,7 @@ impl ProviderRepository {
     /// 查询所有启用的供应商，按优先级升序、加入时间升序排列。
     pub async fn find_enabled(&self) -> Result<Vec<Provider>> {
         let query = format!(
-            "SELECT {COLUMNS} FROM provider WHERE enabled = true ORDER BY priority ASC, create_time ASC"
+            "SELECT {COLUMNS} FROM provider WHERE enabled = true AND deleted_at = 0 ORDER BY priority ASC, create_time ASC"
         );
 
         let rows = sqlx::query(&query)
@@ -60,10 +62,10 @@ impl ProviderRepository {
     pub async fn first_enabled_by_model(&self, model: &str) -> Result<Option<Provider>> {
         let query = format!(
             "SELECT p.id, p.name, p.display_name, p.base_url, p.api_key, p.priority, p.enabled,
-                    p.config, p.create_time, p.update_time
+                    p.config, p.create_time, p.update_time, p.deleted_at
              FROM provider p
              JOIN provider_model pm ON pm.provider_id = p.id
-             WHERE p.enabled = true AND pm.enabled = true AND pm.model = $1
+             WHERE p.enabled = true AND p.deleted_at = 0 AND pm.enabled = true AND pm.model = $1
              ORDER BY p.priority ASC, p.create_time ASC
              LIMIT 1"
         );
@@ -137,6 +139,20 @@ impl ProviderRepository {
         Ok(())
     }
 
+    /// 逻辑删除，记录删除时间；保留记录以便追溯历史请求日志中的供应商。
+    pub async fn delete(&self, id: i64) -> Result<()> {
+        let now = lib_core::current_millis()?;
+
+        sqlx::query("UPDATE provider SET deleted_at = $1, update_time = $1 WHERE id = $2")
+            .bind(now)
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .context("删除供应商失败")?;
+
+        Ok(())
+    }
+
     pub async fn page(
         &self,
         pagination: &PaginationParams,
@@ -174,6 +190,7 @@ fn provider_from_row(row: sqlx::postgres::PgRow) -> Result<Provider> {
         config: row.get("config"),
         create_time: row.get("create_time"),
         update_time: row.get("update_time"),
+        deleted_at: row.get("deleted_at"),
     })
 }
 
@@ -181,7 +198,7 @@ fn push_provider_conditions<'a>(
     query: &mut QueryBuilder<'a, Postgres>,
     conditions: &'a ProviderQO,
 ) {
-    query.push(" WHERE 1 = 1");
+    query.push(" WHERE deleted_at = 0");
     query.like("name", conditions.name.as_deref());
     query.eq("id", conditions.id);
     query.eq("enabled", conditions.enabled);

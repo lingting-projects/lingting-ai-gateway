@@ -33,6 +33,11 @@ impl ProviderModelService {
         self.repository.find_by_provider_id(provider_id).await
     }
 
+    /// 批量查询多个供应商的模型。
+    pub async fn find_by_providers(&self, provider_ids: &[i64]) -> Result<Vec<ProviderModel>> {
+        self.repository.find_by_provider_ids(provider_ids).await
+    }
+
     /// 查询全部启用的模型。
     pub async fn find_enabled(&self) -> Result<Vec<ProviderModel>> {
         self.repository.find_enabled().await

@@ -117,6 +117,8 @@ pub struct Provider {
     pub config: serde_json::Value,
     pub create_time: i64,
     pub update_time: i64,
+    /// 逻辑删除时间（毫秒时间戳），0 表示未删除。
+    pub deleted_at: i64,
 }
 
 /// 供应商模型，一个供应商对应多条模型数据。

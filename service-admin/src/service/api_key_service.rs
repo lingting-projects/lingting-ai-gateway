@@ -36,6 +36,11 @@ impl ApiKeyService {
         Ok((id, key))
     }
 
+    /// 按主键查询 API Key。
+    pub async fn find_by_id(&self, id: i64) -> Result<Option<ApiKey>> {
+        self.repository.find_by_id(id).await
+    }
+
     /// 更新 API Key。
     pub async fn update(&self, params: &ApiKeyUpdatePO) -> Result<()> {
         self.repository.update(params).await

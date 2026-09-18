@@ -72,12 +72,32 @@ impl KvConfigRepository {
         sqlx::query(
             "UPDATE kv_config SET config_value = $1, update_time = $2 WHERE config_key = $3",
         )
-            .bind(config_value)
-            .bind(lib_core::current_millis()?)
+        .bind(config_value)
+        .bind(lib_core::current_millis()?)
+        .bind(config_key)
+        .execute(&self.pool)
+        .await
+        .context("更新全局配置失败")?;
+
+        Ok(())
+    }
+
+    /// 按 config_key 写入或更新配置，由单条 SQL 完成；description 仅在首次写入时保留默认值。
+    pub async fn upsert(&self, config_key: &str, config_value: &str) -> Result<()> {
+        let now = lib_core::current_millis()?;
+
+        sqlx::query(
+            "INSERT INTO kv_config (config_key, config_value, description, create_time, update_time)
+             VALUES ($1, $2, '', $3, $3)
+             ON CONFLICT (config_key) DO UPDATE
+             SET config_value = EXCLUDED.config_value, update_time = EXCLUDED.update_time",
+        )
             .bind(config_key)
+            .bind(config_value)
+            .bind(now)
             .execute(&self.pool)
             .await
-            .context("更新全局配置失败")?;
+            .context("写入全局配置失败")?;
 
         Ok(())
     }

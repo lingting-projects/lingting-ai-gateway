@@ -2,11 +2,9 @@ use anyhow::{Context, Result};
 use framework_core::logging::LoggingConfig;
 use framework_web_axum::axum_builder;
 use lib_core::application_directory;
-use lib_db::{DbConfig, DbContext, init_db};
-use lib_web::{WebContext, WebRouter};
+use lib_db::{DbConfig, DbContext};
 use std::sync::Arc;
 use tracing_subscriber::filter::LevelFilter;
-use tracing_subscriber::util::SubscriberInitExt;
 
 #[tokio::main]
 async fn main() -> Result<()> {

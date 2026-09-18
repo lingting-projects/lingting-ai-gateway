@@ -52,4 +52,9 @@ impl ProviderService {
     pub async fn update(&self, params: &ProviderUpdatePO) -> Result<()> {
         self.repository.update(params).await
     }
+
+    /// 逻辑删除供应商。
+    pub async fn delete(&self, id: i64) -> Result<()> {
+        self.repository.delete(id).await
+    }
 }
