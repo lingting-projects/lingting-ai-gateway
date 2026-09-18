@@ -1,0 +1,12 @@
+[build]
+rustflags = [
+    # 必须大写命名
+    "-A", "non_upper_case_globals",
+    # 忽略未使用的导入
+    "-A", "unused_imports",
+    # 忽略未使用的变量
+    "-A", "unused_variables",
+    "-A", "dead_code",
+    # 忽略驼峰
+    "-A", "non_snake_case",
+]

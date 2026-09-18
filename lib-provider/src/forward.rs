@@ -53,7 +53,11 @@ pub struct ForwardFailure {
 
 impl ForwardFailure {
     /// 由错误与已累积结果构造。
-    pub fn new(error_type: impl Into<String>, message: impl Into<String>, outcome: ForwardOutcome) -> Self {
+    pub fn new(
+        error_type: impl Into<String>,
+        message: impl Into<String>,
+        outcome: ForwardOutcome,
+    ) -> Self {
         Self {
             error_type: error_type.into(),
             error_code: String::new(),

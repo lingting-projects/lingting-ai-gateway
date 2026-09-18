@@ -1,14 +1,6 @@
 use std::fmt;
-use std::sync::Arc;
 
-use anyhow::Result;
-use async_trait::async_trait;
-use types_admin::Provider;
-
-use crate::chunk::ChunkSink;
-use crate::forward::{ForwardCallback, ForwardFailure, ForwardOutcome};
-use crate::request::ChatRequest;
-use crate::response::ProviderResponse;
+use crate::forward::{ForwardFailure, ForwardOutcome};
 
 /// 供应商请求错误，携带错误类别与供应商返回的状态码。
 #[derive(Debug)]

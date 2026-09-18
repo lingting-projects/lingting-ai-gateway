@@ -95,7 +95,9 @@ pub struct ResponseMessage {
 impl ResponseMessage {
     /// 追加文本内容。
     pub fn append_content(&mut self, content: &str) {
-        self.content.get_or_insert_with(String::new).push_str(content);
+        self.content
+            .get_or_insert_with(String::new)
+            .push_str(content);
     }
 
     /// 追加推理内容。
@@ -209,9 +211,7 @@ impl ChatResponse {
                         index: choice.index,
                         ..ChatChoice::default()
                     });
-                    self.choices
-                        .last_mut()
-                        .expect("刚插入的候选必然存在")
+                    self.choices.last_mut().expect("刚插入的候选必然存在")
                 }
             };
 

@@ -60,7 +60,7 @@ impl ProviderRepository {
     /// 查询支持指定原始模型名（无别名）的启用供应商中优先级最高的一个，
     /// 顺序为优先级升序、创建时间升序。
     pub async fn first_enabled_by_model(&self, model: &str) -> Result<Option<Provider>> {
-        let query = format!(
+        let query =
             "SELECT p.id, p.name, p.display_name, p.base_url, p.api_key, p.priority, p.enabled,
                     p.config, p.create_time, p.update_time, p.deleted_at
              FROM provider p
@@ -68,7 +68,7 @@ impl ProviderRepository {
              WHERE p.enabled = true AND p.deleted_at = 0 AND pm.enabled = true AND pm.model = $1
              ORDER BY p.priority ASC, p.create_time ASC
              LIMIT 1"
-        );
+                .to_string();
 
         let row = sqlx::query(&query)
             .bind(model)

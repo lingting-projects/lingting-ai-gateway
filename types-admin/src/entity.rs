@@ -2,18 +2,15 @@ use framework_proc_auto::{auto_enum, auto_enum_impl, auto_type};
 
 /// 请求状态：进行中、成功、失败、取消。
 #[auto_enum(clone = false, copy = false)]
+#[derive(Default)]
 pub enum RequestStatus {
+    #[default]
     Processing,
     Success,
     Failed,
     Cancelled,
 }
 
-impl Default for RequestStatus {
-    fn default() -> Self {
-        Self::Processing
-    }
-}
 #[auto_enum_impl]
 impl RequestStatus {
     pub fn label(&self) -> &'static str {

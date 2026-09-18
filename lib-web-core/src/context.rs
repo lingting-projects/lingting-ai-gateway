@@ -73,4 +73,3 @@ pub fn use_app() -> Result<Arc<AppContext>> {
         .try_with(Arc::clone)
         .map_err(|error| anyhow!("当前调用不在应用上下文作用域内：{error}"))
 }
-
