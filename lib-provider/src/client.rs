@@ -1,6 +1,22 @@
 use std::fmt;
+use std::sync::{Arc, LazyLock};
+
+use dashmap::DashMap;
+use reqwest::Client;
+use types_admin::entity::Provider;
 
 use crate::forward::{ForwardFailure, ForwardOutcome};
+
+/// 供应商 HTTP 客户端缓存：同一个供应商始终复用同一个客户端。
+static CLIENTS: LazyLock<DashMap<i64, Arc<Client>>> = LazyLock::new(DashMap::new);
+
+/// 取供应商对应的 HTTP 客户端，首次调用时创建并缓存。
+pub fn build_client(provider: &Provider) -> Arc<Client> {
+    let entry = CLIENTS
+        .entry(provider.id)
+        .or_insert_with(|| Arc::new(Client::new()));
+    Arc::clone(entry.value())
+}
 
 /// 供应商请求错误，携带错误类别与供应商返回的状态码。
 #[derive(Debug)]

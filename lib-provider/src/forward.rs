@@ -10,7 +10,7 @@ use crate::response::ProviderResponse;
 pub struct ForwardOutcome {
     /// 输入、输出、缓存读、缓存写、推理与总量。
     pub token_info: TokenInfo,
-    /// 返回内容的原始字节，仅在调试模式下设置。
+    /// 返回内容的原始字节，是否落库由回调按调试模式决定。
     pub content: Option<Bytes>,
     /// 供应商实际返回的模型名。
     pub return_model: String,
@@ -74,6 +74,11 @@ impl ForwardFailure {
 /// 回调返回的错误不得影响正常请求的完成。
 #[async_trait]
 pub trait ForwardCallback: Send + Sync {
+    /// 是否处于调试模式；客户端据此决定是否把返回的原始内容交给回调。
+    fn is_debug(&self) -> bool {
+        false
+    }
+
     /// 请求已发出。
     async fn on_start(&self) -> Result<()> {
         Ok(())
@@ -99,9 +104,3 @@ pub trait ForwardCallback: Send + Sync {
         Ok(())
     }
 }
-
-/// 不做任何记录的回调。
-pub struct NoopForwardCallback;
-
-#[async_trait]
-impl ForwardCallback for NoopForwardCallback {}

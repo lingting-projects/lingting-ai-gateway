@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use types_admin::TokenInfo;
 
 /// 输入 token 明细。
@@ -7,8 +7,6 @@ use types_admin::TokenInfo;
 pub struct PromptTokensDetails {
     #[serde(default)]
     pub cached_tokens: i64,
-    #[serde(flatten)]
-    pub extra: Map<String, Value>,
 }
 
 /// 输出 token 明细。
@@ -16,8 +14,6 @@ pub struct PromptTokensDetails {
 pub struct CompletionTokensDetails {
     #[serde(default)]
     pub reasoning_tokens: i64,
-    #[serde(flatten)]
-    pub extra: Map<String, Value>,
 }
 
 /// 用量信息。
@@ -33,8 +29,6 @@ pub struct ChatUsage {
     pub prompt_tokens_details: Option<PromptTokensDetails>,
     #[serde(default)]
     pub completion_tokens_details: Option<CompletionTokensDetails>,
-    #[serde(flatten)]
-    pub extra: Map<String, Value>,
 }
 
 impl ChatUsage {
@@ -88,8 +82,6 @@ pub struct ResponseMessage {
     pub reasoning_content: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tool_calls: Option<Vec<Value>>,
-    #[serde(flatten)]
-    pub extra: Map<String, Value>,
 }
 
 impl ResponseMessage {
@@ -119,8 +111,6 @@ pub struct ChatChoice {
     pub delta: Option<ResponseMessage>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub finish_reason: Option<String>,
-    #[serde(flatten)]
-    pub extra: Map<String, Value>,
 }
 
 impl ChatChoice {
@@ -136,17 +126,11 @@ pub struct ChatResponse {
     #[serde(default)]
     pub id: String,
     #[serde(default)]
-    pub object: String,
-    #[serde(default)]
-    pub created: i64,
-    #[serde(default)]
     pub model: String,
     #[serde(default)]
     pub choices: Vec<ChatChoice>,
     #[serde(default)]
     pub usage: Option<ChatUsage>,
-    #[serde(flatten)]
-    pub extra: Map<String, Value>,
 }
 
 impl ChatResponse {
@@ -191,12 +175,6 @@ impl ChatResponse {
         }
         if !chunk.model.is_empty() {
             self.model = chunk.model.clone();
-        }
-        if !chunk.object.is_empty() {
-            self.object = chunk.object.clone();
-        }
-        if chunk.created > 0 {
-            self.created = chunk.created;
         }
 
         for choice in &chunk.choices {

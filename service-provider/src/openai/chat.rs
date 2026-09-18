@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use lib_provider::{ChatRequest, ForwardCallback};
+use lib_provider_openai::utils::chat_url;
 use lib_web_core::{WebResponse, use_app, use_authorization, use_web};
 use service_admin::service::provider_service::ProviderService;
 use service_admin::service::request_service::RequestService;
@@ -26,7 +27,7 @@ impl OpenaiService {
             .await?
             .ok_or_else(|| anyhow!("没有匹配到支持模型 {} 的供应商", request.model))?;
 
-        if request.is_stream() {
+        if request.stream {
             with_wrapper(provider, request, call_chat_stream).await
         } else {
             with_wrapper(provider, request, call_chat).await
@@ -51,7 +52,7 @@ where
 
     let debug_mode = app_context.debug_mode();
     let start_time = lib_core::current_millis()?;
-    let request_params = utils::request_params(&request, debug_mode);
+    let request_params = utils::request_params(&web_context, debug_mode);
 
     // 主请求日志
     let request_id = lib_core::next_id()?.to_string();
@@ -64,12 +65,12 @@ where
             request_id,
             trace_id,
             client_request_id,
-            session_id: request.session_id().unwrap_or_default(),
+            session_id: request.session_id.clone().unwrap_or_default(),
             client_ip: web_context.request().client_ip.clone().unwrap_or_default(),
             user_agent: utils::header(&web_context, "user-agent").unwrap_or_default(),
             credential_id: authorization.credential_id().to_string(),
             model: request.model.clone(),
-            stream: request.is_stream(),
+            stream: request.stream,
             method: web_context.request().method.to_string(),
             path: web_context.request().path.clone(),
             request_params: request_params.clone(),
@@ -84,7 +85,7 @@ where
             provider_id: provider.id,
             provider_name: provider.name.clone(),
             model: request.model.clone(),
-            provider_url: utils::chat_url(&provider),
+            provider_url: chat_url(&provider),
             request_params,
             start_time,
         })

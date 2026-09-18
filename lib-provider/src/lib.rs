@@ -11,9 +11,9 @@ pub mod request;
 pub mod response;
 
 pub use chunk::ChunkSink;
-pub use client::ProviderError;
-pub use forward::{ForwardCallback, ForwardFailure, ForwardOutcome, NoopForwardCallback};
-pub use request::{ChatMessage, ChatRequest, ChatRequestBuilder, MessageContent, MessageRole};
+pub use client::{ProviderError, build_client};
+pub use forward::{ForwardCallback, ForwardFailure, ForwardOutcome};
+pub use request::{ChatMessage, ChatRequest, MessageContent, MessageRole};
 pub use response::{
     ChatChoice, ChatResponse, ChatUsage, CompletionTokensDetails, PromptTokensDetails,
     ProviderResponse, ResponseMessage,

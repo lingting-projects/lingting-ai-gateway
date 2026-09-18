@@ -6,7 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
+framework-core.workspace = true
 lib-provider.workspace = true
+lib-web-core.workspace = true
 types-admin.workspace = true
 
 anyhow.workspace = true

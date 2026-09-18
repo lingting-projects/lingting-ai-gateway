@@ -98,4 +98,8 @@ impl ForwardCallback for OpenAiForwardCallback {
         let params = self.finish_params(RequestStatus::Cancelled, outcome, None)?;
         self.finish(&params).await
     }
+
+    fn is_debug(&self) -> bool {
+        self.debug_mode
+    }
 }

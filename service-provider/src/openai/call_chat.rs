@@ -1,17 +1,21 @@
-//! 普通（非流式）转发，当前仅占位。
+//! 普通（非流式）转发：构造 [OI] 客户端并执行。
 
 use std::sync::Arc;
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use lib_provider::{ChatRequest, ForwardCallback};
-use lib_web_core::WebResponse;
+use lib_provider_openai::OpenaiChatClient;
+use lib_web_core::{WebResponse, use_web};
 use types_admin::entity::Provider;
 
 /// 普通转发：等待供应商返回完整响应后原样转发。
 pub async fn call_chat(
-    _provider: Provider,
+    provider: Provider,
     _request: ChatRequest,
-    _callback: Arc<dyn ForwardCallback>,
+    callback: Arc<dyn ForwardCallback>,
 ) -> Result<WebResponse> {
-    Err(anyhow!("普通转发尚未实现"))
+    let web_context = use_web()?;
+    OpenaiChatClient::new(provider, web_context, callback)
+        .call()
+        .await
 }
