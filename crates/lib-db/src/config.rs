@@ -104,5 +104,9 @@ pub async fn init(config: &DbConfig) -> Result<Db> {
         .await
         .context("连接 pglite 数据库失败")?;
 
+    sqlx::migrate!("../../migrations")
+        .run(&pool)
+        .await
+        .context("执行 PostgreSQL migration 失败")?;
     Ok(Db { server, pool })
 }
