@@ -1,13 +1,13 @@
 //! [OI] 兼容接口声明，业务实现见 `service_provider::openai::OpenaiService`。
 
 use anyhow::Result;
-use framework_web::{WebError, WebResponse, use_web, web_api_post};
+use framework_web::{WebError, WebResponse, use_web, web_api_get, web_api_post};
 use lib_provider::ChatRequest;
 use serde_json::Value;
 use service_provider::openai::OpenaiService;
 
 /// 聊天接口
-#[web_api_post(path = "/chat")]
+#[web_api_post(path = "/v1/chat/completions")]
 pub async fn chat() -> Result<WebResponse> {
     let web_context = use_web()?;
     let body = web_context.body_json()?;
@@ -35,7 +35,7 @@ fn session_id(body: &Value) -> Option<String> {
 }
 
 /// 模型列表接口
-#[web_api_post(path = "/models")]
+#[web_api_get(path = "/v1/models")]
 pub async fn models() -> Result<WebResponse> {
     OpenaiService::models().await
 }
