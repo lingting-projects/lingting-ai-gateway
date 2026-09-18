@@ -1,5 +1,16 @@
 [workspace]
-members = ["bin-server", "lib-core", "lib-db", "lib-provider", "lib-provider-openai", "lib-web", "lib-web-core", "service-admin", "service-provider", "types-admin"]
+members = [
+    "crates/bin-server",
+    "crates/lib-core",
+    "crates/lib-db",
+    "crates/lib-provider",
+    "crates/lib-provider-openai",
+    "crates/lib-web",
+    "crates/lib-web-core",
+    "crates/service-admin",
+    "crates/service-provider",
+    "crates/types-admin",
+]
 resolver = "2"
 
 [workspace.package]
@@ -19,15 +30,15 @@ framework-web-axum = { path = "../lingting-rust-framework/framework-web-axum", f
 framework-region = { path = "../lingting-rust-framework/framework-region" }
 
 # Internal crates
-lib-core = { path = "./lib-core" }
-lib-db = { path = "./lib-db" }
-lib-provider = { path = "./lib-provider" }
-lib-provider-openai = { path = "./lib-provider-openai" }
-lib-web = { path = "./lib-web" }
-lib-web-core = { path = "./lib-web-core" }
-service-admin = { path = "./service-admin" }
-service-provider = { path = "./service-provider" }
-types-admin = { path = "./types-admin" }
+lib-core = { path = "crates/lib-core" }
+lib-db = { path = "crates/lib-db" }
+lib-provider = { path = "crates/lib-provider" }
+lib-provider-openai = { path = "crates/lib-provider-openai" }
+lib-web = { path = "crates/lib-web" }
+lib-web-core = { path = "crates/lib-web-core" }
+service-admin = { path = "crates/service-admin" }
+service-provider = { path = "crates/service-provider" }
+types-admin = { path = "crates/types-admin" }
 
 # External dependencies
 aes = { version = "0.8" }
