@@ -1,6 +1,6 @@
 use anyhow::Result;
 use framework_core::types::{PaginationParams, PaginationResult};
-use lib_db::use_pool;
+use lib_db::{PgTransaction, use_pool};
 use types_admin::dto::{ProviderModelCreatePO, ProviderModelQO, ProviderModelUpdatePO};
 use types_admin::entity::ProviderModel;
 
@@ -69,14 +69,30 @@ impl ProviderModelService {
         self.repository.find_default().await
     }
 
-    /// 写入或更新供应商模型，用于模型同步任务。
-    pub async fn upsert(&self, params: &ProviderModelCreatePO) -> Result<()> {
-        self.repository.upsert(params).await
+    /// 查询指定供应商已入库的模型名称；模型同步任务使用。
+    pub async fn find_models(&self, provider_id: i64) -> Result<Vec<String>> {
+        self.repository.find_models(provider_id).await
+    }
+
+    /// 批量写入或更新供应商模型，用于模型同步任务。
+    pub async fn upsert(
+        &self,
+        params: &[ProviderModelCreatePO],
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<()> {
+        self.repository.upsert(params, transaction).await
     }
 
     /// 关闭供应商已不再返回的模型。
-    pub async fn disable_missing(&self, provider_id: i64, models: &[String]) -> Result<u64> {
-        self.repository.disable_missing(provider_id, models).await
+    pub async fn disable_missing(
+        &self,
+        provider_id: i64,
+        models: &[String],
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<u64> {
+        self.repository
+            .disable_missing(provider_id, models, transaction)
+            .await
     }
 
     /// 更新供应商模型的可编辑字段。

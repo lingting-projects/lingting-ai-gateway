@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use framework_core::types::{PaginationParams, PaginationResult};
-use lib_db::{PgPool, QueryBuilderExt};
+use lib_db::{PgPool, PgTransaction, QueryBuilderExt};
 use sqlx::{Postgres, QueryBuilder, Row};
 use types_admin::DEFAULT_PROVIDER_ID;
 use types_admin::dto::{ProviderModelCreatePO, ProviderModelQO, ProviderModelUpdatePO};
@@ -161,19 +161,61 @@ impl ProviderModelRepository {
         rows.into_iter().map(provider_model_from_row).collect()
     }
 
-    /// 模型同步任务使用；已存在时更新除启用状态外的全部字段。
-    pub async fn upsert(&self, params: &ProviderModelCreatePO) -> Result<()> {
-        let now = lib_core::current_millis()?;
+    /// 查询指定供应商已入库的模型名称；模型同步任务使用。
+    pub async fn find_models(&self, provider_id: i64) -> Result<Vec<String>> {
+        let rows = sqlx::query(
+            "SELECT model FROM provider_model
+             WHERE provider_id = $1 AND provider_id <> {DEFAULT_PROVIDER_ID}
+             ORDER BY model ASC",
+        )
+        .bind(provider_id)
+        .fetch_all(&self.pool)
+        .await
+        .context("查询供应商模型名称失败")?;
 
-        sqlx::query(
+        Ok(rows.into_iter().map(|row| row.get("model")).collect())
+    }
+
+    /// 模型同步任务使用；批量写入，已存在时更新除启用状态外的全部字段。
+    pub async fn upsert(
+        &self,
+        params: &[ProviderModelCreatePO],
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<()> {
+        if params.is_empty() {
+            return Ok(());
+        }
+
+        let now = lib_core::current_millis()?;
+        let mut query = QueryBuilder::<Postgres>::new(
             "INSERT INTO provider_model
                 (provider_id, model, display_name, reasoning, levels, level_default,
                  context_window, max_tokens, support_tools, support_vision, support_stream,
                  support_json, support_cache, knowledge_cutoff, release_date,
-                 enabled, create_time, update_time)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
-                 true, $16, $16)
-             ON CONFLICT (provider_id, model) DO UPDATE
+                 enabled, create_time, update_time) ",
+        );
+        query.push_values(params, |mut row, param| {
+            row.push_bind(param.provider_id)
+                .push_bind(&param.model)
+                .push_bind(&param.display_name)
+                .push_bind(param.reasoning)
+                .push_bind(sqlx::types::Json(&param.levels))
+                .push_bind(&param.level_default)
+                .push_bind(param.context_window)
+                .push_bind(param.max_tokens)
+                .push_bind(param.support_tools)
+                .push_bind(param.support_vision)
+                .push_bind(param.support_stream)
+                .push_bind(param.support_json)
+                .push_bind(param.support_cache)
+                .push_bind(&param.knowledge_cutoff)
+                .push_bind(&param.release_date)
+                .push_bind(true)
+                .push_bind(now)
+                .push_bind(now);
+        });
+        query.push(
+            " ON CONFLICT (provider_id, model) DO UPDATE
              SET display_name = EXCLUDED.display_name,
                  reasoning = EXCLUDED.reasoning,
                  levels = EXCLUDED.levels,
@@ -188,32 +230,24 @@ impl ProviderModelRepository {
                  knowledge_cutoff = EXCLUDED.knowledge_cutoff,
                  release_date = EXCLUDED.release_date,
                  update_time = EXCLUDED.update_time",
-        )
-        .bind(params.provider_id)
-        .bind(&params.model)
-        .bind(&params.display_name)
-        .bind(params.reasoning)
-        .bind(sqlx::types::Json(&params.levels))
-        .bind(&params.level_default)
-        .bind(params.context_window)
-        .bind(params.max_tokens)
-        .bind(params.support_tools)
-        .bind(params.support_vision)
-        .bind(params.support_stream)
-        .bind(params.support_json)
-        .bind(params.support_cache)
-        .bind(&params.knowledge_cutoff)
-        .bind(&params.release_date)
-        .bind(now)
-        .execute(&self.pool)
-        .await
-        .context("写入供应商模型失败")?;
+        );
+
+        query
+            .build()
+            .execute(&mut **transaction)
+            .await
+            .context("写入供应商模型失败")?;
 
         Ok(())
     }
 
     /// 关闭供应商已不再返回的模型；同步任务使用。
-    pub async fn disable_missing(&self, provider_id: i64, models: &[String]) -> Result<u64> {
+    pub async fn disable_missing(
+        &self,
+        provider_id: i64,
+        models: &[String],
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<u64> {
         let result = sqlx::query(
             "UPDATE provider_model SET enabled = false, update_time = $1
              WHERE provider_id = $2 AND provider_id <> {DEFAULT_PROVIDER_ID}
@@ -222,7 +256,7 @@ impl ProviderModelRepository {
         .bind(lib_core::current_millis()?)
         .bind(provider_id)
         .bind(models)
-        .execute(&self.pool)
+        .execute(&mut **transaction)
         .await
         .context("关闭失效供应商模型失败")?;
 

@@ -40,6 +40,10 @@ impl ProviderModelRedirectService {
         self.repository.find_by_source(source).await
     }
 
+    /// 查询全部模型名称映射；模型同步任务使用。
+    pub async fn find_all(&self) -> Result<Vec<ProviderModelRedirect>> {
+        self.repository.find_all().await
+    }
     /// 新增模型名称映射。
     pub async fn create(&self, params: &ProviderModelRedirectCreatePO) -> Result<i64> {
         self.repository.create(params).await

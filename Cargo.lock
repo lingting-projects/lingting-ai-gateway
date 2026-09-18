@@ -4187,6 +4187,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bytes",
+ "dashmap",
  "framework-core",
  "lib-core",
  "lib-db",

@@ -45,6 +45,19 @@ impl ProviderModelRedirectRepository {
         row.map(provider_model_redirect_from_row).transpose()
     }
 
+    /// 查询全部模型名称映射；模型同步任务使用。
+    pub async fn find_all(&self) -> Result<Vec<ProviderModelRedirect>> {
+        let query = format!("SELECT {COLUMNS} FROM provider_model_redirect ORDER BY source ASC");
+
+        let rows = sqlx::query(&query)
+            .fetch_all(&self.pool)
+            .await
+            .context("查询模型名称映射失败")?;
+
+        rows.into_iter()
+            .map(provider_model_redirect_from_row)
+            .collect()
+    }
     pub async fn create(&self, params: &ProviderModelRedirectCreatePO) -> Result<i64> {
         let now = lib_core::current_millis()?;
 

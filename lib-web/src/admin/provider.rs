@@ -1,6 +1,7 @@
 use anyhow::{Result, anyhow};
 use framework_core::types::{IdPO, PaginationParams, PaginationResult};
 use framework_web::{Json, web_api_post};
+use lib_db::use_db;
 use service_admin::manager::ProviderManager;
 use service_admin::service::ProviderService;
 use types_admin::dto::{
@@ -45,9 +46,9 @@ pub async fn provider_delete(Json(params): Json<IdPO>) -> Result<()> {
     ProviderService::new()?.delete(params.id).await
 }
 
-/// 供应商模型更新：占位，后续在此启动异步拉取并更新模型的任务。
+/// 供应商模型同步：启动异步任务拉取供应商模型并更新本地配置，立即返回。
 #[web_api_post(path = "/___/provider/update-model")]
-pub async fn provider_update_model(Json(_params): Json<IdPO>) -> Result<()> {
-    // TODO: 启动异步的供应商模型拉取与更新任务
+pub async fn provider_update_model(Json(params): Json<IdPO>) -> Result<()> {
+    service_provider::models_fetch::async_run(use_db()?, Some(params.id)).await;
     Ok(())
 }
