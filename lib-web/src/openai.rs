@@ -6,7 +6,6 @@ use lib_provider::ChatRequest;
 use service_provider::openai::OpenaiService;
 
 /// 聊天接口
-
 #[web_api_post(path = "/chat")]
 pub async fn chat() -> Result<WebResponse> {
     let web_context = use_web()?;
@@ -17,7 +16,6 @@ pub async fn chat() -> Result<WebResponse> {
 }
 
 /// 模型列表接口
-
 #[web_api_post(path = "/models")]
 pub async fn models() -> Result<WebResponse> {
     OpenaiService::models().await

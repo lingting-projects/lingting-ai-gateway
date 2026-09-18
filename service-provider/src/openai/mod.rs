@@ -2,6 +2,7 @@
 
 pub mod call_chat;
 pub mod call_chat_stream;
+pub mod callback;
 pub mod chat;
 pub mod common;
 pub mod models;

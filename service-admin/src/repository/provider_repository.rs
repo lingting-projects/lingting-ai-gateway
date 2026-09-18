@@ -55,24 +55,26 @@ impl ProviderRepository {
         rows.into_iter().map(provider_from_row).collect()
     }
 
-    /// 查询提供指定原始模型名（无别名）的启用供应商，顺序即路由尝试顺序。
-    pub async fn find_enabled_by_model(&self, model: &str) -> Result<Vec<Provider>> {
+    /// 查询支持指定原始模型名（无别名）的启用供应商中优先级最高的一个，
+    /// 顺序为优先级升序、创建时间升序。
+    pub async fn first_enabled_by_model(&self, model: &str) -> Result<Option<Provider>> {
         let query = format!(
             "SELECT p.id, p.name, p.display_name, p.base_url, p.api_key, p.priority, p.enabled,
                     p.config, p.create_time, p.update_time
              FROM provider p
              JOIN provider_model pm ON pm.provider_id = p.id
              WHERE p.enabled = true AND pm.enabled = true AND pm.model = $1
-             ORDER BY p.priority ASC, p.create_time ASC"
+             ORDER BY p.priority ASC, p.create_time ASC
+             LIMIT 1"
         );
 
-        let rows = sqlx::query(&query)
+        let row = sqlx::query(&query)
             .bind(model)
-            .fetch_all(&self.pool)
+            .fetch_optional(&self.pool)
             .await
             .context("查询支持指定模型的供应商失败")?;
 
-        rows.into_iter().map(provider_from_row).collect()
+        row.map(provider_from_row).transpose()
     }
 
     pub async fn create(&self, params: &ProviderCreatePO) -> Result<i64> {

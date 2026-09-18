@@ -57,6 +57,21 @@ impl ProviderModelRepository {
         rows.into_iter().map(provider_model_from_row).collect()
     }
 
+    /// 查询所有启用模型，按模型名去重，同名取 id 最大（最新写入）的一条；用于可用模型列表。
+    pub async fn find_enabled_distinct(&self) -> Result<Vec<ProviderModel>> {
+        let query = format!(
+            "SELECT DISTINCT ON (model) {COLUMNS} FROM provider_model
+             WHERE enabled = true ORDER BY model ASC, id DESC"
+        );
+
+        let rows = sqlx::query(&query)
+            .fetch_all(&self.pool)
+            .await
+            .context("查询启用供应商模型失败")?;
+
+        rows.into_iter().map(provider_model_from_row).collect()
+    }
+
     /// 查询启用的模型名称，已去重并排序；用于可用模型列表接口。
     pub async fn find_enabled_names(&self) -> Result<Vec<String>> {
         let rows = sqlx::query(

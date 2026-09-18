@@ -38,6 +38,11 @@ impl ProviderModelService {
         self.repository.find_enabled().await
     }
 
+    /// 查询全部启用且按名称去重的模型，同名取 id 最大的一条；用于可用模型列表。
+    pub async fn find_enabled_distinct(&self) -> Result<Vec<ProviderModel>> {
+        self.repository.find_enabled_distinct().await
+    }
+
     /// 查询全部启用且去重后的模型名称。
     pub async fn find_enabled_names(&self) -> Result<Vec<String>> {
         self.repository.find_enabled_names().await

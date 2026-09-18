@@ -85,8 +85,13 @@ pub trait ForwardCallback: Send + Sync {
         Ok(())
     }
 
-    /// 失败或被取消。
+    /// 失败。
     async fn on_failure(&self, _failure: &ForwardFailure) -> Result<()> {
+        Ok(())
+    }
+
+    /// 客户端取消请求；携带取消前已累积的结果。
+    async fn on_cancel(&self, _outcome: &ForwardOutcome) -> Result<()> {
         Ok(())
     }
 }
