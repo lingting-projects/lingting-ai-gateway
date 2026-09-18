@@ -65,7 +65,6 @@ pub struct Provider {
     pub api_key: String,
     pub priority: i32,
     pub enabled: bool,
-    pub config: serde_json::Value,
     pub create_time: i64,
     pub update_time: i64,
     /// 逻辑删除时间（毫秒时间戳），0 表示未删除。
@@ -106,6 +105,17 @@ pub struct ProviderModel {
     pub enabled: bool,
     pub create_time: i64,
     pub update_time: i64,
+}
+
+/// 模型名称映射，把非官方模型名映射到官方模型名，用于复用官方模型的基础配置。
+#[auto_type(default = false)]
+pub struct ProviderModelRedirect {
+    pub id: i64,
+    /// 非官方模型名。
+    pub source: String,
+    /// 映射到的官方模型名。
+    pub target: String,
+    pub create_time: i64,
 }
 
 /// API Key，仅保存原始 key 的 sha1 值。

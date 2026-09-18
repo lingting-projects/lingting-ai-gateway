@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::{PgPool, QueryBuilderExt};
 use sqlx::{Postgres, QueryBuilder, Row};
+use types_admin::DEFAULT_PROVIDER_ID;
 use types_admin::dto::{ProviderModelCreatePO, ProviderModelQO, ProviderModelUpdatePO};
 use types_admin::entity::ProviderModel;
 
@@ -21,7 +22,10 @@ impl ProviderModelRepository {
     }
 
     pub async fn find_by_id(&self, id: i64) -> Result<Option<ProviderModel>> {
-        let query = format!("SELECT {COLUMNS} FROM provider_model pm WHERE pm.id = $1 LIMIT 1");
+        let query = format!(
+            "SELECT {COLUMNS} FROM provider_model pm
+             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.id = $1 LIMIT 1"
+        );
 
         let row = sqlx::query(&query)
             .bind(id)
@@ -34,7 +38,9 @@ impl ProviderModelRepository {
 
     pub async fn find_by_provider_id(&self, provider_id: i64) -> Result<Vec<ProviderModel>> {
         let query = format!(
-            "SELECT {COLUMNS} FROM provider_model pm WHERE pm.provider_id = $1 ORDER BY pm.model ASC"
+            "SELECT {COLUMNS} FROM provider_model pm
+             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.provider_id = $1
+             ORDER BY pm.model ASC"
         );
 
         let rows = sqlx::query(&query)
@@ -54,7 +60,8 @@ impl ProviderModelRepository {
 
         let query = format!(
             "SELECT {COLUMNS} FROM provider_model pm
-             WHERE pm.provider_id = ANY($1) ORDER BY pm.provider_id ASC, pm.model ASC"
+             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.provider_id = ANY($1)
+             ORDER BY pm.provider_id ASC, pm.model ASC"
         );
 
         let rows = sqlx::query(&query)
@@ -69,7 +76,9 @@ impl ProviderModelRepository {
     /// 查询所有启用模型；用于可用模型列表与路由匹配。
     pub async fn find_enabled(&self) -> Result<Vec<ProviderModel>> {
         let query = format!(
-            "SELECT {COLUMNS} FROM provider_model pm WHERE pm.enabled = true ORDER BY pm.model ASC"
+            "SELECT {COLUMNS} FROM provider_model pm
+             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.enabled = true
+             ORDER BY pm.model ASC"
         );
 
         let rows = sqlx::query(&query)
@@ -87,7 +96,8 @@ impl ProviderModelRepository {
             "SELECT DISTINCT ON (pm.model) {COLUMNS}
              FROM provider_model pm
              JOIN provider p ON p.id = pm.provider_id
-             WHERE pm.enabled = true AND p.enabled = true AND p.deleted_at = 0
+             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID}
+               AND pm.enabled = true AND p.enabled = true AND p.deleted_at = 0
              ORDER BY pm.model ASC, p.priority ASC, p.create_time ASC"
         );
 
@@ -105,7 +115,7 @@ impl ProviderModelRepository {
             "SELECT DISTINCT pm.model
              FROM provider_model pm
              JOIN provider p ON p.id = pm.provider_id
-             WHERE pm.enabled = true AND p.enabled = true
+             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.enabled = true AND p.enabled = true
              ORDER BY pm.model ASC",
         )
         .fetch_all(&self.pool)
@@ -121,7 +131,9 @@ impl ProviderModelRepository {
         model: &str,
     ) -> Result<Option<ProviderModel>> {
         let query = format!(
-            "SELECT {COLUMNS} FROM provider_model pm WHERE pm.provider_id = $1 AND pm.model = $2 LIMIT 1"
+            "SELECT {COLUMNS} FROM provider_model pm
+             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.provider_id = $1 AND pm.model = $2
+             LIMIT 1"
         );
 
         let row = sqlx::query(&query)
@@ -132,6 +144,21 @@ impl ProviderModelRepository {
             .context("查询供应商模型失败")?;
 
         row.map(provider_model_from_row).transpose()
+    }
+
+    /// 查询默认模型数据，唯一读取该数据的入口；其余查询均已排除默认 provider_id。
+    pub async fn find_default(&self) -> Result<Vec<ProviderModel>> {
+        let query = format!(
+            "SELECT {COLUMNS} FROM provider_model pm
+             WHERE pm.provider_id = {DEFAULT_PROVIDER_ID} ORDER BY pm.model ASC"
+        );
+
+        let rows = sqlx::query(&query)
+            .fetch_all(&self.pool)
+            .await
+            .context("查询默认模型数据失败")?;
+
+        rows.into_iter().map(provider_model_from_row).collect()
     }
 
     /// 模型同步任务使用；已存在时更新除启用状态外的全部字段。
@@ -189,7 +216,8 @@ impl ProviderModelRepository {
     pub async fn disable_missing(&self, provider_id: i64, models: &[String]) -> Result<u64> {
         let result = sqlx::query(
             "UPDATE provider_model SET enabled = false, update_time = $1
-             WHERE provider_id = $2 AND enabled = true AND model <> ALL($3)",
+             WHERE provider_id = $2 AND provider_id <> {DEFAULT_PROVIDER_ID}
+               AND enabled = true AND model <> ALL($3)",
         )
         .bind(lib_core::current_millis()?)
         .bind(provider_id)
@@ -204,7 +232,8 @@ impl ProviderModelRepository {
     pub async fn update(&self, params: &ProviderModelUpdatePO) -> Result<()> {
         sqlx::query(
             "UPDATE provider_model SET display_name = $1, levels = $2, level_default = $3,
-                enabled = $4, update_time = $5 WHERE id = $6",
+                enabled = $4, update_time = $5
+             WHERE id = $6 AND provider_id <> {DEFAULT_PROVIDER_ID}",
         )
         .bind(&params.display_name)
         .bind(sqlx::types::Json(&params.levels))
@@ -276,7 +305,7 @@ fn push_provider_model_conditions<'a>(
     query: &mut QueryBuilder<'a, Postgres>,
     conditions: &'a ProviderModelQO,
 ) {
-    query.push(" WHERE 1 = 1");
+    query.push(format!(" WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID}"));
     query.eq("pm.id", conditions.id);
     query.eq("pm.provider_id", conditions.provider_id);
     query.like("pm.model", conditions.model.as_deref());

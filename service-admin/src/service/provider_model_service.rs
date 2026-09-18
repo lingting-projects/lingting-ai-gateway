@@ -64,6 +64,11 @@ impl ProviderModelService {
             .await
     }
 
+    /// 查询默认模型数据；默认数据仅作为模型基础配置，不参与路由与展示。
+    pub async fn find_default(&self) -> Result<Vec<ProviderModel>> {
+        self.repository.find_default().await
+    }
+
     /// 写入或更新供应商模型，用于模型同步任务。
     pub async fn upsert(&self, params: &ProviderModelCreatePO) -> Result<()> {
         self.repository.upsert(params).await

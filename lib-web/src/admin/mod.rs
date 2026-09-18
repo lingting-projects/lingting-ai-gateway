@@ -4,5 +4,7 @@ pub mod api_key;
 pub mod config;
 /// 供应商管理
 pub mod provider;
+/// 模型名称映射管理
+pub mod provider_model_redirect;
 /// 请求日志管理
 pub mod request;

@@ -10,7 +10,7 @@ pub struct ProviderRepository {
     pool: PgPool,
 }
 
-const COLUMNS: &str = "id, name, display_name, base_url, api_key, priority, enabled, config, create_time, update_time, deleted_at";
+const COLUMNS: &str = "id, name, display_name, base_url, api_key, priority, enabled, create_time, update_time, deleted_at";
 
 impl ProviderRepository {
     pub fn new(pool: PgPool) -> Self {
@@ -62,7 +62,7 @@ impl ProviderRepository {
     pub async fn first_enabled_by_model(&self, model: &str) -> Result<Option<Provider>> {
         let query =
             "SELECT p.id, p.name, p.display_name, p.base_url, p.api_key, p.priority, p.enabled,
-                    p.config, p.create_time, p.update_time, p.deleted_at
+                    p.create_time, p.update_time, p.deleted_at
              FROM provider p
              JOIN provider_model pm ON pm.provider_id = p.id
              WHERE p.enabled = true AND p.deleted_at = 0 AND pm.enabled = true AND pm.model = $1
@@ -84,21 +84,20 @@ impl ProviderRepository {
 
         let row = sqlx::query(
             "INSERT INTO provider
-                (name, display_name, base_url, api_key, priority, enabled, config, create_time, update_time)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
+                (name, display_name, base_url, api_key, priority, enabled, create_time, update_time)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
              RETURNING id",
         )
-            .bind(&params.name)
-            .bind(&params.display_name)
-            .bind(&params.base_url)
-            .bind(&params.api_key)
-            .bind(params.priority)
-            .bind(params.enabled)
-            .bind(&params.config)
-            .bind(now)
-            .fetch_one(&self.pool)
-            .await
-            .context("创建供应商失败")?;
+        .bind(&params.name)
+        .bind(&params.display_name)
+        .bind(&params.base_url)
+        .bind(&params.api_key)
+        .bind(params.priority)
+        .bind(params.enabled)
+        .bind(now)
+        .fetch_one(&self.pool)
+        .await
+        .context("创建供应商失败")?;
 
         Ok(row.get("id"))
     }
@@ -118,10 +117,6 @@ impl ProviderRepository {
         // 为空表示不修改已保存的 key。
         if let Some(api_key) = &params.api_key {
             query.push(", api_key = ").push_bind(api_key);
-        }
-
-        if let Some(config) = &params.config {
-            query.push(", config = ").push_bind(config);
         }
 
         query
@@ -187,7 +182,6 @@ fn provider_from_row(row: sqlx::postgres::PgRow) -> Result<Provider> {
         api_key: row.get("api_key"),
         priority: row.get("priority"),
         enabled: row.get("enabled"),
-        config: row.get("config"),
         create_time: row.get("create_time"),
         update_time: row.get("update_time"),
         deleted_at: row.get("deleted_at"),

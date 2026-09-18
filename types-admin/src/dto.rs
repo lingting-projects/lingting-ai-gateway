@@ -1,5 +1,6 @@
 use crate::entity::{
-    ApiKey, KvConfig, Provider, ProviderModel, RequestMain, RequestStatus, RequestSub,
+    ApiKey, KvConfig, Provider, ProviderModel, ProviderModelRedirect, RequestMain, RequestStatus,
+    RequestSub,
 };
 use framework_proc_auto::auto_type;
 
@@ -22,7 +23,6 @@ pub struct ProviderCreatePO {
     pub api_key: String,
     pub priority: i32,
     pub enabled: bool,
-    pub config: Option<serde_json::Value>,
 }
 
 #[auto_type(default = false)]
@@ -34,7 +34,6 @@ pub struct ProviderUpdatePO {
     pub api_key: Option<String>,
     pub priority: i32,
     pub enabled: bool,
-    pub config: Option<serde_json::Value>,
 }
 
 #[auto_type(default = false)]
@@ -47,7 +46,6 @@ pub struct ProviderVO {
     pub api_key: String,
     pub priority: i32,
     pub enabled: bool,
-    pub config: serde_json::Value,
     pub create_time: i64,
     pub update_time: i64,
 }
@@ -62,7 +60,6 @@ impl From<Provider> for ProviderVO {
             api_key: mask_secret(&provider.api_key),
             priority: provider.priority,
             enabled: provider.enabled,
-            config: provider.config,
             create_time: provider.create_time,
             update_time: provider.update_time,
         }
@@ -168,6 +165,53 @@ pub struct ProviderDetailVO {
     pub id: i64,
     pub provider: ProviderVO,
     pub models: Vec<ProviderModelVO>,
+}
+
+// ---------------------------------------------------------------------------
+// 模型名称映射
+// ---------------------------------------------------------------------------
+
+#[auto_type]
+pub struct ProviderModelRedirectQO {
+    pub id: Option<i64>,
+    pub source: Option<String>,
+    pub target: Option<String>,
+}
+
+#[auto_type(default = false)]
+pub struct ProviderModelRedirectCreatePO {
+    /// 非官方模型名。
+    pub source: String,
+    /// 映射到的官方模型名。
+    pub target: String,
+}
+
+#[auto_type(default = false)]
+pub struct ProviderModelRedirectUpdatePO {
+    pub id: i64,
+    /// 非官方模型名。
+    pub source: String,
+    /// 映射到的官方模型名。
+    pub target: String,
+}
+
+#[auto_type(default = false)]
+pub struct ProviderModelRedirectVO {
+    pub id: i64,
+    pub source: String,
+    pub target: String,
+    pub create_time: i64,
+}
+
+impl From<ProviderModelRedirect> for ProviderModelRedirectVO {
+    fn from(redirect: ProviderModelRedirect) -> Self {
+        Self {
+            id: redirect.id,
+            source: redirect.source,
+            target: redirect.target,
+            create_time: redirect.create_time,
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
