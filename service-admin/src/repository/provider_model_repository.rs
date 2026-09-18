@@ -2,16 +2,18 @@ use anyhow::{Context, Result};
 use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::{PgPool, QueryBuilderExt};
 use sqlx::{Postgres, QueryBuilder, Row};
-use types_admin::dto::{ProviderModelQO, ProviderModelUpdatePO};
-use types_admin::entity::{InferenceLevel, ProviderModel};
+use types_admin::dto::{ProviderModelCreatePO, ProviderModelQO, ProviderModelUpdatePO};
+use types_admin::entity::ProviderModel;
 
 /// 供应商模型数据访问。
 pub struct ProviderModelRepository {
     pool: PgPool,
 }
 
-const COLUMNS: &str =
-    "id, provider_id, model, display_name, inference_level, enabled, create_time, update_time";
+const COLUMNS: &str = "pm.id, pm.provider_id, pm.model, pm.display_name, pm.reasoning, pm.levels,
+    pm.level_default, pm.context_window, pm.max_tokens, pm.support_tools, pm.support_vision,
+    pm.support_stream, pm.support_json, pm.support_cache, pm.knowledge_cutoff, pm.release_date,
+    pm.enabled, pm.create_time, pm.update_time";
 
 impl ProviderModelRepository {
     pub fn new(pool: PgPool) -> Self {
@@ -19,7 +21,7 @@ impl ProviderModelRepository {
     }
 
     pub async fn find_by_id(&self, id: i64) -> Result<Option<ProviderModel>> {
-        let query = format!("SELECT {COLUMNS} FROM provider_model WHERE id = $1 LIMIT 1");
+        let query = format!("SELECT {COLUMNS} FROM provider_model pm WHERE pm.id = $1 LIMIT 1");
 
         let row = sqlx::query(&query)
             .bind(id)
@@ -32,7 +34,7 @@ impl ProviderModelRepository {
 
     pub async fn find_by_provider_id(&self, provider_id: i64) -> Result<Vec<ProviderModel>> {
         let query = format!(
-            "SELECT {COLUMNS} FROM provider_model WHERE provider_id = $1 ORDER BY model ASC"
+            "SELECT {COLUMNS} FROM provider_model pm WHERE pm.provider_id = $1 ORDER BY pm.model ASC"
         );
 
         let rows = sqlx::query(&query)
@@ -51,7 +53,8 @@ impl ProviderModelRepository {
         }
 
         let query = format!(
-            "SELECT {COLUMNS} FROM provider_model WHERE provider_id = ANY($1) ORDER BY provider_id ASC, model ASC"
+            "SELECT {COLUMNS} FROM provider_model pm
+             WHERE pm.provider_id = ANY($1) ORDER BY pm.provider_id ASC, pm.model ASC"
         );
 
         let rows = sqlx::query(&query)
@@ -65,8 +68,9 @@ impl ProviderModelRepository {
 
     /// 查询所有启用模型；用于可用模型列表与路由匹配。
     pub async fn find_enabled(&self) -> Result<Vec<ProviderModel>> {
-        let query =
-            format!("SELECT {COLUMNS} FROM provider_model WHERE enabled = true ORDER BY model ASC");
+        let query = format!(
+            "SELECT {COLUMNS} FROM provider_model pm WHERE pm.enabled = true ORDER BY pm.model ASC"
+        );
 
         let rows = sqlx::query(&query)
             .fetch_all(&self.pool)
@@ -76,11 +80,15 @@ impl ProviderModelRepository {
         rows.into_iter().map(provider_model_from_row).collect()
     }
 
-    /// 查询所有启用模型，按模型名去重，同名取 id 最大（最新写入）的一条；用于可用模型列表。
+    /// 查询所有启用模型，按模型名去重；同名取路由优先级最高的一条。
+    /// 排序键与供应商路由规则一致：优先级升序、创建时间升序。
     pub async fn find_enabled_distinct(&self) -> Result<Vec<ProviderModel>> {
         let query = format!(
-            "SELECT DISTINCT ON (model) {COLUMNS} FROM provider_model
-             WHERE enabled = true ORDER BY model ASC, id DESC"
+            "SELECT DISTINCT ON (pm.model) {COLUMNS}
+             FROM provider_model pm
+             JOIN provider p ON p.id = pm.provider_id
+             WHERE pm.enabled = true AND p.enabled = true AND p.deleted_at = 0
+             ORDER BY pm.model ASC, p.priority ASC, p.create_time ASC"
         );
 
         let rows = sqlx::query(&query)
@@ -113,7 +121,7 @@ impl ProviderModelRepository {
         model: &str,
     ) -> Result<Option<ProviderModel>> {
         let query = format!(
-            "SELECT {COLUMNS} FROM provider_model WHERE provider_id = $1 AND model = $2 LIMIT 1"
+            "SELECT {COLUMNS} FROM provider_model pm WHERE pm.provider_id = $1 AND pm.model = $2 LIMIT 1"
         );
 
         let row = sqlx::query(&query)
@@ -126,32 +134,53 @@ impl ProviderModelRepository {
         row.map(provider_model_from_row).transpose()
     }
 
-    /// 模型同步任务使用；已存在时更新展示名与推理级别，不改变启用状态。
-    pub async fn upsert(
-        &self,
-        provider_id: i64,
-        model: &str,
-        display_name: &str,
-        inference_level: &InferenceLevel,
-    ) -> Result<()> {
+    /// 模型同步任务使用；已存在时更新除启用状态外的全部字段。
+    pub async fn upsert(&self, params: &ProviderModelCreatePO) -> Result<()> {
         let now = lib_core::current_millis()?;
 
         sqlx::query(
             "INSERT INTO provider_model
-                (provider_id, model, display_name, inference_level, enabled, create_time, update_time)
-             VALUES ($1, $2, $3, $4, true, $5, $5)
+                (provider_id, model, display_name, reasoning, levels, level_default,
+                 context_window, max_tokens, support_tools, support_vision, support_stream,
+                 support_json, support_cache, knowledge_cutoff, release_date,
+                 enabled, create_time, update_time)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
+                 true, $16, $16)
              ON CONFLICT (provider_id, model) DO UPDATE
              SET display_name = EXCLUDED.display_name,
+                 reasoning = EXCLUDED.reasoning,
+                 levels = EXCLUDED.levels,
+                 level_default = EXCLUDED.level_default,
+                 context_window = EXCLUDED.context_window,
+                 max_tokens = EXCLUDED.max_tokens,
+                 support_tools = EXCLUDED.support_tools,
+                 support_vision = EXCLUDED.support_vision,
+                 support_stream = EXCLUDED.support_stream,
+                 support_json = EXCLUDED.support_json,
+                 support_cache = EXCLUDED.support_cache,
+                 knowledge_cutoff = EXCLUDED.knowledge_cutoff,
+                 release_date = EXCLUDED.release_date,
                  update_time = EXCLUDED.update_time",
         )
-            .bind(provider_id)
-            .bind(model)
-            .bind(display_name)
-            .bind(inference_level.as_str())
-            .bind(now)
-            .execute(&self.pool)
-            .await
-            .context("写入供应商模型失败")?;
+        .bind(params.provider_id)
+        .bind(&params.model)
+        .bind(&params.display_name)
+        .bind(params.reasoning)
+        .bind(sqlx::types::Json(&params.levels))
+        .bind(&params.level_default)
+        .bind(params.context_window)
+        .bind(params.max_tokens)
+        .bind(params.support_tools)
+        .bind(params.support_vision)
+        .bind(params.support_stream)
+        .bind(params.support_json)
+        .bind(params.support_cache)
+        .bind(&params.knowledge_cutoff)
+        .bind(&params.release_date)
+        .bind(now)
+        .execute(&self.pool)
+        .await
+        .context("写入供应商模型失败")?;
 
         Ok(())
     }
@@ -174,11 +203,12 @@ impl ProviderModelRepository {
 
     pub async fn update(&self, params: &ProviderModelUpdatePO) -> Result<()> {
         sqlx::query(
-            "UPDATE provider_model SET display_name = $1, inference_level = $2, enabled = $3,
-                update_time = $4 WHERE id = $5",
+            "UPDATE provider_model SET display_name = $1, levels = $2, level_default = $3,
+                enabled = $4, update_time = $5 WHERE id = $6",
         )
         .bind(&params.display_name)
-        .bind(params.inference_level.as_str())
+        .bind(sqlx::types::Json(&params.levels))
+        .bind(&params.level_default)
         .bind(params.enabled)
         .bind(lib_core::current_millis()?)
         .bind(params.id)
@@ -195,14 +225,14 @@ impl ProviderModelRepository {
         conditions: &ProviderModelQO,
     ) -> Result<PaginationResult<ProviderModel>> {
         let mut count =
-            QueryBuilder::<Postgres>::new("SELECT COUNT(*) AS total FROM provider_model");
+            QueryBuilder::<Postgres>::new("SELECT COUNT(*) AS total FROM provider_model pm");
         push_provider_model_conditions(&mut count, conditions);
 
         let total_row = count.build().fetch_one(&self.pool).await?;
         let total: i64 = total_row.get("total");
 
         let mut query =
-            QueryBuilder::<Postgres>::new(format!("SELECT {COLUMNS} FROM provider_model"));
+            QueryBuilder::<Postgres>::new(format!("SELECT {COLUMNS} FROM provider_model pm"));
         push_provider_model_conditions(&mut query, conditions);
         query.push_pagination(pagination);
 
@@ -217,12 +247,25 @@ impl ProviderModelRepository {
 }
 
 fn provider_model_from_row(row: sqlx::postgres::PgRow) -> Result<ProviderModel> {
+    let levels = row.get::<sqlx::types::Json<Vec<String>>, _>("levels").0;
+
     Ok(ProviderModel {
         id: row.get("id"),
         provider_id: row.get("provider_id"),
         model: row.get("model"),
         display_name: row.get("display_name"),
-        inference_level: InferenceLevel::from_db(&row.get::<String, _>("inference_level")),
+        reasoning: row.get("reasoning"),
+        levels,
+        level_default: row.get("level_default"),
+        context_window: row.get("context_window"),
+        max_tokens: row.get("max_tokens"),
+        support_tools: row.get("support_tools"),
+        support_vision: row.get("support_vision"),
+        support_stream: row.get("support_stream"),
+        support_json: row.get("support_json"),
+        support_cache: row.get("support_cache"),
+        knowledge_cutoff: row.get("knowledge_cutoff"),
+        release_date: row.get("release_date"),
         enabled: row.get("enabled"),
         create_time: row.get("create_time"),
         update_time: row.get("update_time"),
@@ -234,15 +277,9 @@ fn push_provider_model_conditions<'a>(
     conditions: &'a ProviderModelQO,
 ) {
     query.push(" WHERE 1 = 1");
-    query.eq("id", conditions.id);
-    query.eq("provider_id", conditions.provider_id);
-    query.like("model", conditions.model.as_deref());
-    query.eq(
-        "inference_level",
-        conditions
-            .inference_level
-            .as_ref()
-            .map(|level| level.as_str()),
-    );
-    query.eq("enabled", conditions.enabled);
+    query.eq("pm.id", conditions.id);
+    query.eq("pm.provider_id", conditions.provider_id);
+    query.like("pm.model", conditions.model.as_deref());
+    query.eq("pm.reasoning", conditions.reasoning);
+    query.eq("pm.enabled", conditions.enabled);
 }

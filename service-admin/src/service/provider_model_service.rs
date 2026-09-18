@@ -1,8 +1,8 @@
 use anyhow::Result;
 use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::use_pool;
-use types_admin::dto::{ProviderModelQO, ProviderModelUpdatePO};
-use types_admin::entity::{InferenceLevel, ProviderModel};
+use types_admin::dto::{ProviderModelCreatePO, ProviderModelQO, ProviderModelUpdatePO};
+use types_admin::entity::ProviderModel;
 
 use crate::repository::ProviderModelRepository;
 
@@ -43,7 +43,7 @@ impl ProviderModelService {
         self.repository.find_enabled().await
     }
 
-    /// 查询全部启用且按名称去重的模型，同名取 id 最大的一条；用于可用模型列表。
+    /// 查询全部启用且按名称去重的模型，同名取路由优先级最高的一条；用于可用模型列表。
     pub async fn find_enabled_distinct(&self) -> Result<Vec<ProviderModel>> {
         self.repository.find_enabled_distinct().await
     }
@@ -65,16 +65,8 @@ impl ProviderModelService {
     }
 
     /// 写入或更新供应商模型，用于模型同步任务。
-    pub async fn upsert(
-        &self,
-        provider_id: i64,
-        model: &str,
-        display_name: &str,
-        inference_level: &InferenceLevel,
-    ) -> Result<()> {
-        self.repository
-            .upsert(provider_id, model, display_name, inference_level)
-            .await
+    pub async fn upsert(&self, params: &ProviderModelCreatePO) -> Result<()> {
+        self.repository.upsert(params).await
     }
 
     /// 关闭供应商已不再返回的模型。

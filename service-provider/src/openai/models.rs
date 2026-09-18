@@ -15,7 +15,7 @@ impl OpenaiService {
 
         let data = models
             .into_iter()
-            .map(|model| OpenAiModel::new(model.model, model.create_time / 1000))
+            .map(OpenAiModel::from_provider_model)
             .collect::<Vec<_>>();
 
         utils::json_response(&OpenAiModelList::new(data))

@@ -55,52 +55,6 @@ impl RequestStatus {
     }
 }
 
-/// 推理级别。
-#[auto_enum(clone = false, copy = false)]
-pub enum InferenceLevel {
-    Standard,
-    Economy,
-    Performance,
-}
-
-#[auto_enum_impl]
-impl InferenceLevel {
-    pub fn label(&self) -> &'static str {
-        match self {
-            Self::Standard => "标准",
-            Self::Economy => "经济",
-            Self::Performance => "性能",
-        }
-    }
-
-    #[auto_enum_field]
-    pub fn color(&self) -> &'static str {
-        match self {
-            Self::Standard => "var(--ant-color-primary-text)",
-            Self::Economy => "var(--ant-color-success-text)",
-            Self::Performance => "var(--ant-color-warning-text)",
-        }
-    }
-}
-
-impl InferenceLevel {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Standard => "standard",
-            Self::Economy => "economy",
-            Self::Performance => "performance",
-        }
-    }
-
-    pub fn from_db(value: &str) -> Self {
-        match value {
-            "economy" => Self::Economy,
-            "performance" => Self::Performance,
-            _ => Self::Standard,
-        }
-    }
-}
-
 /// 供应商
 #[auto_type(default = false)]
 pub struct Provider {
@@ -125,7 +79,30 @@ pub struct ProviderModel {
     pub provider_id: i64,
     pub model: String,
     pub display_name: String,
-    pub inference_level: InferenceLevel,
+    /// 是否推理模型，会产出思维链。
+    pub reasoning: bool,
+    /// 支持的推理级别列表，级别名称由厂商与模型自行定义。
+    pub levels: Vec<String>,
+    /// 默认推理级别，空串表示由上游决定。
+    pub level_default: String,
+    /// 上下文窗口上限（输入与输出 token 合计），0 表示未知。
+    pub context_window: i64,
+    /// 单次响应最大输出 token，0 表示未知。
+    pub max_tokens: i64,
+    /// 是否支持函数调用。
+    pub support_tools: bool,
+    /// 是否支持图片输入。
+    pub support_vision: bool,
+    /// 是否支持流式返回。
+    pub support_stream: bool,
+    /// 是否支持结构化输出。
+    pub support_json: bool,
+    /// 是否支持提示词缓存。
+    pub support_cache: bool,
+    /// 知识截止日期，如 2024-06。
+    pub knowledge_cutoff: String,
+    /// 模型发布日期，如 2024-05-13。
+    pub release_date: String,
     pub enabled: bool,
     pub create_time: i64,
     pub update_time: i64,

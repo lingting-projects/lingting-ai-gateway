@@ -1,6 +1,5 @@
 use crate::entity::{
-    ApiKey, InferenceLevel, KvConfig, Provider, ProviderModel, RequestMain, RequestStatus,
-    RequestSub,
+    ApiKey, KvConfig, Provider, ProviderModel, RequestMain, RequestStatus, RequestSub,
 };
 use framework_proc_auto::auto_type;
 
@@ -79,24 +78,36 @@ pub struct ProviderModelQO {
     pub id: Option<i64>,
     pub provider_id: Option<i64>,
     pub model: Option<String>,
-    pub inference_level: Option<InferenceLevel>,
+    pub reasoning: Option<bool>,
     pub enabled: Option<bool>,
 }
 
+/// 供应商模型的写入参数，模型同步与新建共用；新增记录固定为启用。
 #[auto_type(default = false)]
 pub struct ProviderModelCreatePO {
     pub provider_id: i64,
     pub model: String,
     pub display_name: String,
-    pub inference_level: InferenceLevel,
-    pub enabled: bool,
+    pub reasoning: bool,
+    pub levels: Vec<String>,
+    pub level_default: String,
+    pub context_window: i64,
+    pub max_tokens: i64,
+    pub support_tools: bool,
+    pub support_vision: bool,
+    pub support_stream: bool,
+    pub support_json: bool,
+    pub support_cache: bool,
+    pub knowledge_cutoff: String,
+    pub release_date: String,
 }
 
 #[auto_type(default = false)]
 pub struct ProviderModelUpdatePO {
     pub id: i64,
     pub display_name: String,
-    pub inference_level: InferenceLevel,
+    pub levels: Vec<String>,
+    pub level_default: String,
     pub enabled: bool,
 }
 
@@ -107,7 +118,18 @@ pub struct ProviderModelVO {
     pub provider_name: String,
     pub model: String,
     pub display_name: String,
-    pub inference_level: InferenceLevel,
+    pub reasoning: bool,
+    pub levels: Vec<String>,
+    pub level_default: String,
+    pub context_window: i64,
+    pub max_tokens: i64,
+    pub support_tools: bool,
+    pub support_vision: bool,
+    pub support_stream: bool,
+    pub support_json: bool,
+    pub support_cache: bool,
+    pub knowledge_cutoff: String,
+    pub release_date: String,
     pub enabled: bool,
     pub create_time: i64,
     pub update_time: i64,
@@ -121,7 +143,18 @@ impl ProviderModelVO {
             provider_name,
             model: model.model,
             display_name: model.display_name,
-            inference_level: model.inference_level,
+            reasoning: model.reasoning,
+            levels: model.levels,
+            level_default: model.level_default,
+            context_window: model.context_window,
+            max_tokens: model.max_tokens,
+            support_tools: model.support_tools,
+            support_vision: model.support_vision,
+            support_stream: model.support_stream,
+            support_json: model.support_json,
+            support_cache: model.support_cache,
+            knowledge_cutoff: model.knowledge_cutoff,
+            release_date: model.release_date,
             enabled: model.enabled,
             create_time: model.create_time,
             update_time: model.update_time,
