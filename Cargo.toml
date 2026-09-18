@@ -57,6 +57,7 @@ sha1 = { version = "0.10" }
 md-5 = { version = "0.10" }
 wreq = { version = "0.16", features = ["cookies", "form", "json", "webpki-roots"] }
 reqwest = { version = "0.13", features = ["cookies", "form", "json"] }
+http = "1"
 rsntp = { version = "4.1", default-features = false, features = ["async"] }
 sha2 = { version = "0.10" }
 async-trait = { version = "0.1" }

@@ -1,10 +1,10 @@
-//! 普通（非流式）转发：构造 [OI] 客户端并执行。
+//! 普通（非流式）转发：构造 [OI] 请求并执行。
 
 use std::sync::Arc;
 
 use anyhow::Result;
 use lib_provider::{ChatRequest, ForwardCallback};
-use lib_provider_openai::OpenaiChatClient;
+use lib_provider_openai::OpenaiChatRequest;
 use lib_web_core::{WebResponse, use_web};
 use types_admin::entity::Provider;
 
@@ -15,7 +15,7 @@ pub async fn call_chat(
     callback: Arc<dyn ForwardCallback>,
 ) -> Result<WebResponse> {
     let web_context = use_web()?;
-    OpenaiChatClient::new(provider, web_context, callback)
+    OpenaiChatRequest::new(provider, web_context, callback)
         .call()
         .await
 }
