@@ -186,6 +186,12 @@ pub struct ProviderModelRedirectCreatePO {
     pub target: String,
 }
 
+/// 模型名称映射创建结果。
+#[auto_type(default = false)]
+pub struct ProviderModelRedirectCreateVO {
+    pub id: i64,
+}
+
 #[auto_type(default = false)]
 pub struct ProviderModelRedirectUpdatePO {
     pub id: i64,

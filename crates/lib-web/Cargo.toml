@@ -5,9 +5,19 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+[features]
+ts-export = [
+    "framework-proc-auto/collect",
+    "framework-proc-core/collect",
+    "framework-proc-ts/collect",
+    "types-admin/ts-export",
+]
+
 [dependencies]
 framework-web.workspace = true
 framework-web-axum.workspace = true
+framework-proc-auto.workspace = true
+framework-proc-core.workspace = true
 framework-proc-ts.workspace = true
 framework-core.workspace = true
 lib-web-core.workspace = true
@@ -21,3 +31,7 @@ serde_json.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 anyhow.workspace = true
+
+[[example]]
+name = "build_ts"
+required-features = ["ts-export"]

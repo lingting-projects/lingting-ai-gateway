@@ -1478,6 +1478,7 @@ dependencies = [
 name = "framework-proc-core"
 version = "26.8.14"
 dependencies = [
+ "inventory",
  "serde",
  "serde_json",
  "specta",
@@ -2484,6 +2485,8 @@ version = "2026.9.15"
 dependencies = [
  "anyhow",
  "framework-core",
+ "framework-proc-auto",
+ "framework-proc-core",
  "framework-proc-ts",
  "framework-web",
  "framework-web-axum",
@@ -5186,6 +5189,7 @@ version = "2026.9.15"
 dependencies = [
  "framework-core",
  "framework-proc-auto",
+ "framework-proc-core",
  "serde",
  "serde_json",
  "serde_with",

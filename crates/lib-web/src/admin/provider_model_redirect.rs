@@ -3,8 +3,8 @@ use framework_core::types::{IdPO, PaginationParams, PaginationResult};
 use framework_web::{Json, web_api_post};
 use service_admin::service::ProviderModelRedirectService;
 use types_admin::dto::{
-    ProviderModelRedirectCreatePO, ProviderModelRedirectQO, ProviderModelRedirectUpdatePO,
-    ProviderModelRedirectVO,
+    ProviderModelRedirectCreatePO, ProviderModelRedirectCreateVO, ProviderModelRedirectQO,
+    ProviderModelRedirectUpdatePO, ProviderModelRedirectVO,
 };
 
 /// 模型名称映射分页
@@ -31,8 +31,9 @@ pub async fn provider_model_redirect_page(
 #[web_api_post(path = "/___/provider-model-redirect/create")]
 pub async fn provider_model_redirect_create(
     Json(params): Json<ProviderModelRedirectCreatePO>,
-) -> Result<i64> {
-    ProviderModelRedirectService::new()?.create(&params).await
+) -> Result<ProviderModelRedirectCreateVO> {
+    let id = ProviderModelRedirectService::new()?.create(&params).await?;
+    Ok(ProviderModelRedirectCreateVO { id })
 }
 
 /// 模型名称映射更新
