@@ -17,7 +17,14 @@ async fn main() -> Result<()> {
     let db_config = DbConfig::new(directory.data.join("pgsql"));
     let db = lib_db::init(&db_config).await?;
     let db_context = Arc::new(DbContext::new(db.pool().clone()));
-    let server = axum_builder("127.0.0.1", 0).bind().await?;
+
+    let address = "127.0.0.1";
+    #[cfg(not(debug_assertions))]
+    let port = 0;
+    #[cfg(debug_assertions)]
+    let port = 26380;
+
+    let server = axum_builder(address, port).bind().await?;
     let result = server
         .run(Some(lib_web::web_route_wrapper(db_context)))
         .await;
