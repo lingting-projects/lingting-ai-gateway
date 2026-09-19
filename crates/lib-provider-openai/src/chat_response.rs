@@ -1,3 +1,6 @@
+//! chat 补全响应模型：普通响应与流式分片共用同一结构。
+
+use lib_provider::ForwardOutcome;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use types_admin::TokenInfo;
@@ -237,4 +240,18 @@ pub struct ProviderResponse {
     pub response: ChatResponse,
     /// 供应商返回的 HTTP 状态码。
     pub http_status: i32,
+}
+
+impl ProviderResponse {
+    /// 构造转发累积结果。
+    pub fn into_outcome(self) -> ForwardOutcome {
+        ForwardOutcome {
+            token_info: self.response.token_info(),
+            content: None,
+            return_model: self.response.model.clone(),
+            finish_reason: self.response.finish_reason(),
+            provider_request_id: self.response.id.clone(),
+            http_status: Some(self.http_status),
+        }
+    }
 }

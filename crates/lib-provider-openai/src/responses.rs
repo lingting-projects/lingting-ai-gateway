@@ -1,4 +1,4 @@
-//! 普通（非流式）转发：把客户端请求原样发给供应商，再把供应商响应原样返回。
+//! Responses 非流式转发：把客户端请求原样发给供应商，再把供应商响应原样返回。
 
 use std::sync::Arc;
 
@@ -10,14 +10,14 @@ use types_admin::entity::Provider;
 
 use crate::utils;
 
-/// [OI] 普通转发请求。
-pub struct OpenaiChatRequest {
+/// Responses 非流式转发请求。
+pub struct OpenaiResponsesRequest {
     provider: Provider,
     web_context: Arc<WebContext>,
     callback: Arc<dyn ForwardCallback>,
 }
 
-impl OpenaiChatRequest {
+impl OpenaiResponsesRequest {
     /// 绑定供应商、当前请求上下文与转发回调。
     pub fn new(
         provider: Provider,
@@ -33,7 +33,7 @@ impl OpenaiChatRequest {
 
     /// 发起请求并把供应商响应原样返回。
     pub async fn call(&self) -> Result<WebResponse> {
-        let request = ForwardRequest::new(&self.provider, utils::CHAT_COMPLETIONS_SUFFIX)
+        let request = ForwardRequest::new(&self.provider, utils::RESPONSES_SUFFIX)
             .forward(&self.web_context)?;
 
         utils::notify(self.callback.on_start().await);
@@ -46,7 +46,7 @@ impl OpenaiChatRequest {
             Err(error) => return utils::fail_transport(&self.callback, error).await,
         };
 
-        let outcome = utils::chat_outcome(status.as_u16(), &body, self.callback.is_debug());
+        let outcome = utils::responses_outcome(status.as_u16(), &body, self.callback.is_debug());
         utils::finish_response(&self.callback, status, headers, body, outcome).await
     }
 }

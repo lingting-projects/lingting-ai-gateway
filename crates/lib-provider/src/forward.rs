@@ -3,8 +3,6 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use types_admin::TokenInfo;
 
-use crate::response::ProviderResponse;
-
 /// 一次转发累积的用量与返回信息。
 #[derive(Debug, Clone, Default)]
 pub struct ForwardOutcome {
@@ -20,20 +18,6 @@ pub struct ForwardOutcome {
     pub provider_request_id: String,
     /// 供应商返回的 HTTP 状态码。
     pub http_status: Option<i32>,
-}
-
-impl ForwardOutcome {
-    /// 由供应商响应构造累积结果。
-    pub fn from_response(result: ProviderResponse) -> Self {
-        Self {
-            token_info: result.response.token_info(),
-            content: None,
-            return_model: result.response.model.clone(),
-            finish_reason: result.response.finish_reason(),
-            provider_request_id: result.response.id.clone(),
-            http_status: Some(result.http_status),
-        }
-    }
 }
 
 /// 转发失败信息，携带失败前已累积的用量与内容。

@@ -6,12 +6,14 @@ use std::sync::Arc;
 use anyhow::Result;
 use bytes::Bytes;
 use framework_core::MultiStringValue;
-use lib_provider::response::{ChatResponse, ProviderResponse};
 use lib_provider::{ForwardCallback, ForwardFailure, ForwardOutcome};
 use lib_web_core::{WebBody, WebResponse};
 use reqwest::StatusCode;
 use reqwest::header::HeaderMap;
 use types_admin::entity::Provider;
+
+use crate::chat_response::{ChatResponse, ProviderResponse};
+use crate::responses_response::ResponsesResponse;
 
 /// 对话补全接口的路径后缀。
 pub const CHAT_COMPLETIONS_SUFFIX: &str = "/chat/completions";
@@ -25,16 +27,54 @@ pub fn chat_url(provider: &Provider) -> String {
     )
 }
 
-/// 由供应商响应体构造日志用的转发结果；解析失败时只保留状态码。
+/// Responses 接口的路径后缀。
+pub const RESPONSES_SUFFIX: &str = "/responses";
+
+/// 供应商的 Responses 地址。
+pub fn responses_url(provider: &Provider) -> String {
+    format!(
+        "{}{}",
+        provider.base_url.trim_end_matches('/'),
+        RESPONSES_SUFFIX
+    )
+}
+
+/// 由 chat 供应商响应体构造日志用的转发结果；解析失败时只保留状态码。
 ///
 /// 原始字节仅在调试模式下收集。
-pub fn outcome(http_status: u16, body: &Bytes, debug_mode: bool) -> ForwardOutcome {
+pub fn chat_outcome(http_status: u16, body: &Bytes, debug_mode: bool) -> ForwardOutcome {
     let status = i32::from(http_status);
     let mut outcome = match serde_json::from_slice::<ChatResponse>(body) {
-        Ok(response) => ForwardOutcome::from_response(ProviderResponse {
+        Ok(response) => ProviderResponse {
             response,
             http_status: status,
-        }),
+        }
+        .into_outcome(),
+        Err(_) => ForwardOutcome {
+            http_status: Some(status),
+            ..ForwardOutcome::default()
+        },
+    };
+    if debug_mode {
+        outcome.content = Some(body.clone());
+    }
+    outcome
+}
+
+/// 由 Responses 供应商响应体构造日志用的转发结果；解析失败时只保留状态码。
+///
+/// 原始字节仅在调试模式下收集。
+pub fn responses_outcome(http_status: u16, body: &Bytes, debug_mode: bool) -> ForwardOutcome {
+    let status = i32::from(http_status);
+    let mut outcome = match serde_json::from_slice::<ResponsesResponse>(body) {
+        Ok(response) => ForwardOutcome {
+            token_info: response.token_info(),
+            content: None,
+            return_model: response.model.clone(),
+            finish_reason: response.finish_reason(),
+            provider_request_id: response.id.clone(),
+            http_status: Some(status),
+        },
         Err(_) => ForwardOutcome {
             http_status: Some(status),
             ..ForwardOutcome::default()
@@ -75,16 +115,16 @@ pub async fn fail_transport(
     Err(error.into())
 }
 
-/// 结束一次已收到完整响应体的转发：解析日志结果、通知回调，并把响应原样返回。
+/// 结束一次已收到完整响应体的转发：通知回调，并把响应原样返回。
 ///
-/// 普通转发与流式转发收到完整响应时共用这一条出口。
+/// 普通转发与流式转发收到完整响应时共用这一条出口，转发结果由各协议自行解析。
 pub async fn finish_response(
     callback: &Arc<dyn ForwardCallback>,
     status: StatusCode,
     headers: MultiStringValue,
     body: Bytes,
+    outcome: ForwardOutcome,
 ) -> Result<WebResponse> {
-    let outcome = outcome(status.as_u16(), &body, callback.is_debug());
     if status.is_success() {
         notify(callback.on_success(&outcome).await);
     } else {

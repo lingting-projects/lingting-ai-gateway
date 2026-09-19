@@ -1,4 +1,4 @@
-//! 流式转发：把供应商的 SSE 分片原样转发给客户端，同时解析累积用量。
+//! Responses 流式转发：把供应商的 SSE 分片原样转发给客户端，同时解析累积用量。
 
 use std::sync::Arc;
 
@@ -9,18 +9,18 @@ use lib_provider::{ChunkSink, ForwardCallback, ForwardOutcome};
 use lib_web_core::{WebBody, WebContext, WebResponse};
 use types_admin::entity::Provider;
 
-use crate::chat_response::ChatResponse;
+use crate::responses_response::{ResponsesResponse, ResponsesStreamEvent};
 use crate::stream::{StreamParser, forward_stream};
 use crate::utils;
 
-/// [OI] 流式转发请求。
-pub struct OpenaiChatStreamRequest {
+/// Responses 流式转发请求。
+pub struct OpenaiResponsesStreamRequest {
     provider: Provider,
     web_context: Arc<WebContext>,
     callback: Arc<dyn ForwardCallback>,
 }
 
-impl OpenaiChatStreamRequest {
+impl OpenaiResponsesStreamRequest {
     /// 绑定供应商、当前请求上下文与转发回调。
     pub fn new(
         provider: Provider,
@@ -36,7 +36,7 @@ impl OpenaiChatStreamRequest {
 
     /// 发起请求：正常时返回持续输出的分片流，供应商直接报错时原样返回错误响应。
     pub async fn call(&self) -> Result<WebResponse> {
-        let request = ForwardRequest::new(&self.provider, utils::CHAT_COMPLETIONS_SUFFIX)
+        let request = ForwardRequest::new(&self.provider, utils::RESPONSES_SUFFIX)
             .forward(&self.web_context)?;
 
         utils::notify(self.callback.on_start().await);
@@ -49,13 +49,14 @@ impl OpenaiChatStreamRequest {
                 Ok(body) => body,
                 Err(error) => return utils::fail_transport(&self.callback, error).await,
             };
-            let outcome = utils::chat_outcome(status.as_u16(), &body, self.callback.is_debug());
+            let outcome =
+                utils::responses_outcome(status.as_u16(), &body, self.callback.is_debug());
             return utils::finish_response(&self.callback, status, headers, body, outcome).await;
         }
 
         let (sink, stream) = ChunkSink::channel();
         let callback = Arc::clone(&self.callback);
-        let parser = ChatStreamParser::new(callback.is_debug());
+        let parser = ResponsesStreamParser::new(callback.is_debug());
         tokio::spawn(forward_stream(response, sink, callback, parser));
 
         Ok(WebResponse {
@@ -67,38 +68,40 @@ impl OpenaiChatStreamRequest {
 }
 
 /// SSE 分片解析器：按数据行累积响应，并按调试模式保留原始内容。
-struct ChatStreamParser {
+struct ResponsesStreamParser {
     /// 尚未构成完整行的残余字节。
     pending: Vec<u8>,
     /// 累积后的响应。
-    response: ChatResponse,
+    response: ResponsesResponse,
     /// 原始内容，仅调试模式下收集。
     content: BytesMut,
     /// 是否处于调试模式。
     debug_mode: bool,
 }
 
-impl ChatStreamParser {
+impl ResponsesStreamParser {
     /// 按调试模式创建解析器。
     fn new(debug_mode: bool) -> Self {
         Self {
             pending: Vec::new(),
-            response: ChatResponse::default(),
+            response: ResponsesResponse::default(),
             content: BytesMut::new(),
             debug_mode,
         }
     }
 
-    /// 合并一行 SSE 数据；`[DONE]` 与其他行直接忽略。
+    /// 合并一行 SSE 数据；未携带响应对象的行直接忽略。
     fn merge_line(&mut self, line: &[u8]) {
         let line = String::from_utf8_lossy(line);
         let Some(data) = line.trim_end().strip_prefix("data:") else {
             return;
         };
-        let Ok(chunk) = serde_json::from_str::<ChatResponse>(data.trim()) else {
+        let Ok(event) = serde_json::from_str::<ResponsesStreamEvent>(data.trim()) else {
             return;
         };
-        self.response.merge_chunk(&chunk);
+        if let Some(response) = &event.response {
+            self.response.merge(response);
+        }
     }
 
     /// 取走已收集的原始内容。
@@ -110,7 +113,7 @@ impl ChatStreamParser {
     }
 }
 
-impl StreamParser for ChatStreamParser {
+impl StreamParser for ResponsesStreamParser {
     /// 追加一段原始分片，解析其中已完整的数据行。
     fn push(&mut self, chunk: &[u8]) {
         if self.debug_mode {
