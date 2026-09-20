@@ -2484,12 +2484,14 @@ name = "lib-web"
 version = "2026.9.15"
 dependencies = [
  "anyhow",
+ "chrono",
  "framework-core",
  "framework-proc-auto",
  "framework-proc-core",
  "framework-proc-ts",
  "framework-web",
  "framework-web-axum",
+ "lib-core",
  "lib-db",
  "lib-provider",
  "lib-web-core",
@@ -2497,6 +2499,7 @@ dependencies = [
  "serde_json",
  "service-admin",
  "service-provider",
+ "specta",
  "tokio",
  "tracing",
  "types-admin",
