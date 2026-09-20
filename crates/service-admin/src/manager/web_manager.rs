@@ -22,37 +22,47 @@ impl WebManager {
 
     /// 解析 Authorization 请求头得到请求身份。
     ///
-    /// - 请求头 trim 后为空：匿名身份。
+    /// - 请求头 trim 后为空：管理员令牌未设置时按管理员身份处理，否则匿名身份。
     /// - 摘要命中 API Key：API 身份，值为密钥 ID。
     /// - 管理员令牌不存在或 trim 后为空：管理员身份，值为空串。
     /// - 摘要与管理员令牌一致：管理员身份，值为摘要。
     /// - 其余情况：匿名身份。
     pub async fn build_authorization(&self, value: &str) -> Result<Authorization> {
         let value = value.trim();
-        if value.is_empty() {
+        if !value.is_empty() {
+            let hashed = hash(value);
+            if let Some(api_key) = self.api_key_service.find_by_key_hash(&hashed).await? {
+                return Ok(Authorization::new(AuthKind::Api, api_key.id.to_string()));
+            }
+
+            let admin_token = self.admin_token().await?;
+            if admin_token.is_empty() {
+                return Ok(Authorization::new(AuthKind::Admin, String::new()));
+            }
+            if admin_token == hashed {
+                return Ok(Authorization::new(AuthKind::Admin, hashed));
+            }
+
             return Ok(Authorization::anonymous());
         }
 
-        let hashed = hash(value);
-        if let Some(api_key) = self.api_key_service.find_by_key_hash(&hashed).await? {
-            return Ok(Authorization::new(AuthKind::Api, api_key.id.to_string()));
+        // 未携带令牌：管理员令牌未设置时视为管理员，方便本地直接访问。
+        if self.admin_token().await?.is_empty() {
+            return Ok(Authorization::new(AuthKind::Admin, String::new()));
         }
 
+        Ok(Authorization::anonymous())
+    }
+
+    /// 管理员令牌摘要；未设置时为空串。
+    async fn admin_token(&self) -> Result<String> {
         let admin_token = self
             .kv_config_service
             .find_value(KvConfigKey::AdminToken)
             .await?
             .unwrap_or_default();
-        let admin_token = admin_token.trim();
-        if admin_token.is_empty() {
-            return Ok(Authorization::new(AuthKind::Admin, ""));
-        }
 
-        if admin_token == hashed {
-            return Ok(Authorization::new(AuthKind::Admin, hashed));
-        }
-
-        Ok(Authorization::anonymous())
+        Ok(admin_token.trim().to_string())
     }
 
     /// 一次性装载应用全局上下文。

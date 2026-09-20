@@ -45,19 +45,18 @@ async fn invoke(db: Arc<DbContext>, route: Arc<WebRoute>) -> Result<WebResponse>
     .await
 }
 
+/// 读取 Bearer 令牌；未携带 Authorization 或格式异常时返回空串，由授权解析决定身份。
 fn bearer_token() -> Result<String> {
     let context = use_web()?;
-    let value = context
-        .request()
-        .headers
-        .get_first("authorization")
-        .ok_or_else(|| WebError::unauthorized("缺少 Authorization 请求头"))?;
-    let (scheme, token) = value
-        .split_once(' ')
-        .ok_or_else(|| WebError::unauthorized("Authorization 请求头格式错误"))?;
+    let Some(value) = context.request().headers.get_first("authorization") else {
+        return Ok(String::new());
+    };
+    let Some((scheme, token)) = value.split_once(' ') else {
+        return Ok(String::new());
+    };
     let token = token.trim();
     if !scheme.eq_ignore_ascii_case("Bearer") || token.is_empty() {
-        return Err(WebError::unauthorized("Authorization 请求头格式错误").into());
+        return Ok(String::new());
     }
     Ok(token.to_string())
 }
