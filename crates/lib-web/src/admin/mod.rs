@@ -6,7 +6,7 @@ pub mod api_key;
 pub mod kv_config;
 /// 供应商管理
 pub mod provider;
-/// 模型名称映射管理
-pub mod provider_model_redirect;
+/// 供应商模型管理
+pub mod provider_model;
 /// 请求日志管理
 pub mod request;

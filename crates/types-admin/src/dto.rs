@@ -8,13 +8,6 @@ use framework_proc_auto::auto_type;
 // 供应商
 // ---------------------------------------------------------------------------
 
-#[auto_type]
-pub struct ProviderQO {
-    pub id: Option<i64>,
-    pub name: Option<String>,
-    pub enabled: Option<bool>,
-}
-
 #[auto_type(default = false)]
 pub struct ProviderCreatePO {
     pub name: String,
@@ -170,13 +163,6 @@ pub struct ProviderDetailVO {
 // ---------------------------------------------------------------------------
 // 模型名称映射
 // ---------------------------------------------------------------------------
-
-#[auto_type]
-pub struct ProviderModelRedirectQO {
-    pub id: Option<i64>,
-    pub source: Option<String>,
-    pub target: Option<String>,
-}
 
 #[auto_type(default = false)]
 pub struct ProviderModelRedirectCreatePO {

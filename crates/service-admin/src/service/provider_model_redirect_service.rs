@@ -1,9 +1,6 @@
 use anyhow::Result;
-use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::use_pool;
-use types_admin::dto::{
-    ProviderModelRedirectCreatePO, ProviderModelRedirectQO, ProviderModelRedirectUpdatePO,
-};
+use types_admin::dto::{ProviderModelRedirectCreatePO, ProviderModelRedirectUpdatePO};
 use types_admin::entity::ProviderModelRedirect;
 
 use crate::repository::ProviderModelRedirectRepository;
@@ -19,15 +16,6 @@ impl ProviderModelRedirectService {
         Ok(Self {
             repository: ProviderModelRedirectRepository::new(use_pool()?),
         })
-    }
-
-    /// 分页查询模型名称映射。
-    pub async fn page(
-        &self,
-        pagination: &PaginationParams,
-        conditions: &ProviderModelRedirectQO,
-    ) -> Result<PaginationResult<ProviderModelRedirect>> {
-        self.repository.page(pagination, conditions).await
     }
 
     /// 按主键查询模型名称映射。
