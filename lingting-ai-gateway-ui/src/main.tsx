@@ -6,7 +6,7 @@ import { AppSidebarLayout, type User, UserStore } from "@lri";
 import { menuRoutes, standaloneRoutes } from "@/router";
 import { ProductBrand } from "@/components/product-brand";
 
-const PRODUCT_ICON = "/icon.svg";
+const PRODUCT_ICON = "/icon.png";
 const PRODUCT_TITLE = "Lingting AI Gateway";
 
 // 桌面端不需要登录，始终返回同一个用户信息

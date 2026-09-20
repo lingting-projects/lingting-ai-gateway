@@ -43,6 +43,13 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "127.0.0.1",
       port: 26381,
+      proxy: {
+        "/api": {
+          target: "http://localhost:26380",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ""),
+        },
+      },
     },
     build: {
       cssCodeSplit: !isDesktopBuild,
