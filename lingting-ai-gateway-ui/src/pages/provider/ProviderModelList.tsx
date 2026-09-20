@@ -78,13 +78,12 @@ export function ProviderModelList({ detail }: ProviderModelListProps) {
   );
 
   const header = (
-    <Flex align="center" className="provider-model-header" justify="space-between">
+    <Flex align="center" className="provider-model-header" gap="middle">
       <Typography.Text type="secondary">共 {models.length} 个模型</Typography.Text>
       <Button
         icon={<SyncOutlined/>}
         loading={syncing}
         onClick={handleSync}
-        text="同步"
         tooltip="同步供应商模型"
       />
     </Flex>

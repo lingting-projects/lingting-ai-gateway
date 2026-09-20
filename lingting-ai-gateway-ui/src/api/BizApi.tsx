@@ -1,18 +1,6 @@
 import { BasicAiGatewayApi, type R, RCodeKindMap } from "@lingting/ai-gateway-sdk";
-
+import { DocumentUtils } from "@lri";
 import { AuthorizationStore } from "@/store/AuthorizationStore";
-
-/** 默认请求前缀，未配置 VITE_API_PREFIX 时使用。 */
-const DEFAULT_API_PREFIX = "/api";
-
-/** 请求前缀：由环境变量配置，未配置时使用 /api。 */
-function resolveApiPrefix(): string {
-  const prefix = import.meta.env.VITE_API_PREFIX?.trim();
-  if (!prefix) {
-    return DEFAULT_API_PREFIX;
-  }
-  return prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
-}
 
 function buildQueryString(query: unknown): string {
   if (!query || typeof query !== "object") {
@@ -30,7 +18,9 @@ function buildQueryString(query: unknown): string {
 }
 
 function buildRequestUrl(path: string, query?: unknown): string {
-  const url = `${resolveApiPrefix()}/${path.replace(/^\/+/, "")}`;
+  const prefix = import.meta.env.VITE_API_PREFIX?.trim();
+  const target = DocumentUtils.buildTarget(prefix, "/api");
+  const url = `${target}/${path}`;
   const search = buildQueryString(query);
   return search ? `${url}?${search}` : url;
 }

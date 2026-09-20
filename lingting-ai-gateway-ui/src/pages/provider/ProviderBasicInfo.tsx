@@ -1,8 +1,8 @@
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { ProDescriptions, type ProDescriptionsColumn } from "@ant-design/pro-components";
+import { ProCard, ProDescriptions, type ProDescriptionsColumn } from "@ant-design/pro-components";
 import type { ProviderDetailVO, ProviderUpdatePO, ProviderVO } from "@lingting/ai-gateway-sdk";
 import { AppHolder, Button, DictTag, LinkButton } from "@lri";
-import { Flex, Form } from "antd";
+import { Checkbox, Flex, Form } from "antd";
 import { useCallback, useMemo, useState } from "react";
 
 import { bizApi } from "@/api/BizApi";
@@ -14,7 +14,7 @@ const ENABLED_DICT = [
 ];
 
 /** 可编辑字段，与供应商更新接口的可修改字段一致。 */
-const EDITABLE_FIELDS = ["displayName", "baseUrl", "apiKey", "priority", "enabled"];
+const EDITABLE_FIELDS = ["displayName", "baseUrl", "apiKey", "priority"];
 
 type ProviderUpdateValues = {
   apiKey?: string;
@@ -54,6 +54,8 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
   const [editing, setEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm<ProviderUpdateValues>();
+  // 启用状态在编辑态用复选框，不参与 ProDescriptions 的字段编辑
+  const [enabledDraft, setEnabledDraft] = useState(provider.enabled);
 
   const handleToggleEnabled = useCallback(async () => {
     try {
@@ -75,7 +77,10 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
     }
   }, [onChanged, provider.id]);
 
-  const handleEdit = useCallback(() => setEditing(true), []);
+  const handleEdit = useCallback(() => {
+    setEnabledDraft(provider.enabled);
+    setEditing(true);
+  }, [provider.enabled]);
 
   const handleCancel = useCallback(() => {
     setEditing(false);
@@ -92,7 +97,7 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
 
     setSubmitting(true);
     try {
-      await bizApi.providerUpdate(toUpdatePO(provider, values));
+      await bizApi.providerUpdate(toUpdatePO(provider, { ...values, enabled: enabledDraft }));
       AppHolder.message.success("保存成功");
       setEditing(false);
       onChanged();
@@ -101,7 +106,7 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
     } finally {
       setSubmitting(false);
     }
-  }, [form, onChanged, provider]);
+  }, [enabledDraft, form, onChanged, provider]);
 
   const columns = useMemo<ProDescriptionsColumn<ProviderVO>[]>(
     () => [
@@ -114,18 +119,21 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
       {
         dataIndex: "enabled",
         editable: false,
-        render: (_dom, record) => (
-          <Flex align="center" gap="small">
-            <DictTag dict={ENABLED_DICT} value={record.enabled}/>
-            <LinkButton
-              hidden={editing}
-              onClick={handleToggleEnabled}
-              text={record.enabled ? "禁用" : "启用"}
-            />
-          </Flex>
-        ),
+        render: () =>
+          editing ? (
+            <Checkbox
+              checked={enabledDraft}
+              onChange={(event) => setEnabledDraft(event.target.checked)}
+            >
+              启用
+            </Checkbox>
+          ) : (
+            <Flex align="center" gap="small">
+              <DictTag dict={ENABLED_DICT} value={provider.enabled}/>
+              <LinkButton onClick={handleToggleEnabled} text={provider.enabled ? "禁用" : "启用"}/>
+            </Flex>
+          ),
         title: "启用状态",
-        valueType: "switch",
       },
       {
         dataIndex: "createTime",
@@ -140,43 +148,43 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
         title: "更新时间",
       },
     ],
-    [editing, handleToggleEnabled],
+    [editing, enabledDraft, handleToggleEnabled, provider.enabled],
   );
 
   return (
-    <Flex className="provider-basic-info" gap="middle" vertical>
-      <ProDescriptions<ProviderVO>
-        column={2}
-        columns={columns}
-        dataSource={provider}
-        editable={{
-          actionRender: () => [],
-          editableKeys: editing ? [...EDITABLE_FIELDS] : [],
-          form,
-          type: "multiple",
-        }}
-        extra={
-          <Flex gap="small">
-            <Button
-              confirm={{
-                description: "删除后该供应商的模型配置会一并移除。",
-                title: "确认删除该供应商？",
-              }}
-              danger
-              icon={<DeleteOutlined/>}
-              onConfirm={handleDelete}
-              text="删除"
-            />
-            <Button hidden={editing} icon={<EditOutlined/>} onClick={handleEdit} text="编辑"/>
-          </Flex>
-        }
-      />
-      {editing && (
-        <Flex gap="small" justify="end">
-          <Button onClick={handleCancel} text="取消"/>
-          <Button loading={submitting} onClick={handleSubmit} text="提交" type="primary"/>
+    <ProCard>
+      <Flex className="provider-basic-info" gap="middle" vertical>
+        <Flex gap="small">
+          <Button hidden={editing} icon={<EditOutlined/>} onClick={handleEdit} text="编辑"/>
+          <Button
+            confirm={{
+              description: "删除后该供应商的模型配置会一并移除。",
+              title: "确认删除该供应商？",
+            }}
+            danger
+            icon={<DeleteOutlined/>}
+            onConfirm={handleDelete}
+            text="删除"
+          />
         </Flex>
-      )}
-    </Flex>
+        <ProDescriptions<ProviderVO>
+          column={2}
+          columns={columns}
+          dataSource={provider}
+          editable={{
+            actionRender: () => [],
+            editableKeys: editing ? [...EDITABLE_FIELDS] : [],
+            form,
+            type: "multiple",
+          }}
+        />
+        {editing && (
+          <Flex gap="small">
+            <Button loading={submitting} onClick={handleSubmit} text="提交" type="primary"/>
+            <Button onClick={handleCancel} text="取消"/>
+          </Flex>
+        )}
+      </Flex>
+    </ProCard>
   );
 }

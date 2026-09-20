@@ -40,7 +40,7 @@ export function ProviderDetail({ detail, enabledCount, onChanged, total }: Provi
     <>
       {!detail && <ProviderOverview enabledCount={enabledCount} total={total}/>}
       {detail && (
-        <ProCard className="provider-detail-card">
+        <ProCard className="provider-detail-card" ghost={true}>
           <Tabs className="provider-detail-tabs" items={items}/>
         </ProCard>
       )}

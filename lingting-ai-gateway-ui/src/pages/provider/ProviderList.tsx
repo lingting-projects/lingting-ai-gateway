@@ -7,6 +7,8 @@ import { useCallback, useState } from "react";
 
 import { filterProviderDetails } from "@/utils/providerUtils";
 
+import { ProviderCreateModal } from "./ProviderCreateModal";
+
 /** 供应商卡片高度，与卡片内容高度保持一致。 */
 const PROVIDER_ITEM_HEIGHT = 72;
 
@@ -86,9 +88,9 @@ export function ProviderList({
         icon={<ReloadOutlined/>}
         loading={refreshing}
         onClick={onRefresh}
-        text="刷新"
         tooltip="刷新供应商列表"
       />
+      <ProviderCreateModal onCreated={onRefresh}/>
     </Flex>
   );
 
@@ -101,6 +103,7 @@ export function ProviderList({
         itemHeight={PROVIDER_ITEM_HEIGHT}
         itemRender={renderItem}
         loading={loading}
+        props={{ ghost: true }}
       />
     </Flex>
   );

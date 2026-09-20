@@ -1,70 +1,65 @@
 @reference "../../index.css";
 
 .provider-main {
-    @apply h-full min-h-0 w-full;
+  @apply h-full min-h-0 w-full;
 }
 
 .provider-list {
-    @apply h-full min-h-0 w-80 shrink-0;
+  @apply h-full min-h-0 w-80 shrink-0;
 }
 
 .provider-list-header {
-    @apply w-full;
+  @apply w-full;
 }
 
 .provider-list-search {
-    @apply min-w-0 flex-1;
+  @apply min-w-0 flex-1;
 }
 
 .provider-list-item {
-    @apply h-full w-full cursor-pointer rounded-md border border-solid border-(--ant-color-border-secondary) px-3 py-2;
+  @apply h-full w-full cursor-pointer rounded-md border border-solid border-(--ant-color-border-secondary) bg-(--ant-color-bg-container) px-3 py-2;
 }
 
 .provider-list-item:hover {
-    @apply border-(--ant-color-primary);
+  @apply border-(--ant-color-primary);
 }
 
 .provider-list-item-selected {
-    @apply border-(--ant-color-primary) bg-(--ant-color-primary-bg);
+  @apply border-(--ant-color-primary) bg-(--ant-color-primary-bg);
 }
 
 .provider-overview {
-    @apply min-w-0 flex-1 self-start;
+  @apply min-w-0 flex-1 self-start;
 }
 
 .provider-overview-card {
-    @apply flex-1;
+  @apply flex-1;
 }
 
 .provider-detail-card {
-    @apply min-w-0 flex-1;
+  @apply min-w-0 flex-1;
 }
 
 .provider-detail-card .ant-pro-card-body {
-    @apply flex min-h-0 flex-1 flex-col;
+  @apply flex min-h-0 flex-1 flex-col;
 }
 
 .provider-detail-tabs {
-    @apply flex min-h-0 flex-1 flex-col;
+  @apply flex min-h-0 flex-1 flex-col;
 }
 
 .provider-detail-tabs .ant-tabs-content-holder {
-    @apply min-h-0 flex-1;
-}
-
-.provider-detail-tabs .ant-tabs-content,
-.provider-detail-tabs .ant-tabs-tabpane {
-    @apply h-full min-h-0;
+  @apply min-h-0 flex-1;
 }
 
 .provider-model-list {
-    @apply h-full min-h-0;
+  @apply h-full min-h-0;
 }
 
 .provider-model-header {
-    @apply w-full;
+  @apply w-full;
 }
 
 .provider-model-item {
-    @apply h-full w-full rounded-md border border-solid border-(--ant-color-border-secondary) px-3 py-2;
+  @apply h-full w-full rounded-md border border-solid border-(--ant-color-border-secondary) px-3 py-2;
 }
