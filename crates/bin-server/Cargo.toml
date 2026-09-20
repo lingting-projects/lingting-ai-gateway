@@ -11,6 +11,7 @@ lib-web-core.workspace = true
 lib-db.workspace = true
 lib-provider.workspace = true
 lib-core.workspace = true
+service-admin.workspace = true
 types-admin.workspace = true
 framework-core.workspace = true
 framework-web.workspace = true

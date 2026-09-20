@@ -3,6 +3,7 @@ use framework_core::logging::LoggingConfig;
 use framework_web_axum::axum_builder;
 use lib_core::application_directory;
 use lib_db::{DbConfig, DbContext};
+use service_admin::service::KvConfigService;
 use std::sync::Arc;
 use tracing::log;
 use tracing_subscriber::filter::LevelFilter;
@@ -19,14 +20,14 @@ async fn main() -> Result<()> {
     let db = lib_db::init(&db_config).await?;
     let db_context = Arc::new(DbContext::new(db.pool().clone()));
 
-    let address = "127.0.0.1";
-    #[cfg(not(debug_assertions))]
-    let port = 0;
-    #[cfg(debug_assertions)]
-    let port = 26380;
+    let bind = KvConfigService::from(db.pool().clone())
+        .server_bind()
+        .await?;
 
-    let server = axum_builder(address, port).bind().await?;
-    log::info!("当前服务运行: {address}:{}", server.context().port);
+    let server = axum_builder(bind.address.as_str(), bind.port)
+        .bind()
+        .await?;
+    log::info!("当前服务绑定: {}:{}", bind.address, server.context().port);
     let result = server
         .run(Some(lib_web::web_route_wrapper(db_context)))
         .await;

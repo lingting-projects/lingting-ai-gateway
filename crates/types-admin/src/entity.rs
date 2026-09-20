@@ -131,6 +131,48 @@ pub struct ApiKey {
     pub update_time: i64,
 }
 
+/// 全局配置键，供前端解析与展示。
+///
+/// 数据库存储值统一为 `_` 分隔的全大写形式，与 `Display` / `FromStr` 保持一致；
+/// `FromStr` 不区分大小写，历史的小写值也能解析。
+#[auto_enum]
+pub enum KvConfigKey {
+    /// 是否允许匿名访问 AI 接口
+    AllowAnonymous,
+    /// 是否开启调试模式
+    DebugMode,
+    /// 管理接口令牌
+    AdminToken,
+    /// 服务绑定地址
+    BindAddress,
+    /// 服务绑定端口
+    BindPort,
+}
+
+#[auto_enum_impl]
+impl KvConfigKey {
+    pub fn label(&self) -> &'static str {
+        match self {
+            Self::AllowAnonymous => "允许匿名访问",
+            Self::DebugMode => "调试模式",
+            Self::AdminToken => "管理令牌",
+            Self::BindAddress => "绑定地址",
+            Self::BindPort => "绑定端口",
+        }
+    }
+
+    #[auto_enum_field]
+    pub fn description(&self) -> &'static str {
+        match self {
+            Self::AllowAnonymous => "是否允许匿名访问 AI 接口",
+            Self::DebugMode => "是否开启调试模式，开启后记录完整请求参数与返回内容",
+            Self::AdminToken => "管理接口令牌，保存 sha1 值，为空表示不校验",
+            Self::BindAddress => "服务绑定地址",
+            Self::BindPort => "服务绑定端口，0 表示随机端口",
+        }
+    }
+}
+
 /// 全局配置
 #[auto_type(default = false)]
 pub struct KvConfig {

@@ -1,16 +1,14 @@
 use anyhow::Result;
 use lib_core::hash;
-use lib_web_core::{
-    AppContext, AuthKind, Authorization, CONFIG_ADMIN_TOKEN, CONFIG_ALLOW_ANONYMOUS,
-    CONFIG_DEBUG_MODE,
-};
+use lib_web_core::{AppContext, AuthKind, Authorization};
+use types_admin::KvConfigKey;
 
-use crate::service::{ApiKeyService, ConfigService};
+use crate::service::{ApiKeyService, KvConfigService};
 
 /// Web 层编排：统一装配请求鉴权身份与全局配置。
 pub struct WebManager {
     api_key_service: ApiKeyService,
-    config_service: ConfigService,
+    kv_config_service: KvConfigService,
 }
 
 impl WebManager {
@@ -18,7 +16,7 @@ impl WebManager {
     pub fn new() -> Result<Self> {
         Ok(Self {
             api_key_service: ApiKeyService::new()?,
-            config_service: ConfigService::new()?,
+            kv_config_service: KvConfigService::new()?,
         })
     }
 
@@ -41,8 +39,8 @@ impl WebManager {
         }
 
         let admin_token = self
-            .config_service
-            .find_value(CONFIG_ADMIN_TOKEN)
+            .kv_config_service
+            .find_value(KvConfigKey::AdminToken)
             .await?
             .unwrap_or_default();
         let admin_token = admin_token.trim();
@@ -60,8 +58,8 @@ impl WebManager {
     /// 一次性装载应用全局上下文。
     pub async fn build_app(&self) -> Result<AppContext> {
         let configs = self
-            .config_service
-            .find_keys(&[CONFIG_DEBUG_MODE, CONFIG_ALLOW_ANONYMOUS])
+            .kv_config_service
+            .find_keys(&[KvConfigKey::DebugMode, KvConfigKey::AllowAnonymous])
             .await?;
 
         Ok(AppContext::from(configs))

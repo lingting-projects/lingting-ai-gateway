@@ -4,14 +4,7 @@ use std::future::Future;
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
-use types_admin::KvConfig;
-
-/// 全局配置键：调试模式，开启后记录完整请求参数与返回内容。
-pub const CONFIG_DEBUG_MODE: &str = "debug_mode";
-/// 全局配置键：是否允许匿名访问 AI 接口。
-pub const CONFIG_ALLOW_ANONYMOUS: &str = "allow_anonymous";
-/// 全局配置键：管理员令牌，库中保存的是 SHA1。
-pub const CONFIG_ADMIN_TOKEN: &str = "admin_token";
+use types_admin::{KvConfig, KvConfigKey};
 
 /// 应用全局上下文，构造完成后只读。
 #[derive(Debug, Clone, Default)]
@@ -41,11 +34,11 @@ impl From<Vec<KvConfig>> for AppContext {
     fn from(configs: Vec<KvConfig>) -> Self {
         let mut context = Self::default();
         for config in configs {
-            match config.config_key.as_str() {
-                CONFIG_DEBUG_MODE => {
+            match config.config_key.parse::<KvConfigKey>() {
+                Ok(KvConfigKey::DebugMode) => {
                     context.debug_mode = lib_core::string_is_true(&config.config_value)
                 }
-                CONFIG_ALLOW_ANONYMOUS => {
+                Ok(KvConfigKey::AllowAnonymous) => {
                     context.allow_anonymous = lib_core::string_is_true(&config.config_value)
                 }
                 _ => {}

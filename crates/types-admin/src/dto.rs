@@ -276,12 +276,12 @@ impl From<ApiKey> for ApiKeyVO {
 // ---------------------------------------------------------------------------
 
 #[auto_type]
-pub struct ConfigQO {
+pub struct KvConfigQO {
     pub config_key: Option<String>,
 }
 
 #[auto_type(default = false)]
-pub struct ConfigVO {
+pub struct KvConfigVO {
     pub id: i64,
     pub config_key: String,
     pub config_value: String,
@@ -290,7 +290,7 @@ pub struct ConfigVO {
     pub update_time: i64,
 }
 
-impl From<KvConfig> for ConfigVO {
+impl From<KvConfig> for KvConfigVO {
     fn from(config: KvConfig) -> Self {
         Self {
             id: config.id,
@@ -304,7 +304,7 @@ impl From<KvConfig> for ConfigVO {
 }
 
 #[auto_type(default = false)]
-pub struct ConfigUpdatePO {
+pub struct KvConfigUpdatePO {
     pub config_key: String,
     pub config_value: String,
 }

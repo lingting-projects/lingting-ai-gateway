@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::{PgPool, QueryBuilderExt};
 use sqlx::{Postgres, QueryBuilder, Row};
-use types_admin::dto::ConfigQO;
+use types_admin::dto::KvConfigQO;
 use types_admin::entity::KvConfig;
 
 /// 全局配置数据访问。
@@ -105,16 +105,16 @@ impl KvConfigRepository {
     pub async fn page(
         &self,
         pagination: &PaginationParams,
-        conditions: &ConfigQO,
+        conditions: &KvConfigQO,
     ) -> Result<PaginationResult<KvConfig>> {
         let mut count = QueryBuilder::<Postgres>::new("SELECT COUNT(*) AS total FROM kv_config");
-        push_config_conditions(&mut count, conditions);
+        push_kv_config_conditions(&mut count, conditions);
 
         let total_row = count.build().fetch_one(&self.pool).await?;
         let total: i64 = total_row.get("total");
 
         let mut query = QueryBuilder::<Postgres>::new(format!("SELECT {COLUMNS} FROM kv_config"));
-        push_config_conditions(&mut query, conditions);
+        push_kv_config_conditions(&mut query, conditions);
         query.push_pagination(pagination);
 
         let rows = query.build().fetch_all(&self.pool).await?;
@@ -138,7 +138,10 @@ fn kv_config_from_row(row: sqlx::postgres::PgRow) -> Result<KvConfig> {
     })
 }
 
-fn push_config_conditions<'a>(query: &mut QueryBuilder<'a, Postgres>, conditions: &'a ConfigQO) {
+fn push_kv_config_conditions<'a>(
+    query: &mut QueryBuilder<'a, Postgres>,
+    conditions: &'a KvConfigQO,
+) {
     query.push(" WHERE 1 = 1");
     query.like("config_key", conditions.config_key.as_deref());
 }
