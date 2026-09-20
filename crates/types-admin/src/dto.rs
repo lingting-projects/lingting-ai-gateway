@@ -456,6 +456,7 @@ pub struct RequestSubVO {
     pub response_content: Option<String>,
     pub response_headers: Option<serde_json::Value>,
     pub start_time: i64,
+    pub first_chunk_time: Option<i64>,
     pub end_time: Option<i64>,
     pub duration_ms: Option<i64>,
     pub create_time: i64,
@@ -492,6 +493,7 @@ impl From<RequestSub> for RequestSubVO {
             response_content: sub.response_content,
             response_headers: sub.response_headers,
             start_time: sub.start_time,
+            first_chunk_time: sub.first_chunk_time,
             end_time: sub.end_time,
             duration_ms: sub.duration_ms,
             create_time: sub.create_time,
@@ -566,8 +568,9 @@ pub struct RequestFinishPO {
     pub provider_request_id: Option<String>,
     pub response_content: Option<String>,
     pub response_headers: Option<serde_json::Value>,
+    /// 子请求首字时间；仅子请求日志使用，非流式请求取完成时间。
+    pub first_chunk_time: Option<i64>,
     pub end_time: i64,
-    pub duration_ms: i64,
 }
 
 /// 供应商模型更新任务的执行结果。

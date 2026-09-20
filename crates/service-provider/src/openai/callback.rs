@@ -1,5 +1,7 @@
 //! 转发回调：把一次转发的进度与结果写回主请求日志和子请求日志。
 
+use std::sync::atomic::{AtomicI64, Ordering};
+
 use anyhow::Result;
 use async_trait::async_trait;
 use lib_provider::{ForwardCallback, ForwardFailure, ForwardOutcome};
@@ -9,13 +11,19 @@ use types_admin::entity::RequestStatus;
 
 use super::utils;
 
+/// 首字时间尚未产生的标记值。
+const NO_FIRST_CHUNK: i64 = 0;
+
 /// 把一次转发的进度与结果写回主请求日志和子请求日志。
 pub struct OpenAiForwardCallback {
     request_service: RequestService,
     main_request_id: i64,
     sub_request_id: i64,
     debug_mode: bool,
-    start_time: i64,
+    /// 是否流式请求；非流式没有分片回调，首字时间取完成时间。
+    stream: bool,
+    /// 子请求首字时间，`NO_FIRST_CHUNK` 表示尚未产生分片。
+    first_chunk_time: AtomicI64,
 }
 
 impl OpenAiForwardCallback {
@@ -25,14 +33,24 @@ impl OpenAiForwardCallback {
         main_request_id: i64,
         sub_request_id: i64,
         debug_mode: bool,
-        start_time: i64,
+        stream: bool,
     ) -> Self {
         Self {
             request_service,
             main_request_id,
             sub_request_id,
             debug_mode,
-            start_time,
+            stream,
+            first_chunk_time: AtomicI64::new(NO_FIRST_CHUNK),
+        }
+    }
+
+    /// 子请求首字时间：已产生分片时取首个分片时刻，非流式取完成时间，未产生分片时为空。
+    fn first_chunk_time(&self, end_time: i64) -> Option<i64> {
+        match self.first_chunk_time.load(Ordering::Acquire) {
+            NO_FIRST_CHUNK if self.stream => None,
+            NO_FIRST_CHUNK => Some(end_time),
+            recorded => Some(recorded),
         }
     }
 
@@ -68,8 +86,8 @@ impl OpenAiForwardCallback {
                 outcome.response_headers.as_ref(),
                 self.debug_mode,
             ),
+            first_chunk_time: self.first_chunk_time(end_time),
             end_time,
-            duration_ms: end_time - self.start_time,
         })
     }
 
@@ -87,6 +105,29 @@ impl OpenAiForwardCallback {
 
 #[async_trait]
 impl ForwardCallback for OpenAiForwardCallback {
+    /// 请求即将发出：记录子请求的转发开始时间。
+    async fn on_start(&self) -> Result<()> {
+        let start_time = lib_core::current_millis()?;
+        self.request_service
+            .update_sub_start_time(self.sub_request_id, start_time)
+            .await
+    }
+
+    /// 收到新的分片：首次调用时记录首字时间。
+    async fn on_progress(&self, _outcome: &ForwardOutcome) -> Result<()> {
+        let first_chunk_time = lib_core::current_millis()?;
+        let previous = self
+            .first_chunk_time
+            .swap(first_chunk_time, Ordering::AcqRel);
+        if previous != NO_FIRST_CHUNK {
+            return Ok(());
+        }
+
+        self.request_service
+            .update_sub_first_chunk_time(self.sub_request_id, first_chunk_time)
+            .await
+    }
+
     async fn on_success(&self, outcome: &ForwardOutcome) -> Result<()> {
         let params = self.finish_params(RequestStatus::Success, outcome, None)?;
         self.finish(&params).await

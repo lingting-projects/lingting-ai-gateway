@@ -116,8 +116,8 @@ impl RequestMainRepository {
                 cache_read_tokens = $8, cache_write_tokens = $9, inference_tokens = $10,
                 read_tokens = $11, write_tokens = $12, total_tokens = $13, http_status = $14,
                 finish_reason = $15, provider_request_id = $16, response_content = $17,
-                response_headers = $18, end_time = $19, duration_ms = $20
-             WHERE id = $21",
+                response_headers = $18, end_time = $19, duration_ms = $19 - start_time
+             WHERE id = $20",
         )
         .bind(params.status.as_str())
         .bind(&params.error_type)
@@ -138,7 +138,6 @@ impl RequestMainRepository {
         .bind(&params.response_content)
         .bind(&params.response_headers)
         .bind(params.end_time)
-        .bind(params.duration_ms)
         .bind(id)
         .execute(&self.pool)
         .await

@@ -16,7 +16,7 @@ const COLUMNS: &str = "id, main_request_id, provider_id, provider_name, model, p
     output_tokens, cache_read_tokens, cache_write_tokens, inference_tokens, read_tokens,
     write_tokens, total_tokens, http_status, finish_reason, provider_request_id, response_content,
     response_headers,
-    start_time, end_time, duration_ms, create_time";
+    start_time, first_chunk_time, end_time, duration_ms, create_time";
 
 impl RequestSubRepository {
     pub fn new(pool: PgPool) -> Self {
@@ -51,6 +51,30 @@ impl RequestSubRepository {
         Ok(row.get("id"))
     }
 
+    /// 记录转发开始时间；由转发回调在请求发出前调用。
+    pub async fn update_start_time(&self, id: i64, start_time: i64) -> Result<()> {
+        sqlx::query("UPDATE request_sub SET start_time = $1 WHERE id = $2")
+            .bind(start_time)
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .context("更新子请求开始时间失败")?;
+
+        Ok(())
+    }
+
+    /// 记录首字时间；由转发回调在首个分片到达时调用。
+    pub async fn update_first_chunk_time(&self, id: i64, first_chunk_time: i64) -> Result<()> {
+        sqlx::query("UPDATE request_sub SET first_chunk_time = $1 WHERE id = $2")
+            .bind(first_chunk_time)
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .context("更新子请求首字时间失败")?;
+
+        Ok(())
+    }
+
     /// 请求结束时写入状态、错误、token 与返回信息。
     pub async fn finish(&self, id: i64, params: &RequestFinishPO) -> Result<()> {
         sqlx::query(
@@ -60,7 +84,8 @@ impl RequestSubRepository {
                 cache_read_tokens = $8, cache_write_tokens = $9, inference_tokens = $10,
                 read_tokens = $11, write_tokens = $12, total_tokens = $13, http_status = $14,
                 finish_reason = $15, provider_request_id = $16, response_content = $17,
-                response_headers = $18, end_time = $19, duration_ms = $20
+                response_headers = $18, end_time = $19,
+                first_chunk_time = COALESCE($20, first_chunk_time), duration_ms = $19 - start_time
              WHERE id = $21",
         )
         .bind(params.status.as_str())
@@ -82,7 +107,7 @@ impl RequestSubRepository {
         .bind(&params.response_content)
         .bind(&params.response_headers)
         .bind(params.end_time)
-        .bind(params.duration_ms)
+        .bind(params.first_chunk_time)
         .bind(id)
         .execute(&self.pool)
         .await
@@ -172,6 +197,7 @@ fn request_sub_from_row(row: sqlx::postgres::PgRow) -> Result<RequestSub> {
         response_content: row.get("response_content"),
         response_headers: row.get("response_headers"),
         start_time: row.get("start_time"),
+        first_chunk_time: row.get("first_chunk_time"),
         end_time: row.get("end_time"),
         duration_ms: row.get("duration_ms"),
         create_time: row.get("create_time"),

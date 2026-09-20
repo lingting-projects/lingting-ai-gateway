@@ -85,6 +85,18 @@ impl RequestService {
             .await
     }
 
+    /// 记录子请求日志的转发开始时间。
+    pub async fn update_sub_start_time(&self, id: i64, start_time: i64) -> Result<()> {
+        self.sub_repository.update_start_time(id, start_time).await
+    }
+
+    /// 记录子请求日志的首字时间。
+    pub async fn update_sub_first_chunk_time(&self, id: i64, first_chunk_time: i64) -> Result<()> {
+        self.sub_repository
+            .update_first_chunk_time(id, first_chunk_time)
+            .await
+    }
+
     /// 结束主请求日志。
     pub async fn finish_main(&self, id: i64, params: &RequestFinishPO) -> Result<()> {
         self.main_repository.finish(id, params).await

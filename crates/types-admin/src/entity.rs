@@ -223,6 +223,7 @@ pub struct RequestMain {
     pub response_content: Option<String>,
     /// 返回给客户端的响应头，仅调试模式记录，已移除逐跳头。
     pub response_headers: Option<serde_json::Value>,
+    /// 请求收到时间（毫秒时间戳）。
     pub start_time: i64,
     pub end_time: Option<i64>,
     pub duration_ms: Option<i64>,
@@ -260,7 +261,10 @@ pub struct RequestSub {
     pub response_content: Option<String>,
     /// 供应商返回的响应头，仅调试模式记录，已移除逐跳头。
     pub response_headers: Option<serde_json::Value>,
+    /// 转发开始时间（毫秒时间戳）。
     pub start_time: i64,
+    /// 首字时间（毫秒时间戳），非流式与完成时间一致，为空表示未产生分片。
+    pub first_chunk_time: Option<i64>,
     pub end_time: Option<i64>,
     pub duration_ms: Option<i64>,
     pub create_time: i64,

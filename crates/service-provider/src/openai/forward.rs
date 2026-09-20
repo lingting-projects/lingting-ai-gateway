@@ -39,7 +39,8 @@ where
     let request_service = RequestService::new()?;
 
     let debug_mode = app_context.debug_mode();
-    let start_time = lib_core::current_millis()?;
+    // 主请求的收到时间取自框架的请求快照，早于鉴权与供应商查询。
+    let receive_time = web_context.request().receive_time;
     let request_params = utils::request_params(&web_context, debug_mode);
     let request_headers = utils::request_headers(&web_context, debug_mode);
     let forwarded_headers = utils::forwarded_headers(&web_context, &provider.api_key, debug_mode)?;
@@ -65,7 +66,7 @@ where
             path: web_context.request().path.clone(),
             request_params: request_params.clone(),
             request_headers,
-            start_time,
+            start_time: receive_time,
         })
         .await?;
 
@@ -79,7 +80,7 @@ where
             provider_url,
             request_params,
             request_headers: forwarded_headers,
-            start_time,
+            start_time: receive_time,
         })
         .await?;
 
@@ -89,7 +90,7 @@ where
         main_request_id,
         sub_request_id,
         debug_mode,
-        start_time,
+        request.stream,
     ));
 
     executor(provider, request, callback).await
