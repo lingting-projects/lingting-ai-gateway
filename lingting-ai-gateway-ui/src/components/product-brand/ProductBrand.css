@@ -1,0 +1,13 @@
+@reference "../../index.css";
+
+.product-brand {
+    @apply h-14 w-full shrink-0 px-2;
+}
+
+.product-brand-icon {
+    @apply w-8 shrink-0;
+}
+
+.product-brand-title {
+    @apply min-w-0 flex-1;
+}
