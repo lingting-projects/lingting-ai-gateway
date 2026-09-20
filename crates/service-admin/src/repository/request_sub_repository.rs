@@ -11,9 +11,11 @@ pub struct RequestSubRepository {
 }
 
 const COLUMNS: &str = "id, main_request_id, provider_id, provider_name, model, provider_url,
-    request_params, status, error_type, error_code, error_message, return_model, input_tokens,
+    request_params, request_headers, status, error_type, error_code, error_message, return_model,
+    input_tokens,
     output_tokens, cache_read_tokens, cache_write_tokens, inference_tokens, read_tokens,
     write_tokens, total_tokens, http_status, finish_reason, provider_request_id, response_content,
+    response_headers,
     start_time, end_time, duration_ms, create_time";
 
 impl RequestSubRepository {
@@ -28,8 +30,8 @@ impl RequestSubRepository {
         let row = sqlx::query(
             "INSERT INTO request_sub
                 (main_request_id, provider_id, provider_name, model, provider_url, request_params,
-                 status, start_time, create_time)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                 request_headers, status, start_time, create_time)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
              RETURNING id",
         )
         .bind(params.main_request_id)
@@ -38,6 +40,7 @@ impl RequestSubRepository {
         .bind(&params.model)
         .bind(&params.provider_url)
         .bind(&params.request_params)
+        .bind(&params.request_headers)
         .bind(RequestStatus::Processing.as_str())
         .bind(params.start_time)
         .bind(now)
@@ -57,8 +60,8 @@ impl RequestSubRepository {
                 cache_read_tokens = $8, cache_write_tokens = $9, inference_tokens = $10,
                 read_tokens = $11, write_tokens = $12, total_tokens = $13, http_status = $14,
                 finish_reason = $15, provider_request_id = $16, response_content = $17,
-                end_time = $18, duration_ms = $19
-             WHERE id = $20",
+                response_headers = $18, end_time = $19, duration_ms = $20
+             WHERE id = $21",
         )
         .bind(params.status.as_str())
         .bind(&params.error_type)
@@ -77,6 +80,7 @@ impl RequestSubRepository {
         .bind(&params.finish_reason)
         .bind(&params.provider_request_id)
         .bind(&params.response_content)
+        .bind(&params.response_headers)
         .bind(params.end_time)
         .bind(params.duration_ms)
         .bind(id)
@@ -148,6 +152,7 @@ fn request_sub_from_row(row: sqlx::postgres::PgRow) -> Result<RequestSub> {
         model: row.get("model"),
         provider_url: row.get("provider_url"),
         request_params: row.get("request_params"),
+        request_headers: row.get("request_headers"),
         status: RequestStatus::from_db(&row.get::<String, _>("status")),
         error_type: row.get("error_type"),
         error_code: row.get("error_code"),
@@ -165,6 +170,7 @@ fn request_sub_from_row(row: sqlx::postgres::PgRow) -> Result<RequestSub> {
         finish_reason: row.get("finish_reason"),
         provider_request_id: row.get("provider_request_id"),
         response_content: row.get("response_content"),
+        response_headers: row.get("response_headers"),
         start_time: row.get("start_time"),
         end_time: row.get("end_time"),
         duration_ms: row.get("duration_ms"),

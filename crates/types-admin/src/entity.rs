@@ -200,6 +200,8 @@ pub struct RequestMain {
     pub method: String,
     pub path: String,
     pub request_params: Option<serde_json::Value>,
+    /// 网关收到的请求头，仅调试模式记录，已移除逐跳头。
+    pub request_headers: Option<serde_json::Value>,
     pub status: RequestStatus,
     pub current_status: String,
     pub error_type: String,
@@ -219,6 +221,8 @@ pub struct RequestMain {
     pub finish_reason: String,
     pub provider_request_id: String,
     pub response_content: Option<String>,
+    /// 返回给客户端的响应头，仅调试模式记录，已移除逐跳头。
+    pub response_headers: Option<serde_json::Value>,
     pub start_time: i64,
     pub end_time: Option<i64>,
     pub duration_ms: Option<i64>,
@@ -235,6 +239,8 @@ pub struct RequestSub {
     pub model: String,
     pub provider_url: String,
     pub request_params: Option<serde_json::Value>,
+    /// 实际转发给供应商的请求头，仅调试模式记录，已移除逐跳头且鉴权已脱敏。
+    pub request_headers: Option<serde_json::Value>,
     pub status: RequestStatus,
     pub error_type: String,
     pub error_code: String,
@@ -252,6 +258,8 @@ pub struct RequestSub {
     pub finish_reason: String,
     pub provider_request_id: String,
     pub response_content: Option<String>,
+    /// 供应商返回的响应头，仅调试模式记录，已移除逐跳头。
+    pub response_headers: Option<serde_json::Value>,
     pub start_time: i64,
     pub end_time: Option<i64>,
     pub duration_ms: Option<i64>,

@@ -64,6 +64,10 @@ impl OpenAiForwardCallback {
             finish_reason: Some(outcome.finish_reason.clone()),
             provider_request_id: Some(outcome.provider_request_id.clone()),
             response_content: utils::response_content(&outcome.content, self.debug_mode),
+            response_headers: utils::response_headers(
+                outcome.response_headers.as_ref(),
+                self.debug_mode,
+            ),
             end_time,
             duration_ms: end_time - self.start_time,
         })

@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use framework_core::MultiStringValue;
 use futures_util::StreamExt;
 use lib_provider::{ChunkSink, ForwardCallback, ForwardFailure, ForwardOutcome};
 use reqwest::Response;
@@ -26,15 +27,18 @@ pub async fn forward_stream<P>(
     sink: ChunkSink,
     callback: Arc<dyn ForwardCallback>,
     mut parser: P,
+    response_headers: MultiStringValue,
 ) where
     P: StreamParser,
 {
     let status = response.status().as_u16();
+    let debug_mode = callback.is_debug();
     let mut stream = response.bytes_stream();
 
     while let Some(item) = stream.next().await {
         if sink.is_closed() {
-            utils::notify(callback.on_cancel(&parser.outcome(status)).await);
+            let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode);
+            utils::notify(callback.on_cancel(&outcome).await);
             return;
         }
 
@@ -44,7 +48,7 @@ pub async fn forward_stream<P>(
                 let failure = ForwardFailure::new(
                     utils::transport_error_type(&error),
                     error.to_string(),
-                    parser.outcome(status),
+                    take_outcome(&mut parser, status, &response_headers, debug_mode),
                 );
                 utils::notify(callback.on_failure(&failure).await);
                 sink.send_error(error.to_string());
@@ -54,9 +58,26 @@ pub async fn forward_stream<P>(
 
         parser.push(&chunk);
         sink.send(chunk);
-        utils::notify(callback.on_progress(&parser.outcome(status)).await);
+        let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode);
+        utils::notify(callback.on_progress(&outcome).await);
     }
 
     parser.finish();
-    utils::notify(callback.on_success(&parser.outcome(status)).await);
+    let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode);
+    utils::notify(callback.on_success(&outcome).await);
+}
+
+/// 取当前累积结果，并按调试模式并入供应商响应头。
+fn take_outcome<P>(
+    parser: &mut P,
+    status: u16,
+    response_headers: &MultiStringValue,
+    debug_mode: bool,
+) -> ForwardOutcome
+where
+    P: StreamParser,
+{
+    let mut outcome = parser.outcome(status);
+    utils::record_response_headers(&mut outcome, response_headers, debug_mode);
+    outcome
 }

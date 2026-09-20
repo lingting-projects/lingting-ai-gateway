@@ -11,10 +11,12 @@ pub struct RequestMainRepository {
 }
 
 const COLUMNS: &str = "id, request_id, trace_id, client_request_id, session_id, client_ip,
-    user_agent, credential_id, model, stream, method, path, request_params, status, current_status,
+    user_agent, credential_id, model, stream, method, path, request_params, request_headers,
+    status, current_status,
     error_type, error_code, error_message, provider_count, return_model, input_tokens,
     output_tokens, cache_read_tokens, cache_write_tokens, inference_tokens, read_tokens,
     write_tokens, total_tokens, http_status, finish_reason, provider_request_id, response_content,
+    response_headers,
     start_time, end_time, duration_ms, create_time";
 
 impl RequestMainRepository {
@@ -53,28 +55,30 @@ impl RequestMainRepository {
         let row = sqlx::query(
             "INSERT INTO request_main
                 (request_id, trace_id, client_request_id, session_id, client_ip, user_agent,
-                 credential_id, model, stream, method, path, request_params, status, start_time, create_time)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                 credential_id, model, stream, method, path, request_params, request_headers,
+                 status, start_time, create_time)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
              RETURNING id",
         )
-            .bind(&params.request_id)
-            .bind(&params.trace_id)
-            .bind(&params.client_request_id)
-            .bind(&params.session_id)
-            .bind(&params.client_ip)
-            .bind(&params.user_agent)
-            .bind(&params.credential_id)
-            .bind(&params.model)
-            .bind(params.stream)
-            .bind(&params.method)
-            .bind(&params.path)
-            .bind(&params.request_params)
-            .bind(RequestStatus::Processing.as_str())
-            .bind(params.start_time)
-            .bind(now)
-            .fetch_one(&self.pool)
-            .await
-            .context("写入主请求日志失败")?;
+        .bind(&params.request_id)
+        .bind(&params.trace_id)
+        .bind(&params.client_request_id)
+        .bind(&params.session_id)
+        .bind(&params.client_ip)
+        .bind(&params.user_agent)
+        .bind(&params.credential_id)
+        .bind(&params.model)
+        .bind(params.stream)
+        .bind(&params.method)
+        .bind(&params.path)
+        .bind(&params.request_params)
+        .bind(&params.request_headers)
+        .bind(RequestStatus::Processing.as_str())
+        .bind(params.start_time)
+        .bind(now)
+        .fetch_one(&self.pool)
+        .await
+        .context("写入主请求日志失败")?;
 
         Ok(row.get("id"))
     }
@@ -112,8 +116,8 @@ impl RequestMainRepository {
                 cache_read_tokens = $8, cache_write_tokens = $9, inference_tokens = $10,
                 read_tokens = $11, write_tokens = $12, total_tokens = $13, http_status = $14,
                 finish_reason = $15, provider_request_id = $16, response_content = $17,
-                end_time = $18, duration_ms = $19
-             WHERE id = $20",
+                response_headers = $18, end_time = $19, duration_ms = $20
+             WHERE id = $21",
         )
         .bind(params.status.as_str())
         .bind(&params.error_type)
@@ -132,6 +136,7 @@ impl RequestMainRepository {
         .bind(&params.finish_reason)
         .bind(&params.provider_request_id)
         .bind(&params.response_content)
+        .bind(&params.response_headers)
         .bind(params.end_time)
         .bind(params.duration_ms)
         .bind(id)
@@ -183,6 +188,7 @@ fn request_main_from_row(row: sqlx::postgres::PgRow) -> Result<RequestMain> {
         method: row.get("method"),
         path: row.get("path"),
         request_params: row.get("request_params"),
+        request_headers: row.get("request_headers"),
         status: RequestStatus::from_db(&row.get::<String, _>("status")),
         current_status: row.get("current_status"),
         error_type: row.get("error_type"),
@@ -202,6 +208,7 @@ fn request_main_from_row(row: sqlx::postgres::PgRow) -> Result<RequestMain> {
         finish_reason: row.get("finish_reason"),
         provider_request_id: row.get("provider_request_id"),
         response_content: row.get("response_content"),
+        response_headers: row.get("response_headers"),
         start_time: row.get("start_time"),
         end_time: row.get("end_time"),
         duration_ms: row.get("duration_ms"),

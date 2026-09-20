@@ -70,6 +70,7 @@ pub fn responses_outcome(http_status: u16, body: &Bytes, debug_mode: bool) -> Fo
         Ok(response) => ForwardOutcome {
             token_info: response.token_info(),
             content: None,
+            response_headers: None,
             return_model: response.model.clone(),
             finish_reason: response.finish_reason(),
             provider_request_id: response.id.clone(),
@@ -88,19 +89,19 @@ pub fn responses_outcome(http_status: u16, body: &Bytes, debug_mode: bool) -> Fo
 
 /// 供应商响应头转成网关响应头；逐跳头已由 `ForwardRequest::call` 移除。
 pub fn response_headers(headers: &HeaderMap) -> MultiStringValue {
-    let mut values = HashMap::<String, Vec<String>>::new();
-    for (name, value) in headers {
-        let Ok(value) = value.to_str() else {
-            continue;
-        };
-        values
-            .entry(name.as_str().to_string())
-            .or_default()
-            .push(value.to_string());
-    }
-    MultiStringValue::create(true, values)
+    lib_provider::client::headers_to_multi(headers)
 }
 
+/// 按调试模式把供应商响应头并入转发结果；关闭调试时不收集。
+pub fn record_response_headers(
+    outcome: &mut ForwardOutcome,
+    headers: &MultiStringValue,
+    debug_mode: bool,
+) {
+    if debug_mode {
+        outcome.response_headers = Some(headers.clone());
+    }
+}
 /// 传输层失败：构造失败信息、通知回调，并把错误原样抛出。
 pub async fn fail_transport(
     callback: &Arc<dyn ForwardCallback>,
@@ -123,8 +124,9 @@ pub async fn finish_response(
     status: StatusCode,
     headers: MultiStringValue,
     body: Bytes,
-    outcome: ForwardOutcome,
+    mut outcome: ForwardOutcome,
 ) -> Result<WebResponse> {
+    record_response_headers(&mut outcome, &headers, callback.is_debug());
     if status.is_success() {
         notify(callback.on_success(&outcome).await);
     } else {

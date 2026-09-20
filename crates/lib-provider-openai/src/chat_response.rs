@@ -248,6 +248,7 @@ impl ProviderResponse {
         ForwardOutcome {
             token_info: self.response.token_info(),
             content: None,
+            response_headers: None,
             return_model: self.response.model.clone(),
             finish_reason: self.response.finish_reason(),
             provider_request_id: self.response.id.clone(),

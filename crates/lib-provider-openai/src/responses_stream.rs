@@ -57,7 +57,13 @@ impl OpenaiResponsesStreamRequest {
         let (sink, stream) = ChunkSink::channel();
         let callback = Arc::clone(&self.callback);
         let parser = ResponsesStreamParser::new(callback.is_debug());
-        tokio::spawn(forward_stream(response, sink, callback, parser));
+        tokio::spawn(forward_stream(
+            response,
+            sink,
+            callback,
+            parser,
+            headers.clone(),
+        ));
 
         Ok(WebResponse {
             status: status.as_u16(),
@@ -142,6 +148,7 @@ impl StreamParser for ResponsesStreamParser {
             finish_reason: self.response.finish_reason(),
             provider_request_id: self.response.id.clone(),
             http_status: Some(i32::from(http_status)),
+            response_headers: None,
         }
     }
 }

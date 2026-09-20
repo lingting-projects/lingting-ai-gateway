@@ -41,6 +41,8 @@ where
     let debug_mode = app_context.debug_mode();
     let start_time = lib_core::current_millis()?;
     let request_params = utils::request_params(&web_context, debug_mode);
+    let request_headers = utils::request_headers(&web_context, debug_mode);
+    let forwarded_headers = utils::forwarded_headers(&web_context, &provider.api_key, debug_mode)?;
 
     // 主请求日志
     let request_id = lib_core::next_id()?.to_string();
@@ -62,6 +64,7 @@ where
             method: web_context.request().method.to_string(),
             path: web_context.request().path.clone(),
             request_params: request_params.clone(),
+            request_headers,
             start_time,
         })
         .await?;
@@ -75,6 +78,7 @@ where
             model: request.model.clone(),
             provider_url,
             request_params,
+            request_headers: forwarded_headers,
             start_time,
         })
         .await?;

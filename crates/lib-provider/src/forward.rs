@@ -1,6 +1,7 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use bytes::Bytes;
+use framework_core::MultiStringValue;
 use types_admin::TokenInfo;
 
 /// 一次转发累积的用量与返回信息。
@@ -10,6 +11,8 @@ pub struct ForwardOutcome {
     pub token_info: TokenInfo,
     /// 返回内容的原始字节，是否落库由回调按调试模式决定。
     pub content: Option<Bytes>,
+    /// 供应商返回的响应头，是否落库由回调按调试模式决定。
+    pub response_headers: Option<MultiStringValue>,
     /// 供应商实际返回的模型名。
     pub return_model: String,
     /// 结束原因。

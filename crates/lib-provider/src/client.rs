@@ -1,8 +1,10 @@
+use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 
 use anyhow::{Result, anyhow};
 use bytes::Bytes;
 use dashmap::DashMap;
+use framework_core::MultiStringValue;
 use framework_web::WebContext;
 use http::Response as HttpResponse;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue};
@@ -24,7 +26,7 @@ pub fn build_client(provider: &Provider) -> Arc<Client> {
 ///
 /// 逐跳头只对单条连接有效；`host` 与 `content-length` 必须按实际连接和请求体重新生成，
 /// 原样转发会与 reqwest 冲突。
-const SKIPPED_HEADERS: &[&str] = &[
+pub const SKIPPED_HEADERS: &[&str] = &[
     "connection",
     "keep-alive",
     "proxy-authenticate",
@@ -82,26 +84,48 @@ impl ForwardRequest {
 
     /// 原样转发客户端请求头，鉴权换成供应商自己的 api_key。
     fn forward_headers(&self, web_context: &WebContext) -> Result<HeaderMap> {
-        let mut headers = HeaderMap::new();
-        web_context.request().headers.for_each(|name, values| {
-            if is_skipped_header(name) {
-                return;
-            }
-            let Ok(name) = HeaderName::from_bytes(name.as_bytes()) else {
-                return;
-            };
-            for value in values {
-                if let Ok(value) = HeaderValue::from_str(value) {
-                    headers.append(name.clone(), value);
-                }
-            }
-        });
-
-        let authorization = HeaderValue::from_str(&format!("Bearer {}", self.api_key))
-            .map_err(|error| anyhow!("供应商 api_key 无法作为请求头使用：{error}"))?;
-        headers.insert(AUTHORIZATION, authorization);
-        Ok(headers)
+        build_forward_headers(web_context, &self.api_key)
     }
+}
+
+/// 按转发规则构造供应商请求头：移除逐跳头，鉴权换成供应商自己的 api_key。
+///
+/// 请求日志需要复现实际转发内容时也走这里，保证与真实转发完全一致。
+pub fn build_forward_headers(web_context: &WebContext, api_key: &str) -> Result<HeaderMap> {
+    let mut headers = HeaderMap::new();
+    web_context.request().headers.for_each(|name, values| {
+        if is_skipped_header(name) {
+            return;
+        }
+        let Ok(name) = HeaderName::from_bytes(name.as_bytes()) else {
+            return;
+        };
+        for value in values {
+            if let Ok(value) = HeaderValue::from_str(value) {
+                headers.append(name.clone(), value);
+            }
+        }
+    });
+
+    let authorization = HeaderValue::from_str(&format!("Bearer {api_key}"))
+        .map_err(|error| anyhow!("供应商 api_key 无法作为请求头使用：{error}"))?;
+    headers.insert(AUTHORIZATION, authorization);
+    Ok(headers)
+}
+
+/// 请求头 / 响应头转为键值集合；同名多值全部保留。
+pub fn headers_to_multi(headers: &HeaderMap) -> MultiStringValue {
+    let mut values = HashMap::<String, Vec<String>>::new();
+    for (name, value) in headers {
+        let Ok(value) = value.to_str() else {
+            continue;
+        };
+        values
+            .entry(name.as_str().to_string())
+            .or_default()
+            .push(value.to_string());
+    }
+    MultiStringValue::create(true, values)
 }
 
 /// 传输层异常：合成 502 响应，失败原因放在 JSON 响应体中。
@@ -122,7 +146,7 @@ fn transport_response(error: &reqwest::Error) -> Response {
 }
 
 /// 是否为需要跳过的请求头 / 响应头。
-fn is_skipped_header(name: &str) -> bool {
+pub fn is_skipped_header(name: &str) -> bool {
     SKIPPED_HEADERS
         .iter()
         .any(|skipped| name.eq_ignore_ascii_case(skipped))
