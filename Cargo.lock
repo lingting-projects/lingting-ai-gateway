@@ -2435,6 +2435,7 @@ dependencies = [
  "anyhow",
  "framework-core",
  "futures-util",
+ "log",
  "pglite-oxide",
  "sqlx",
  "tokio",

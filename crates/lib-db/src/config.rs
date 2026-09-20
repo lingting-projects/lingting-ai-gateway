@@ -1,7 +1,9 @@
+use std::net::{SocketAddr, SocketAddrV4};
 use std::path::PathBuf;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
+use log::log;
 use pglite_oxide::PgliteServer;
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
@@ -77,15 +79,23 @@ pub async fn init(config: &DbConfig) -> Result<Db> {
             .with_context(|| format!("创建数据目录失败：{}", path.display()))?;
     }
 
+    #[cfg(not(debug_assertions))]
+    let address = SocketAddr::from(([127, 0, 0, 1], 0));
+    #[cfg(debug_assertions)]
+    let address = SocketAddr::from(([127, 0, 0, 1], 26382));
+
     let mut builder = PgliteServer::builder()
         .username(config.username.clone())
-        .database(config.database.clone());
+        .database(config.database.clone())
+        .tcp(address);
     builder = match config.path.clone() {
         Some(path) => builder.path(path),
         None => builder.temporary(),
     };
     let server = builder.start().context("启动 pglite 服务失败")?;
 
+    let url = server.database_url();
+    log::debug!("数据库连接地址: {url}");
     let pool = PgPoolOptions::new()
         .max_connections(MAX_CONNECTIONS)
         .min_connections(MAX_CONNECTIONS)
@@ -100,7 +110,7 @@ pub async fn init(config: &DbConfig) -> Result<Db> {
                 Ok(())
             })
         })
-        .connect(&server.database_url())
+        .connect(&url)
         .await
         .context("连接 pglite 数据库失败")?;
 
