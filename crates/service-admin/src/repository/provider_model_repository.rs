@@ -208,8 +208,8 @@ impl ProviderModelRepository {
                 .push_bind(param.support_stream)
                 .push_bind(param.support_json)
                 .push_bind(param.support_cache)
-                .push_bind(&param.knowledge_cutoff)
-                .push_bind(&param.release_date)
+                .push_bind(param.knowledge_cutoff)
+                .push_bind(param.release_date)
                 .push_bind(true)
                 .push_bind(now)
                 .push_bind(now);

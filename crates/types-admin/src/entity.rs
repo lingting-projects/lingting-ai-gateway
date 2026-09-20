@@ -98,10 +98,10 @@ pub struct ProviderModel {
     pub support_json: bool,
     /// 是否支持提示词缓存。
     pub support_cache: bool,
-    /// 知识截止日期，如 2024-06。
-    pub knowledge_cutoff: String,
-    /// 模型发布日期，如 2024-05-13。
-    pub release_date: String,
+    /// 知识截止日期（毫秒时间戳），0 表示未知。
+    pub knowledge_cutoff: i64,
+    /// 模型发布日期（毫秒时间戳），0 表示未知。
+    pub release_date: i64,
     pub enabled: bool,
     pub create_time: i64,
     pub update_time: i64,

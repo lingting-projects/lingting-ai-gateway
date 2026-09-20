@@ -95,8 +95,8 @@ pub struct ProviderModelCreatePO {
     pub support_stream: bool,
     pub support_json: bool,
     pub support_cache: bool,
-    pub knowledge_cutoff: String,
-    pub release_date: String,
+    pub knowledge_cutoff: i64,
+    pub release_date: i64,
 }
 
 #[auto_type(default = false)]
@@ -125,8 +125,8 @@ pub struct ProviderModelVO {
     pub support_stream: bool,
     pub support_json: bool,
     pub support_cache: bool,
-    pub knowledge_cutoff: String,
-    pub release_date: String,
+    pub knowledge_cutoff: i64,
+    pub release_date: i64,
     pub enabled: bool,
     pub create_time: i64,
     pub update_time: i64,

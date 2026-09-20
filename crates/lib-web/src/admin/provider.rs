@@ -1,22 +1,15 @@
 use anyhow::{Result, anyhow};
-use framework_core::types::{IdPO, PaginationParams, PaginationResult};
+use framework_core::types::IdPO;
 use framework_web::{Json, web_api_post};
 use lib_db::use_db;
 use service_admin::manager::ProviderManager;
 use service_admin::service::ProviderService;
-use types_admin::dto::{
-    ProviderCreatePO, ProviderDetailVO, ProviderQO, ProviderUpdatePO, ProviderVO,
-};
+use types_admin::dto::{ProviderCreatePO, ProviderDetailVO, ProviderUpdatePO, ProviderVO};
 
-/// 供应商分页，附带每个供应商下的全部模型。
-#[web_api_post(path = "/___/provider/page")]
-pub async fn provider_page(
-    pagination: PaginationParams,
-    Json(query): Json<ProviderQO>,
-) -> Result<PaginationResult<ProviderDetailVO>> {
-    ProviderManager::new()?
-        .page_detail(&pagination, &query)
-        .await
+/// 供应商列表，附带每个供应商下的全部模型，按供应商路由策略排序。
+#[web_api_post(path = "/___/provider/list")]
+pub async fn provider_list() -> Result<Vec<ProviderDetailVO>> {
+    ProviderManager::new()?.list_detail().await
 }
 
 /// 供应商创建，返回仅此一次可见的明文 key。

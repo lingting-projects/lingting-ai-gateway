@@ -4,10 +4,11 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock};
 
 use anyhow::{Result, anyhow};
+use chrono::NaiveDate;
 use dashmap::DashMap;
 use lib_db::{DbContext, PgPoolExt, scope_db, use_pool};
 use lib_provider::build_client;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use service_admin::service::{ProviderModelRedirectService, ProviderModelService, ProviderService};
 use tokio::sync::{Mutex, OwnedMutexGuard};
 use types_admin::dto::ProviderModelCreatePO;
@@ -238,11 +239,9 @@ fn merge(
         support_json: or_default(remote.support_json, default, |model| model.support_json),
         support_cache: or_default(remote.support_cache, default, |model| model.support_cache),
         knowledge_cutoff: or_default(remote.knowledge_cutoff, default, |model| {
-            model.knowledge_cutoff.clone()
+            model.knowledge_cutoff
         }),
-        release_date: or_default(remote.release_date, default, |model| {
-            model.release_date.clone()
-        }),
+        release_date: or_default(remote.release_date, default, |model| model.release_date),
     }
 }
 
@@ -270,8 +269,36 @@ struct RemoteModel {
     support_stream: Option<bool>,
     support_json: Option<bool>,
     support_cache: Option<bool>,
-    knowledge_cutoff: Option<String>,
-    release_date: Option<String>,
+    #[serde(default, deserialize_with = "date_millis")]
+    knowledge_cutoff: Option<i64>,
+    #[serde(default, deserialize_with = "date_millis")]
+    release_date: Option<i64>,
+}
+
+/// 日期字段反序列化：接受毫秒时间戳数字，或 `YYYY-MM-DD` / `YYYY-MM` 字符串。
+///
+/// 字符串按 UTC 零点解析，`YYYY-MM` 取当月 1 日；无法识别时视为未返回。
+fn date_millis<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = Option::<serde_json::Value>::deserialize(deserializer)?;
+    Ok(value.and_then(|value| match value {
+        serde_json::Value::Number(number) => number.as_i64(),
+        serde_json::Value::String(text) => parse_date(&text),
+        _ => None,
+    }))
+}
+
+/// 解析 `YYYY-MM-DD` / `YYYY-MM` 为 UTC 零点毫秒时间戳。
+fn parse_date(text: &str) -> Option<i64> {
+    let text = text.trim();
+    ["%Y-%m-%d", "%Y-%m"].iter().find_map(|format| {
+        NaiveDate::parse_from_str(text, format)
+            .ok()
+            .and_then(|date| date.and_hms_opt(0, 0, 0))
+            .map(|time| time.and_utc().timestamp_millis())
+    })
 }
 
 /// 供应商模型列表响应。

@@ -1,8 +1,7 @@
 use anyhow::{Context, Result};
-use framework_core::types::{PaginationParams, PaginationResult};
-use lib_db::{PgPool, QueryBuilderExt};
+use lib_db::PgPool;
 use sqlx::{Postgres, QueryBuilder, Row};
-use types_admin::dto::{ProviderCreatePO, ProviderQO, ProviderUpdatePO};
+use types_admin::dto::{ProviderCreatePO, ProviderUpdatePO};
 use types_admin::entity::Provider;
 
 /// 供应商数据访问。
@@ -148,28 +147,18 @@ impl ProviderRepository {
         Ok(())
     }
 
-    pub async fn page(
-        &self,
-        pagination: &PaginationParams,
-        conditions: &ProviderQO,
-    ) -> Result<PaginationResult<Provider>> {
-        let mut count = QueryBuilder::<Postgres>::new("SELECT COUNT(*) AS total FROM provider");
-        push_provider_conditions(&mut count, conditions);
+    /// 查询全部未删除供应商，按供应商路由策略排序：优先级升序、加入时间升序。
+    pub async fn find_all(&self) -> Result<Vec<Provider>> {
+        let query = format!(
+            "SELECT {COLUMNS} FROM provider WHERE deleted_at = 0 ORDER BY priority ASC, create_time ASC"
+        );
 
-        let total_row = count.build().fetch_one(&self.pool).await?;
-        let total: i64 = total_row.get("total");
+        let rows = sqlx::query(&query)
+            .fetch_all(&self.pool)
+            .await
+            .context("查询供应商列表失败")?;
 
-        let mut query = QueryBuilder::<Postgres>::new(format!("SELECT {COLUMNS} FROM provider"));
-        push_provider_conditions(&mut query, conditions);
-        query.push_pagination(pagination);
-
-        let rows = query.build().fetch_all(&self.pool).await?;
-        let records = rows
-            .into_iter()
-            .filter_map(|row| provider_from_row(row).ok())
-            .collect();
-
-        Ok(PaginationResult { total, records })
+        rows.into_iter().map(provider_from_row).collect()
     }
 }
 
@@ -186,14 +175,4 @@ fn provider_from_row(row: sqlx::postgres::PgRow) -> Result<Provider> {
         update_time: row.get("update_time"),
         deleted_at: row.get("deleted_at"),
     })
-}
-
-fn push_provider_conditions<'a>(
-    query: &mut QueryBuilder<'a, Postgres>,
-    conditions: &'a ProviderQO,
-) {
-    query.push(" WHERE deleted_at = 0");
-    query.like("name", conditions.name.as_deref());
-    query.eq("id", conditions.id);
-    query.eq("enabled", conditions.enabled);
 }

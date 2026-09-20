@@ -1,7 +1,6 @@
 use anyhow::Result;
-use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::use_pool;
-use types_admin::dto::{ProviderCreatePO, ProviderQO, ProviderUpdatePO};
+use types_admin::dto::{ProviderCreatePO, ProviderUpdatePO};
 use types_admin::entity::Provider;
 
 use crate::repository::ProviderRepository;
@@ -19,13 +18,9 @@ impl ProviderService {
         })
     }
 
-    /// 分页查询供应商。
-    pub async fn page(
-        &self,
-        pagination: &PaginationParams,
-        conditions: &ProviderQO,
-    ) -> Result<PaginationResult<Provider>> {
-        self.repository.page(pagination, conditions).await
+    /// 查询全部未删除的供应商，按供应商路由策略排序。
+    pub async fn find_all(&self) -> Result<Vec<Provider>> {
+        self.repository.find_all().await
     }
 
     /// 查询全部启用的供应商。
