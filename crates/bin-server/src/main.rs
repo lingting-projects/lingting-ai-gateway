@@ -20,7 +20,10 @@ async fn main() -> Result<()> {
     let db_context = Arc::new(DbContext::new(db.pool().clone()));
 
     let address = "127.0.0.1";
+    #[cfg(not(debug_assertions))]
     let port = 0;
+    #[cfg(debug_assertions)]
+    let port = 26380;
 
     let server = axum_builder(address, port).bind().await?;
     log::info!("当前服务运行: {address}:{}", server.context().port);
