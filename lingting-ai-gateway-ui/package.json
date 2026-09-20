@@ -1,0 +1,53 @@
+{
+  "name": "lingting-ai-gateway",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build:web": "vp build --mode production",
+    "build:desktop": "vp build --mode desktop",
+    "lint": "vp fmt && vp lint --fix && tsc --noEmit"
+  },
+  "dependencies": {
+    "@ant-design/cssinjs": "^2.1.2",
+    "@ant-design/icons": "~6.3.2",
+    "@ant-design/plots": "~2.6.8",
+    "@ant-design/pro-components": "^3.1.14-6",
+    "@ant-design/x": "~2.8.0",
+    "@ant-design/x-markdown": "~2.8.0",
+    "@ant-design/x-sdk": "~2.8.0",
+    "@marsidev/react-turnstile": "~1.6.1",
+    "@lingting/ai-gateway-sdk": "workspace:",
+    "@tanstack/react-query": "~5.101.2",
+    "@tanstack/react-router": "^1.170.18",
+    "@tanstack/react-store": "^0.11.0",
+    "antd": "~6.6.0",
+    "antd-style": "~4.1.0",
+    "china-division": "~2.7.0",
+    "clsx": "~2.1.1",
+    "d3": "~7.9.0",
+    "dayjs": "~1.11.21",
+    "highlight.js": "~11.11.1",
+    "react": "~19.2.7",
+    "react-dom": "~19.2.7",
+    "simple-icons": "~16.28.0",
+    "topojson-client": "~3.1.0"
+  },
+  "devDependencies": {
+    "@ant-design/cli": "~6.6.0",
+    "@tailwindcss/vite": "~4.1.18",
+    "@types/node": "~22.13.1",
+    "@types/react": "~19.2.8",
+    "@types/react-dom": "~19.2.3",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "@vitejs/plugin-react": "~5.1.1",
+    "tailwindcss": "~4.1.18",
+    "typescript": "~5.9.3",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "volta": {
+    "node": "22.22.3"
+  }
+}
