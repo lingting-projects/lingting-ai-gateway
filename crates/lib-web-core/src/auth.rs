@@ -98,5 +98,5 @@ where
 pub fn use_authorization() -> Result<Authorization> {
     AUTHORIZATION
         .try_with(Clone::clone)
-        .map_err(|error| anyhow!("当前调用不在鉴权上下文作用域内：{error}"))
+        .map_err(|error| anyhow!("当前调用不在鉴权上下文作用域内：{error:#}"))
 }

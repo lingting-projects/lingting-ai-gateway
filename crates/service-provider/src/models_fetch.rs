@@ -32,7 +32,7 @@ pub async fn async_run_with(db: Arc<DbContext>, provider: Option<i64>) {
     tokio::spawn(async move {
         scope_db(db, async move {
             if let Err(error) = run(provider).await {
-                tracing::warn!("供应商模型同步失败：{error}");
+                tracing::warn!("供应商模型同步失败：{error:#}");
             }
         })
         .await;
@@ -176,7 +176,7 @@ async fn fetch_remote(provider: &Provider) -> Result<Option<Vec<RemoteModel>>> {
     {
         Ok(response) => response,
         Err(error) => {
-            tracing::warn!("请求供应商 {} 模型列表失败：{error}", provider.name);
+            tracing::warn!("请求供应商 {} 模型列表失败：{error:#}", provider.name);
             return Ok(None);
         }
     };
@@ -194,7 +194,7 @@ async fn fetch_remote(provider: &Provider) -> Result<Option<Vec<RemoteModel>>> {
     let body = match response.text().await {
         Ok(body) => body,
         Err(error) => {
-            tracing::warn!("读取供应商 {} 模型列表响应失败：{error}", provider.name);
+            tracing::warn!("读取供应商 {} 模型列表响应失败：{error:#}", provider.name);
             return Ok(None);
         }
     };
@@ -203,7 +203,7 @@ async fn fetch_remote(provider: &Provider) -> Result<Option<Vec<RemoteModel>>> {
         Ok(list) => Ok(Some(list.data)),
         Err(error) => {
             tracing::warn!(
-                "解析供应商 {} 模型列表失败：{error}，响应体 {body}",
+                "解析供应商 {} 模型列表失败：{error:#}，响应体 {body}",
                 provider.name
             );
             Ok(None)

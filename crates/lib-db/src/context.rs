@@ -46,7 +46,7 @@ where
 pub fn use_db() -> Result<Arc<DbContext>> {
     DB_CONTEXT
         .try_with(Arc::clone)
-        .map_err(|error| anyhow!("当前调用不在数据库上下文作用域内：{error}"))
+        .map_err(|error| anyhow!("当前调用不在数据库上下文作用域内：{error:#}"))
 }
 
 /// 取当前任务的数据库连接池。

@@ -147,9 +147,12 @@ pub async fn finish_response(
 }
 
 /// 回调失败只记录日志，不影响请求本身。
+///
+/// 用 `{error:#}` 输出完整错误链：`{error}` 只打印最外层 context，
+/// 数据库错误等根因会被丢掉，排障时看不到真正原因。
 pub fn notify(result: Result<()>) {
     if let Err(error) = result {
-        tracing::warn!("转发回调执行失败：{error}");
+        tracing::warn!("转发回调执行失败：{error:#}");
     }
 }
 

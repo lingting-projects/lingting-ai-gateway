@@ -76,7 +76,7 @@ impl ForwardRequest {
                 response
             }
             Err(error) => {
-                tracing::warn!("转发请求失败：{error}");
+                tracing::warn!("转发请求失败：{error:#}");
                 transport_response(&error)
             }
         }
@@ -108,7 +108,7 @@ pub fn build_forward_headers(web_context: &WebContext, api_key: &str) -> Result<
     });
 
     let authorization = HeaderValue::from_str(&format!("Bearer {api_key}"))
-        .map_err(|error| anyhow!("供应商 api_key 无法作为请求头使用：{error}"))?;
+        .map_err(|error| anyhow!("供应商 api_key 无法作为请求头使用：{error:#}"))?;
     headers.insert(AUTHORIZATION, authorization);
     Ok(headers)
 }

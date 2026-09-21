@@ -92,6 +92,14 @@ where
         debug_mode,
         request.stream,
     ));
+    tracing::debug!(
+        "[MOCKTEST] forward-start provider={} model={} stream={} main={main_request_id} sub={sub_request_id}",
+        provider.name,
+        request.model,
+        request.stream
+    );
 
-    executor(provider, request, callback).await
+    let response = executor(provider, request, callback).await;
+    tracing::debug!("[MOCKTEST] forward-return main={main_request_id} sub={sub_request_id}");
+    response
 }

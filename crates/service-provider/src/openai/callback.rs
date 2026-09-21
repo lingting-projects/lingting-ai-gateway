@@ -93,6 +93,15 @@ impl OpenAiForwardCallback {
 
     /// 同时结束子请求日志与主请求日志。
     async fn finish(&self, params: &RequestFinishPO) -> Result<()> {
+        tracing::debug!(
+            "[MOCKTEST] finish status={} main={} sub={}",
+            params.status.as_str(),
+            self.main_request_id,
+            self.sub_request_id
+        );
+
+        // 子日志先写：失败即中断，主日志也不会被标记为已完成，
+        // 避免出现「主日志正常、子日志错误」这种不易察觉的状态。
         self.request_service
             .finish_sub(self.sub_request_id, params)
             .await?;
@@ -108,6 +117,7 @@ impl ForwardCallback for OpenAiForwardCallback {
     /// 请求即将发出：记录子请求的转发开始时间。
     async fn on_start(&self) -> Result<()> {
         let start_time = lib_core::current_millis()?;
+        tracing::debug!("[MOCKTEST] upstream-start sub={}", self.sub_request_id);
         self.request_service
             .update_sub_start_time(self.sub_request_id, start_time)
             .await
