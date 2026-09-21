@@ -79,11 +79,13 @@ impl RequestSubRepository {
     pub async fn finish(&self, id: i64, params: &RequestFinishPO) -> Result<()> {
         sqlx::query(
             "UPDATE request_sub SET
-                status = $1, error_type = $2, error_code = $3, error_message = $4,
-                return_model = $5, input_tokens = $6, output_tokens = $7,
+                status = $1, error_type = COALESCE($2, ''), error_code = COALESCE($3, ''),
+                error_message = COALESCE($4, ''),
+                return_model = COALESCE($5, ''), input_tokens = $6, output_tokens = $7,
                 cache_read_tokens = $8, cache_write_tokens = $9, inference_tokens = $10,
                 read_tokens = $11, write_tokens = $12, total_tokens = $13, http_status = $14,
-                finish_reason = $15, provider_request_id = $16, response_content = $17,
+                finish_reason = COALESCE($15, ''), provider_request_id = COALESCE($16, ''),
+                response_content = $17,
                 response_headers = $18, end_time = $19,
                 first_chunk_time = COALESCE($20, first_chunk_time), duration_ms = $19 - start_time
              WHERE id = $21",
