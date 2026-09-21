@@ -98,11 +98,11 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
     setSubmitting(true);
     try {
       await bizApi.providerUpdate(toUpdatePO(provider, { ...values, enabled: enabledDraft }));
-      AppHolder.message.success("保存成功");
+      void AppHolder.message.success("保存成功");
       setEditing(false);
       onChanged();
     } catch (error) {
-      AppHolder.message.error(resolveErrorMessage(error));
+      void AppHolder.message.error(resolveErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -110,7 +110,6 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
 
   const columns = useMemo<ProDescriptionsColumn<ProviderVO>[]>(
     () => [
-      { copyable: true, dataIndex: "id", editable: false, title: "ID" },
       { copyable: true, dataIndex: "name", editable: false, title: "标识" },
       { dataIndex: "displayName", editable: false, title: "展示名称" },
       { copyable: true, dataIndex: "baseUrl", editable: false, title: "接口地址" },

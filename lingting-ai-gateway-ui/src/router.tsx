@@ -9,6 +9,7 @@ import {
 import { type MenuRouteDefinition, PlaceholderPage, type StandaloneRouteDefinition } from "@lri";
 import { ModelMain } from "@/pages/model/ModelMain";
 import { ProviderMain } from "@/pages/provider/ProviderMain";
+import { RequestMain } from "@/pages/request/RequestMain";
 
 export const menuRoutes: readonly MenuRouteDefinition[] = [
   {
@@ -30,7 +31,7 @@ export const menuRoutes: readonly MenuRouteDefinition[] = [
     title: "模型配置",
   },
   {
-    component: PlaceholderPage,
+    component: RequestMain,
     icon: <FileTextOutlined/>,
     path: "request",
     title: "请求日志",

@@ -25,9 +25,9 @@ export function ProviderModelList({ detail }: ProviderModelListProps) {
     setSyncing(true);
     try {
       await bizApi.providerUpdateModel({ id: detail.provider.id });
-      AppHolder.message.success("同步任务已启动，请稍后刷新供应商列表");
+      void AppHolder.message.success("同步任务已启动，请稍后刷新供应商列表");
     } catch (error) {
-      AppHolder.message.error(error instanceof Error ? error.message : "同步失败");
+      void AppHolder.message.error(error instanceof Error ? error.message : "同步失败");
     } finally {
       setSyncing(false);
     }
@@ -57,6 +57,7 @@ export function ProviderModelList({ detail }: ProviderModelListProps) {
         header={header}
         itemHeight={MODEL_ITEM_HEIGHT}
         itemRender={renderItem}
+        props={{ ghost: true }}
       />
     </Flex>
   );

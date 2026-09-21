@@ -1,0 +1,10 @@
+@reference "../../index.css";
+
+/* Token 列：总 Token 与明细上下排列，明细使用更小的次要文本 */
+.request-token {
+    @apply min-w-48;
+}
+
+.request-token .ant-typography-secondary {
+    @apply text-xs;
+}
