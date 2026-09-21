@@ -2,7 +2,7 @@ use anyhow::Result;
 use framework_web::{WebError, WebResponse, WebRoute, use_web, web_api_iter};
 use framework_web_axum::WebRouteWrapper;
 use lib_db::{DbContext, scope_db};
-use lib_web_core::scope_authorization;
+use lib_web_core::{scope_app, scope_authorization};
 use service_admin::manager::WebManager;
 use std::sync::Arc;
 
@@ -21,7 +21,12 @@ pub fn web_routes() -> Vec<WebRoute> {
 }
 
 async fn invoke(db: Arc<DbContext>, route: Arc<WebRoute>) -> Result<WebResponse> {
+    let path = route.path.clone();
     scope_db(db, async move {
+        // 客户端断开时本 future 被 drop，守卫用于记录该事件；正常结束时解除。
+        let mut guard = InvokeGuard::new(&path);
+        tracing::debug!("[MOCKTEST] request-in path={path}");
+
         let manager = WebManager::new()?;
         let app = manager.build_app().await?;
 
@@ -40,9 +45,45 @@ async fn invoke(db: Arc<DbContext>, route: Arc<WebRoute>) -> Result<WebResponse>
             }
         }
 
-        scope_authorization(authorization, async move { Ok(route.invoke().await) }).await
+        let response = scope_app(
+            Arc::new(app),
+            scope_authorization(authorization, async move { Ok(route.invoke().await) }),
+        )
+        .await;
+
+        guard.disarm();
+        tracing::debug!("[MOCKTEST] request-out path={path}");
+        response
     })
     .await
+}
+
+/// 请求处理守卫：future 被 drop 且未正常结束时，说明客户端在响应完成前断开。
+struct InvokeGuard {
+    path: String,
+    armed: bool,
+}
+
+impl InvokeGuard {
+    fn new(path: &str) -> Self {
+        Self {
+            path: path.to_string(),
+            armed: true,
+        }
+    }
+
+    /// 正常返回后解除，避免误报。
+    fn disarm(&mut self) {
+        self.armed = false;
+    }
+}
+
+impl Drop for InvokeGuard {
+    fn drop(&mut self) {
+        if self.armed {
+            tracing::debug!("[MOCKTEST] handler-drop path={}", self.path);
+        }
+    }
 }
 
 /// 读取 Bearer 令牌；未携带 Authorization 或格式异常时返回空串，由授权解析决定身份。
