@@ -1,0 +1,6 @@
+@reference "../../index.css";
+
+/* 明文密钥：等宽字体并允许换行，避免长 key 溢出弹窗 */
+.api-key-secret-value {
+    @apply block rounded-md bg-(--ant-color-fill-tertiary) px-3 py-2 font-mono break-all;
+}
