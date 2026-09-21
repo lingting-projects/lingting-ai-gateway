@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "crates/bin-mock-ai",
     "crates/bin-server",
     "crates/lib-core",
     "crates/lib-db",
