@@ -1,10 +1,11 @@
 import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import type { ProviderDetailVO } from "@lingting/ai-gateway-sdk";
-import { Button, DictTag, ListCard } from "@lri";
+import { AppHolder, Button, DictTag, ListCard } from "@lri";
 import { Flex, Input, Typography } from "antd";
 import clsx from "clsx";
 import { useCallback, useState } from "react";
 
+import { bizApi } from "@/api/BizApi";
 import { filterProviderDetails } from "@/utils/providerUtils";
 
 import { ProviderCreateModal } from "./ProviderCreateModal";
@@ -38,6 +39,19 @@ export function ProviderList({
                                selectedId,
                              }: ProviderListProps) {
   const [keyword, setKeyword] = useState("");
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+
+  const handleSyncModel = useCallback(async (id: string) => {
+    setSyncingId(id);
+    try {
+      await bizApi.providerUpdateModel({ id });
+      void AppHolder.message.success("同步任务已启动，请稍后刷新供应商列表");
+    } catch (error) {
+      void AppHolder.message.error(error instanceof Error ? error.message : "同步失败");
+    } finally {
+      setSyncingId(null);
+    }
+  }, []);
 
   const filter = useCallback(
     (items: ProviderDetailVO[]) => filterProviderDetails(items, keyword),
@@ -65,13 +79,26 @@ export function ProviderList({
             <DictTag dict={ENABLED_DICT} value={provider.enabled}/>
           </Flex>
           <Flex align="center" gap="small" justify="space-between">
-            <Typography.Text type="secondary">模型 {models.length}</Typography.Text>
+            <Flex align="center" gap="small">
+              <Typography.Text type="secondary">模型 {models.length}</Typography.Text>
+              <Button
+                icon={<ReloadOutlined/>}
+                loading={syncingId === detail.id}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void handleSyncModel(detail.id);
+                }}
+                size="small"
+                tooltip="同步供应商模型"
+                type="text"
+              />
+            </Flex>
             <Typography.Text type="secondary">优先级 {provider.priority}</Typography.Text>
           </Flex>
         </Flex>
       );
     },
-    [onSelect, selectedId],
+    [handleSyncModel, onSelect, selectedId, syncingId],
   );
 
   const header = (

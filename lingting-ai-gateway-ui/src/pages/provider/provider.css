@@ -48,14 +48,19 @@
   @apply flex min-h-0 flex-1 flex-col;
 }
 
-.provider-detail-tabs .ant-tabs-content-holder {
-  @apply min-h-0 flex-1;
+/* 模型列表可能超出可视高度，高度约束沿 Tabs 语义结构逐层传递，最终由虚拟列表内部滚动 */
+
+.provider-detail-tabs-body,
+.provider-detail-tabs-content {
+  @apply h-full min-h-0;
 }
 
 .provider-model-list {
   @apply h-full min-h-0;
 }
 
-.provider-model-header {
-  @apply w-full;
+.provider-model-list .ant-pro-card-header {
+  padding: 0;
+  padding-inline: 0 !important;
+  padding-block: 0 !important;
 }
