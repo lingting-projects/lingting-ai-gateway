@@ -2,7 +2,10 @@ use anyhow::{Context, Result};
 use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::{PgPool, QueryBuilderExt};
 use sqlx::{Postgres, QueryBuilder, Row};
-use types_admin::dto::{RequestFinishPO, RequestMainCreatePO, RequestMainQO};
+use types_admin::dto::{
+    DashboardQO, DashboardRequestVO, DashboardTokenVO, RequestFinishPO, RequestMainCreatePO,
+    RequestMainQO,
+};
 use types_admin::entity::{RequestMain, RequestStatus};
 
 /// 主请求日志数据访问。
@@ -18,6 +21,13 @@ const COLUMNS: &str = "id, request_id, trace_id, client_request_id, session_id, 
     write_tokens, total_tokens, http_status, finish_reason, provider_request_id, response_content,
     response_headers,
     start_time, end_time, duration_ms, create_time";
+
+/// 统计结果中的 token 字段，读/写与总数保持同一别名。
+const TOKEN_COLUMNS: &str = "COALESCE(SUM(total_tokens), 0) AS total,
+    COALESCE(SUM(cache_read_tokens), 0) AS cache_read,
+    COALESCE(SUM(cache_write_tokens), 0) AS cache_write,
+    COALESCE(SUM(read_tokens), 0) AS read,
+    COALESCE(SUM(write_tokens), 0) AS write";
 
 impl RequestMainRepository {
     pub fn new(pool: PgPool) -> Self {
@@ -172,6 +182,42 @@ impl RequestMainRepository {
 
         Ok(PaginationResult { total, records })
     }
+
+    /// 按筛选条件统计请求数量：总数、失败、取消。
+    pub async fn dashboard_request(&self, conditions: &DashboardQO) -> Result<DashboardRequestVO> {
+        let mut query = QueryBuilder::<Postgres>::new("SELECT COUNT(*) AS total,");
+        query
+            .push(" COUNT(*) FILTER (WHERE status = ")
+            .push_bind(RequestStatus::Failed.as_str())
+            .push(") AS failed, COUNT(*) FILTER (WHERE status = ")
+            .push_bind(RequestStatus::Cancelled.as_str())
+            .push(") AS cancelled FROM request_main");
+        push_dashboard_main_conditions(&mut query, conditions);
+
+        let row = query.build().fetch_one(&self.pool).await?;
+        Ok(DashboardRequestVO {
+            total: row.get("total"),
+            failed: row.get("failed"),
+            cancelled: row.get("cancelled"),
+        })
+    }
+
+    /// 按筛选条件统计主请求日志的 token。
+    pub async fn dashboard_token(&self, conditions: &DashboardQO) -> Result<DashboardTokenVO> {
+        let mut query = QueryBuilder::<Postgres>::new("SELECT ");
+        query.push(TOKEN_COLUMNS);
+        query.push(" FROM request_main");
+        push_dashboard_main_conditions(&mut query, conditions);
+
+        let row = query.build().fetch_one(&self.pool).await?;
+        Ok(DashboardTokenVO {
+            total: row.get("total"),
+            cache_read: row.get("cache_read"),
+            cache_write: row.get("cache_write"),
+            read: row.get("read"),
+            write: row.get("write"),
+        })
+    }
 }
 
 fn request_main_from_row(row: sqlx::postgres::PgRow) -> Result<RequestMain> {
@@ -235,4 +281,12 @@ fn push_request_main_conditions<'a>(
     );
     query.ge("start_time", conditions.start_time_begin);
     query.le("start_time", conditions.start_time_end);
+}
+
+/// 追加仪表盘统计筛选条件；主请求表没有供应商字段，忽略 `provider_ids`。
+fn push_dashboard_main_conditions(query: &mut QueryBuilder<Postgres>, conditions: &DashboardQO) {
+    query.push(" WHERE 1 = 1");
+    query.ge("start_time", conditions.start_time);
+    query.le("start_time", conditions.end_time);
+    query.in_array("model", conditions.models.as_deref());
 }

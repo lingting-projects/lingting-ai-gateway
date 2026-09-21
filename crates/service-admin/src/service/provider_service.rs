@@ -33,6 +33,11 @@ impl ProviderService {
         self.repository.find_by_id(id).await
     }
 
+    /// 按主键批量查询供应商，包含已逻辑删除的记录。
+    pub async fn find_by_ids_with_deleted(&self, ids: &[i64]) -> Result<Vec<Provider>> {
+        self.repository.find_by_ids_with_deleted(ids).await
+    }
+
     /// 查询支持指定模型的第一个供应商，按优先级升序、创建时间升序取一个。
     pub async fn first_by_model(&self, model: &str) -> Result<Option<Provider>> {
         self.repository.first_enabled_by_model(model).await

@@ -569,6 +569,88 @@ pub struct ProviderModelSyncResult {
     pub total: i64,
 }
 
+// ---------------------------------------------------------------------------
+// 仪表盘统计
+// ---------------------------------------------------------------------------
+
+/// 仪表盘统计筛选条件。
+///
+/// 主请求表没有供应商字段，`provider_ids` 只对子请求统计生效。
+#[auto_type]
+pub struct DashboardQO {
+    /// 筛选的供应商 ID；为空表示不限。
+    pub provider_ids: Option<Vec<i64>>,
+    /// 筛选的模型名；为空表示不限。
+    pub models: Option<Vec<String>>,
+    /// 筛选开始时间（毫秒时间戳，大于等于），为空表示不限。
+    pub start_time: Option<i64>,
+    /// 筛选结束时间（毫秒时间戳，小于等于），为空表示不限。
+    pub end_time: Option<i64>,
+    /// 是否在按天分组的基础上继续按供应商分组。
+    #[serde(default)]
+    pub with_provider: bool,
+    /// 是否在按天分组的基础上继续按模型分组。
+    #[serde(default)]
+    pub with_model: bool,
+}
+
+/// 请求数量统计：总数、失败、取消。
+#[auto_type(default = false)]
+pub struct DashboardRequestVO {
+    pub total: i64,
+    pub failed: i64,
+    pub cancelled: i64,
+}
+
+/// Token 统计：总数、缓存读、缓存写、读、写。
+#[auto_type(default = false)]
+pub struct DashboardTokenVO {
+    pub total: i64,
+    pub cache_read: i64,
+    pub cache_write: i64,
+    pub read: i64,
+    pub write: i64,
+}
+
+/// 统计结果中的供应商信息。
+#[auto_type(default = false, clone = true)]
+pub struct DashboardProviderVO {
+    pub id: i64,
+    pub name: String,
+    pub display_name: String,
+    /// 逻辑删除时间（毫秒时间戳），0 表示未删除。
+    pub deleted_at: i64,
+}
+
+/// 按天（可再按供应商、模型）分组的 Token 统计结果。
+#[auto_type(default = false)]
+pub struct DashboardTokenFilterVO {
+    /// 所在电脑时区的日期，格式 `YYYY-MM-DD`。
+    pub day: String,
+    /// 按供应商分组时才有值。
+    pub provider: Option<DashboardProviderVO>,
+    /// 按模型分组时才有值。
+    pub model: Option<String>,
+    pub total: i64,
+    pub cache_read: i64,
+    pub cache_write: i64,
+    pub read: i64,
+    pub write: i64,
+}
+
+/// 分组统计的数据库原始结果；供应商名称由 Manager 查询补齐。
+#[auto_type(default = false)]
+pub struct DashboardTokenGroup {
+    pub day: String,
+    pub provider_id: Option<i64>,
+    pub model: Option<String>,
+    pub total: i64,
+    pub cache_read: i64,
+    pub cache_write: i64,
+    pub read: i64,
+    pub write: i64,
+}
+
 fn mask_secret(value: &str) -> String {
     let length = value.chars().count();
     if length <= 8 {

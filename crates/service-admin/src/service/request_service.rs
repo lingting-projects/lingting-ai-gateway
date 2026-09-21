@@ -2,7 +2,8 @@ use anyhow::Result;
 use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::use_pool;
 use types_admin::dto::{
-    RequestFinishPO, RequestMainCreatePO, RequestMainQO, RequestSubCreatePO, RequestSubQO,
+    DashboardQO, DashboardRequestVO, DashboardTokenGroup, DashboardTokenVO, RequestFinishPO,
+    RequestMainCreatePO, RequestMainQO, RequestSubCreatePO, RequestSubQO,
 };
 use types_admin::entity::{RequestMain, RequestSub};
 
@@ -105,5 +106,39 @@ impl RequestService {
     /// 结束子请求日志。
     pub async fn finish_sub(&self, id: i64, params: &RequestFinishPO) -> Result<()> {
         self.sub_repository.finish(id, params).await
+    }
+
+    /// 按筛选条件统计主请求日志的请求数量。
+    pub async fn dashboard_main_request(
+        &self,
+        conditions: &DashboardQO,
+    ) -> Result<DashboardRequestVO> {
+        self.main_repository.dashboard_request(conditions).await
+    }
+
+    /// 按筛选条件统计主请求日志的 token。
+    pub async fn dashboard_main_token(&self, conditions: &DashboardQO) -> Result<DashboardTokenVO> {
+        self.main_repository.dashboard_token(conditions).await
+    }
+
+    /// 按筛选条件统计子请求日志的请求数量。
+    pub async fn dashboard_sub_request(
+        &self,
+        conditions: &DashboardQO,
+    ) -> Result<DashboardRequestVO> {
+        self.sub_repository.dashboard_request(conditions).await
+    }
+
+    /// 按筛选条件统计子请求日志的 token。
+    pub async fn dashboard_sub_token(&self, conditions: &DashboardQO) -> Result<DashboardTokenVO> {
+        self.sub_repository.dashboard_token(conditions).await
+    }
+
+    /// 按筛选条件统计子请求日志的 token，并按天（可再按供应商、模型）分组。
+    pub async fn dashboard_sub_token_group(
+        &self,
+        conditions: &DashboardQO,
+    ) -> Result<Vec<DashboardTokenGroup>> {
+        self.sub_repository.dashboard_token_group(conditions).await
     }
 }

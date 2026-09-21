@@ -147,6 +147,24 @@ impl ProviderRepository {
         Ok(())
     }
 
+    /// 按主键批量查询供应商，包含已逻辑删除的记录：
+    /// 统计历史请求日志时需要已删除供应商的名称，因此这里不追加 `deleted_at = 0` 过滤。
+    pub async fn find_by_ids_with_deleted(&self, ids: &[i64]) -> Result<Vec<Provider>> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let query = format!("SELECT {COLUMNS} FROM provider WHERE id = ANY($1)");
+
+        let rows = sqlx::query(&query)
+            .bind(ids)
+            .fetch_all(&self.pool)
+            .await
+            .context("查询供应商列表失败")?;
+
+        rows.into_iter().map(provider_from_row).collect()
+    }
+
     /// 查询全部未删除供应商，按供应商路由策略排序：优先级升序、加入时间升序。
     pub async fn find_all(&self) -> Result<Vec<Provider>> {
         let query = format!(

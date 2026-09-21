@@ -2,7 +2,10 @@ use anyhow::{Context, Result};
 use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::{PgPool, QueryBuilderExt};
 use sqlx::{Postgres, QueryBuilder, Row};
-use types_admin::dto::{RequestFinishPO, RequestSubCreatePO, RequestSubQO};
+use types_admin::dto::{
+    DashboardQO, DashboardRequestVO, DashboardTokenGroup, DashboardTokenVO, RequestFinishPO,
+    RequestSubCreatePO, RequestSubQO,
+};
 use types_admin::entity::{RequestStatus, RequestSub};
 
 /// 子请求日志数据访问。
@@ -17,6 +20,13 @@ const COLUMNS: &str = "id, main_request_id, provider_id, provider_name, model, p
     write_tokens, total_tokens, http_status, finish_reason, provider_request_id, response_content,
     response_headers,
     start_time, first_chunk_time, end_time, duration_ms, create_time";
+
+/// 统计结果中的 token 字段，读/写与总数保持同一别名。
+const TOKEN_COLUMNS: &str = "COALESCE(SUM(total_tokens), 0) AS total,
+    COALESCE(SUM(cache_read_tokens), 0) AS cache_read,
+    COALESCE(SUM(cache_write_tokens), 0) AS cache_write,
+    COALESCE(SUM(read_tokens), 0) AS read,
+    COALESCE(SUM(write_tokens), 0) AS write";
 
 impl RequestSubRepository {
     pub fn new(pool: PgPool) -> Self {
@@ -168,6 +178,90 @@ impl RequestSubRepository {
 
         Ok(PaginationResult { total, records })
     }
+
+    /// 按筛选条件统计子请求数量：总数、失败、取消。
+    pub async fn dashboard_request(&self, conditions: &DashboardQO) -> Result<DashboardRequestVO> {
+        let mut query = QueryBuilder::<Postgres>::new("SELECT COUNT(*) AS total,");
+        query
+            .push(" COUNT(*) FILTER (WHERE status = ")
+            .push_bind(RequestStatus::Failed.as_str())
+            .push(") AS failed, COUNT(*) FILTER (WHERE status = ")
+            .push_bind(RequestStatus::Cancelled.as_str())
+            .push(") AS cancelled FROM request_sub");
+        push_dashboard_sub_conditions(&mut query, conditions);
+
+        let row = query.build().fetch_one(&self.pool).await?;
+        Ok(DashboardRequestVO {
+            total: row.get("total"),
+            failed: row.get("failed"),
+            cancelled: row.get("cancelled"),
+        })
+    }
+
+    /// 按筛选条件统计子请求日志的 token。
+    pub async fn dashboard_token(&self, conditions: &DashboardQO) -> Result<DashboardTokenVO> {
+        let mut query = QueryBuilder::<Postgres>::new("SELECT ");
+        query.push(TOKEN_COLUMNS);
+        query.push(" FROM request_sub");
+        push_dashboard_sub_conditions(&mut query, conditions);
+
+        let row = query.build().fetch_one(&self.pool).await?;
+        Ok(DashboardTokenVO {
+            total: row.get("total"),
+            cache_read: row.get("cache_read"),
+            cache_write: row.get("cache_write"),
+            read: row.get("read"),
+            write: row.get("write"),
+        })
+    }
+
+    /// 按筛选条件统计子请求日志的 token，按所在电脑时区的天分组，
+    /// 并可继续按供应商、模型分组。
+    pub async fn dashboard_token_group(
+        &self,
+        conditions: &DashboardQO,
+    ) -> Result<Vec<DashboardTokenGroup>> {
+        let timezone_offset = timezone_offset_millis();
+        let mut query = QueryBuilder::<Postgres>::new(format!(
+            "SELECT to_char(to_timestamp((start_time + {timezone_offset}) / 1000), 'YYYY-MM-DD') AS day"
+        ));
+        query.push(", ").push(TOKEN_COLUMNS);
+        if conditions.with_provider {
+            query.push(", provider_id");
+        }
+        if conditions.with_model {
+            query.push(", model");
+        }
+        query.push(" FROM request_sub");
+        push_dashboard_sub_conditions(&mut query, conditions);
+
+        // 分组与排序按 SELECT 中的列序号引用，依次为天、供应商、模型。
+        let group_count =
+            1 + usize::from(conditions.with_provider) + usize::from(conditions.with_model);
+        let group_columns = (1..=group_count)
+            .map(|index| index.to_string())
+            .collect::<Vec<String>>()
+            .join(", ");
+        query
+            .push(format!(" GROUP BY {group_columns}"))
+            .push(format!(" ORDER BY {group_columns}"));
+
+        let rows = query.build().fetch_all(&self.pool).await?;
+        rows.into_iter()
+            .map(|row| {
+                Ok(DashboardTokenGroup {
+                    day: row.get("day"),
+                    provider_id: conditions.with_provider.then(|| row.get("provider_id")),
+                    model: conditions.with_model.then(|| row.get("model")),
+                    total: row.get("total"),
+                    cache_read: row.get("cache_read"),
+                    cache_write: row.get("cache_write"),
+                    read: row.get("read"),
+                    write: row.get("write"),
+                })
+            })
+            .collect()
+    }
 }
 
 fn request_sub_from_row(row: sqlx::postgres::PgRow) -> Result<RequestSub> {
@@ -220,4 +314,20 @@ fn push_request_sub_conditions<'a>(
         "status",
         conditions.status.as_ref().map(|status| status.as_str()),
     );
+}
+
+/// 追加仪表盘统计筛选条件；筛选值一律参数绑定，数组为空时不追加条件。
+fn push_dashboard_sub_conditions(query: &mut QueryBuilder<Postgres>, conditions: &DashboardQO) {
+    query.push(" WHERE 1 = 1");
+    query.ge("start_time", conditions.start_time);
+    query.le("start_time", conditions.end_time);
+    query.in_array("provider_id", conditions.provider_ids.as_deref());
+    query.in_array("model", conditions.models.as_deref());
+}
+
+/// 当前电脑时区相对 UTC 的偏移毫秒数；pglite 无时区数据，因此由本地时钟提供。
+fn timezone_offset_millis() -> i32 {
+    use chrono::Offset;
+
+    chrono::Local::now().offset().fix().local_minus_utc() * 1000
 }
