@@ -1,9 +1,7 @@
 import dayjs from "dayjs";
 import type { ProviderDetailVO } from "@lingting/ai-gateway-sdk";
 
-function includesKeyword(source: string | undefined, keyword: string): boolean {
-  return Boolean(source && source.toLowerCase().includes(keyword));
-}
+import { includesKeyword } from "./textUtils";
 
 /** 供应商搜索：匹配供应商名称、接口地址与模型名称。 */
 export function filterProviderDetails(
@@ -39,11 +37,22 @@ export function formatProviderMillis(value: string): string {
   return dayjs(millis).format("YYYY-MM-DD HH:mm:ss");
 }
 
-/** 数量字段展示，0 表示未知。 */
-export function formatProviderNumber(value: string): string {
+/** token 数量展示：按 K / M 单位缩写，0 表示未知。 */
+export function formatTokenCount(value: string): string {
   const count = Number(value);
   if (!Number.isFinite(count) || count <= 0) {
     return "-";
   }
+  if (count >= 1_000_000) {
+    return `${formatUnitValue(count / 1_000_000)}M`;
+  }
+  if (count >= 1000) {
+    return `${formatUnitValue(count / 1000)}K`;
+  }
   return String(count);
+}
+
+/** 单位数值保留一位小数并去掉多余的 0。 */
+function formatUnitValue(value: number): string {
+  return String(Math.round(value * 10) / 10);
 }

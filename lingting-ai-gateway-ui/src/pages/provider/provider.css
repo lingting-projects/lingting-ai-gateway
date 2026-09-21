@@ -59,7 +59,3 @@
 .provider-model-header {
   @apply w-full;
 }
-
-.provider-model-item {
-  @apply h-full w-full rounded-md border border-solid border-(--ant-color-border-secondary) px-3 py-2;
-}

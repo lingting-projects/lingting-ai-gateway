@@ -1,0 +1,29 @@
+@reference "../../index.css";
+
+.model-item {
+    @apply h-full w-full rounded-md border border-solid border-(--ant-color-border-secondary) bg-(--ant-color-bg-container) px-3 py-2;
+}
+
+.model-item-title {
+    @apply min-w-0 flex-1;
+}
+
+.model-item-name {
+    @apply min-w-0;
+}
+
+.model-item-tags {
+    @apply shrink-0;
+}
+
+.model-item-clickable {
+    @apply cursor-pointer;
+}
+
+.model-item-clickable:hover {
+    @apply border-(--ant-color-primary);
+}
+
+.model-item-selected {
+    @apply border-(--ant-color-primary) bg-(--ant-color-primary-bg);
+}

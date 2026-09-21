@@ -1,0 +1,38 @@
+@reference "../../index.css";
+
+.model-main {
+    @apply h-full min-h-0 w-full;
+}
+
+.model-panel {
+    @apply h-full min-h-0 flex-1;
+}
+
+.model-panel-header {
+    @apply w-full;
+}
+
+.model-redirect-item {
+    @apply h-full w-full cursor-pointer rounded-md border border-solid border-(--ant-color-border-secondary) bg-(--ant-color-bg-container) px-3 py-1;
+}
+
+.model-redirect-item:hover {
+    @apply border-(--ant-color-primary);
+}
+
+.model-redirect-item-selected {
+    @apply border-(--ant-color-primary) bg-(--ant-color-primary-bg);
+}
+
+/* 映射源与目标占满剩余宽度，操作区固定在尾部 */
+.model-redirect-content {
+    @apply min-w-0 flex-1;
+}
+
+.model-redirect-actions {
+    @apply shrink-0;
+}
+
+.model-redirect-arrow {
+    @apply shrink-0 text-(--ant-color-text-tertiary);
+}

@@ -7,6 +7,7 @@ import {
 } from "@ant-design/icons";
 
 import { type MenuRouteDefinition, PlaceholderPage, type StandaloneRouteDefinition } from "@lri";
+import { ModelMain } from "@/pages/model/ModelMain";
 import { ProviderMain } from "@/pages/provider/ProviderMain";
 
 export const menuRoutes: readonly MenuRouteDefinition[] = [
@@ -23,7 +24,7 @@ export const menuRoutes: readonly MenuRouteDefinition[] = [
     title: "供应商",
   },
   {
-    component: PlaceholderPage,
+    component: ModelMain,
     icon: <DeploymentUnitOutlined/>,
     path: "models",
     title: "模型配置",
