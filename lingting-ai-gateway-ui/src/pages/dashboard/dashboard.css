@@ -1,0 +1,17 @@
+@reference "../../index.css";
+
+.dashboard-main {
+    @apply w-full;
+}
+
+.dashboard-stat-card {
+    @apply h-full;
+}
+
+.dashboard-token-chart-filter {
+    @apply w-full;
+}
+
+.dashboard-token-chart-select {
+    @apply min-w-48;
+}

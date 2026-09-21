@@ -31,8 +31,6 @@ type RequestTokenFields = {
   cacheReadTokens: string;
   cacheWriteTokens: string;
   inferenceTokens: string;
-  readTokens: string;
-  writeTokens: string;
   totalTokens: string;
 };
 
@@ -42,8 +40,6 @@ const TOKEN_DETAILS: { key: keyof RequestTokenFields; label: string }[] = [
   { key: "cacheReadTokens", label: "缓存读" },
   { key: "cacheWriteTokens", label: "缓存写" },
   { key: "inferenceTokens", label: "推理" },
-  { key: "readTokens", label: "读" },
-  { key: "writeTokens", label: "写" },
 ];
 
 const TOKEN_DETAIL_FIELDS: { key: keyof RequestTokenFields; title: string }[] = [
@@ -52,8 +48,6 @@ const TOKEN_DETAIL_FIELDS: { key: keyof RequestTokenFields; title: string }[] = 
   { key: "cacheReadTokens", title: "缓存读 Token" },
   { key: "cacheWriteTokens", title: "缓存写 Token" },
   { key: "inferenceTokens", title: "推理 Token" },
-  { key: "readTokens", title: "读 Token" },
-  { key: "writeTokens", title: "写 Token" },
   { key: "totalTokens", title: "总 Token" },
 ];
 

@@ -9,13 +9,14 @@ import {
 
 import { type MenuRouteDefinition, PlaceholderPage, type StandaloneRouteDefinition } from "@lri";
 import { ApiKeyMain } from "@/pages/api-key/ApiKeyMain";
+import { DashboardMain } from "@/pages/dashboard/DashboardMain";
 import { ModelMain } from "@/pages/model/ModelMain";
 import { ProviderMain } from "@/pages/provider/ProviderMain";
 import { RequestMain } from "@/pages/request/RequestMain";
 
 export const menuRoutes: readonly MenuRouteDefinition[] = [
   {
-    component: PlaceholderPage,
+    component: DashboardMain,
     icon: <DashboardOutlined/>,
     path: "dashboard",
     title: "仪表盘",
