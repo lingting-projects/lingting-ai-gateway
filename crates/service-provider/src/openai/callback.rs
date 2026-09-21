@@ -75,8 +75,6 @@ impl OpenAiForwardCallback {
             cache_read_tokens: token_info.cache_read_tokens,
             cache_write_tokens: token_info.cache_write_tokens,
             inference_tokens: token_info.inference_tokens,
-            read_tokens: token_info.read_tokens,
-            write_tokens: token_info.write_tokens,
             total_tokens: token_info.total_tokens,
             http_status: outcome.http_status,
             finish_reason: Some(outcome.finish_reason.clone()),
@@ -117,8 +115,8 @@ impl ForwardCallback for OpenAiForwardCallback {
     /// 请求即将发出：记录子请求的转发开始时间。
     async fn on_start(&self) -> Result<()> {
         let start_time = lib_core::current_millis()?;
-#[cfg(debug_assertions)]
-tracing::debug!("[MOCKTEST]  upstream-start sub={}", self.sub_request_id);
+        #[cfg(debug_assertions)]
+        tracing::debug!("[MOCKTEST]  upstream-start sub={}", self.sub_request_id);
         self.request_service
             .update_sub_start_time(self.sub_request_id, start_time)
             .await

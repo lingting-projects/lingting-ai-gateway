@@ -214,8 +214,6 @@ pub struct RequestMain {
     pub cache_read_tokens: i64,
     pub cache_write_tokens: i64,
     pub inference_tokens: i64,
-    pub read_tokens: i64,
-    pub write_tokens: i64,
     pub total_tokens: i64,
     pub http_status: Option<i32>,
     pub finish_reason: String,
@@ -252,8 +250,6 @@ pub struct RequestSub {
     pub cache_read_tokens: i64,
     pub cache_write_tokens: i64,
     pub inference_tokens: i64,
-    pub read_tokens: i64,
-    pub write_tokens: i64,
     pub total_tokens: i64,
     pub http_status: Option<i32>,
     pub finish_reason: String,
@@ -278,24 +274,11 @@ pub struct TokenInfo {
     pub cache_read_tokens: i64,
     pub cache_write_tokens: i64,
     pub inference_tokens: i64,
-    pub read_tokens: i64,
-    pub write_tokens: i64,
     pub total_tokens: i64,
 }
 
 impl TokenInfo {
     pub fn zero() -> Self {
         Self::default()
-    }
-
-    /// 按输入、输出、缓存读写、推理、读写合计总 Token。
-    pub fn total(&self) -> i64 {
-        self.input_tokens
-            + self.output_tokens
-            + self.cache_read_tokens
-            + self.cache_write_tokens
-            + self.inference_tokens
-            + self.read_tokens
-            + self.write_tokens
     }
 }

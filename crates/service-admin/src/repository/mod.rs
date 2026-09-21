@@ -1,4 +1,5 @@
 pub mod api_key_repository;
+mod dashboard_row;
 pub mod kv_config_repository;
 pub mod provider_model_redirect_repository;
 pub mod provider_model_repository;

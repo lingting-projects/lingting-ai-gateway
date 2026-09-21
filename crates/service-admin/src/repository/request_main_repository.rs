@@ -8,6 +8,8 @@ use types_admin::dto::{
 };
 use types_admin::entity::{RequestMain, RequestStatus};
 
+use super::dashboard_row::{TOKEN_COLUMNS, dashboard_token_vo};
+
 /// 主请求日志数据访问。
 pub struct RequestMainRepository {
     pool: PgPool,
@@ -17,17 +19,9 @@ const COLUMNS: &str = "id, request_id, trace_id, client_request_id, session_id, 
     user_agent, credential_id, model, stream, method, path, request_params, request_headers,
     status, current_status,
     error_type, error_code, error_message, provider_count, return_model, input_tokens,
-    output_tokens, cache_read_tokens, cache_write_tokens, inference_tokens, read_tokens,
-    write_tokens, total_tokens, http_status, finish_reason, provider_request_id, response_content,
-    response_headers,
+    output_tokens, cache_read_tokens, cache_write_tokens, inference_tokens, total_tokens,
+    http_status, finish_reason, provider_request_id, response_content, response_headers,
     start_time, end_time, duration_ms, create_time";
-
-/// 统计结果中的 token 字段，读/写与总数保持同一别名。
-const TOKEN_COLUMNS: &str = "COALESCE(SUM(total_tokens), 0) AS total,
-    COALESCE(SUM(cache_read_tokens), 0) AS cache_read,
-    COALESCE(SUM(cache_write_tokens), 0) AS cache_write,
-    COALESCE(SUM(read_tokens), 0) AS read,
-    COALESCE(SUM(write_tokens), 0) AS write";
 
 impl RequestMainRepository {
     pub fn new(pool: PgPool) -> Self {
@@ -125,11 +119,11 @@ impl RequestMainRepository {
                 error_message = COALESCE($4, ''),
                 return_model = COALESCE($5, ''), input_tokens = $6, output_tokens = $7,
                 cache_read_tokens = $8, cache_write_tokens = $9, inference_tokens = $10,
-                read_tokens = $11, write_tokens = $12, total_tokens = $13, http_status = $14,
-                finish_reason = COALESCE($15, ''), provider_request_id = COALESCE($16, ''),
-                response_content = $17,
-                response_headers = $18, end_time = $19, duration_ms = $19 - start_time
-             WHERE id = $20",
+                total_tokens = $11, http_status = $12,
+                finish_reason = COALESCE($13, ''), provider_request_id = COALESCE($14, ''),
+                response_content = $15,
+                response_headers = $16, end_time = $17, duration_ms = $17 - start_time
+             WHERE id = $18",
         )
         .bind(params.status.as_str())
         .bind(&params.error_type)
@@ -141,8 +135,6 @@ impl RequestMainRepository {
         .bind(params.cache_read_tokens)
         .bind(params.cache_write_tokens)
         .bind(params.inference_tokens)
-        .bind(params.read_tokens)
-        .bind(params.write_tokens)
         .bind(params.total_tokens)
         .bind(params.http_status)
         .bind(&params.finish_reason)
@@ -183,11 +175,13 @@ impl RequestMainRepository {
         Ok(PaginationResult { total, records })
     }
 
-    /// 按筛选条件统计请求数量：总数、失败、取消。
+    /// 按筛选条件统计请求数量：总数、进行中、失败、取消。
     pub async fn dashboard_request(&self, conditions: &DashboardQO) -> Result<DashboardRequestVO> {
         let mut query = QueryBuilder::<Postgres>::new("SELECT COUNT(*) AS total,");
         query
             .push(" COUNT(*) FILTER (WHERE status = ")
+            .push_bind(RequestStatus::Processing.as_str())
+            .push(") AS processing, COUNT(*) FILTER (WHERE status = ")
             .push_bind(RequestStatus::Failed.as_str())
             .push(") AS failed, COUNT(*) FILTER (WHERE status = ")
             .push_bind(RequestStatus::Cancelled.as_str())
@@ -197,6 +191,7 @@ impl RequestMainRepository {
         let row = query.build().fetch_one(&self.pool).await?;
         Ok(DashboardRequestVO {
             total: row.get("total"),
+            processing: row.get("processing"),
             failed: row.get("failed"),
             cancelled: row.get("cancelled"),
         })
@@ -210,13 +205,7 @@ impl RequestMainRepository {
         push_dashboard_main_conditions(&mut query, conditions);
 
         let row = query.build().fetch_one(&self.pool).await?;
-        Ok(DashboardTokenVO {
-            total: row.get("total"),
-            cache_read: row.get("cache_read"),
-            cache_write: row.get("cache_write"),
-            read: row.get("read"),
-            write: row.get("write"),
-        })
+        Ok(dashboard_token_vo(&row))
     }
 }
 
@@ -248,8 +237,6 @@ fn request_main_from_row(row: sqlx::postgres::PgRow) -> Result<RequestMain> {
         cache_read_tokens: row.get("cache_read_tokens"),
         cache_write_tokens: row.get("cache_write_tokens"),
         inference_tokens: row.get("inference_tokens"),
-        read_tokens: row.get("read_tokens"),
-        write_tokens: row.get("write_tokens"),
         total_tokens: row.get("total_tokens"),
         http_status: row.get("http_status"),
         finish_reason: row.get("finish_reason"),

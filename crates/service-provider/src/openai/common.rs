@@ -87,7 +87,5 @@ pub fn accumulate_token_info(target: &mut TokenInfo, source: &TokenInfo) {
     target.cache_read_tokens += source.cache_read_tokens;
     target.cache_write_tokens += source.cache_write_tokens;
     target.inference_tokens += source.inference_tokens;
-    target.read_tokens += source.read_tokens;
-    target.write_tokens += source.write_tokens;
     target.total_tokens += source.total_tokens;
 }

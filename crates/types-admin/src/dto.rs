@@ -342,8 +342,6 @@ pub struct RequestMainVO {
     pub cache_read_tokens: i64,
     pub cache_write_tokens: i64,
     pub inference_tokens: i64,
-    pub read_tokens: i64,
-    pub write_tokens: i64,
     pub total_tokens: i64,
     pub http_status: Option<i32>,
     pub finish_reason: String,
@@ -386,8 +384,6 @@ impl From<RequestMain> for RequestMainVO {
             cache_read_tokens: main.cache_read_tokens,
             cache_write_tokens: main.cache_write_tokens,
             inference_tokens: main.inference_tokens,
-            read_tokens: main.read_tokens,
-            write_tokens: main.write_tokens,
             total_tokens: main.total_tokens,
             http_status: main.http_status,
             finish_reason: main.finish_reason,
@@ -433,8 +429,6 @@ pub struct RequestSubVO {
     pub cache_read_tokens: i64,
     pub cache_write_tokens: i64,
     pub inference_tokens: i64,
-    pub read_tokens: i64,
-    pub write_tokens: i64,
     pub total_tokens: i64,
     pub http_status: Option<i32>,
     pub finish_reason: String,
@@ -470,8 +464,6 @@ impl From<RequestSub> for RequestSubVO {
             cache_read_tokens: sub.cache_read_tokens,
             cache_write_tokens: sub.cache_write_tokens,
             inference_tokens: sub.inference_tokens,
-            read_tokens: sub.read_tokens,
-            write_tokens: sub.write_tokens,
             total_tokens: sub.total_tokens,
             http_status: sub.http_status,
             finish_reason: sub.finish_reason,
@@ -546,8 +538,6 @@ pub struct RequestFinishPO {
     pub cache_read_tokens: i64,
     pub cache_write_tokens: i64,
     pub inference_tokens: i64,
-    pub read_tokens: i64,
-    pub write_tokens: i64,
     pub total_tokens: i64,
     pub http_status: Option<i32>,
     pub finish_reason: Option<String>,
@@ -594,22 +584,26 @@ pub struct DashboardQO {
     pub with_model: bool,
 }
 
-/// 请求数量统计：总数、失败、取消。
+/// 请求数量统计：总数、进行中、失败、取消。
 #[auto_type(default = false)]
 pub struct DashboardRequestVO {
     pub total: i64,
+    /// 仍在处理中的数量。
+    pub processing: i64,
     pub failed: i64,
     pub cancelled: i64,
 }
 
-/// Token 统计：总数、缓存读、缓存写、读、写。
+/// Token 统计：总数、缓存读、缓存写、输入、输出。
 #[auto_type(default = false)]
 pub struct DashboardTokenVO {
     pub total: i64,
     pub cache_read: i64,
     pub cache_write: i64,
-    pub read: i64,
-    pub write: i64,
+    /// 输入 token 合计。
+    pub input: i64,
+    /// 输出 token 合计。
+    pub output: i64,
 }
 
 /// 统计结果中的供应商信息。
@@ -634,8 +628,8 @@ pub struct DashboardTokenFilterVO {
     pub total: i64,
     pub cache_read: i64,
     pub cache_write: i64,
-    pub read: i64,
-    pub write: i64,
+    pub input: i64,
+    pub output: i64,
 }
 
 /// 分组统计的数据库原始结果；供应商名称由 Manager 查询补齐。
@@ -647,8 +641,8 @@ pub struct DashboardTokenGroup {
     pub total: i64,
     pub cache_read: i64,
     pub cache_write: i64,
-    pub read: i64,
-    pub write: i64,
+    pub input: i64,
+    pub output: i64,
 }
 
 fn mask_secret(value: &str) -> String {

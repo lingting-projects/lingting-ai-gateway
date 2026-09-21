@@ -3,13 +3,13 @@ use framework_web::{Json, web_api_post};
 use service_admin::manager::DashboardManager;
 use types_admin::dto::{DashboardQO, DashboardRequestVO, DashboardTokenFilterVO, DashboardTokenVO};
 
-/// 主请求数量统计：总数、失败、取消。
+/// 主请求数量统计：总数、进行中、失败、取消。
 #[web_api_post(path = "/___/dashboard/request-main")]
 pub async fn dashboard_request_main(Json(query): Json<DashboardQO>) -> Result<DashboardRequestVO> {
     DashboardManager::new()?.request_main(&query).await
 }
 
-/// 子请求数量统计：总数、失败、取消。
+/// 子请求数量统计：总数、进行中、失败、取消。
 #[web_api_post(path = "/___/dashboard/request-sub")]
 pub async fn dashboard_request_sub(Json(query): Json<DashboardQO>) -> Result<DashboardRequestVO> {
     DashboardManager::new()?.request_sub(&query).await

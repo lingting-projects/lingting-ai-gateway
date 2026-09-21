@@ -67,8 +67,8 @@ impl DashboardManager {
                 total: group.total,
                 cache_read: group.cache_read,
                 cache_write: group.cache_write,
-                read: group.read,
-                write: group.write,
+                input: group.input,
+                output: group.output,
             })
             .collect())
     }

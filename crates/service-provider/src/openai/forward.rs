@@ -108,24 +108,24 @@ where
     let cancel_callback = Arc::clone(&callback);
 
     let response = tokio::select! {
-        response = executor(provider, request, callback) => {
-#[cfg(debug_assertions)]
-tracing::debug!("[MOCKTEST]  forward-return main={main_request_id} sub={sub_request_id}");
-            response
-        }
-        _ = WebCancelToken::wait_cancelled(&mut cancelled) => {
-#[cfg(debug_assertions)]
-tracing::debug!("[MOCKTEST]  forward-cancel main={main_request_id} sub={sub_request_id}");
-            // 取消时的日志收尾失败只记录，不再向上传播。
-            if let Err(error) = cancel_callback
-                .on_cancel(&ForwardOutcome::default())
-                .await
-            {
-                tracing::warn!("取消回调执行失败：{error:#}");
+            response = executor(provider, request, callback) => {
+    #[cfg(debug_assertions)]
+    tracing::debug!("[MOCKTEST]  forward-return main={main_request_id} sub={sub_request_id}");
+                response
             }
-            return Err(anyhow!("客户端已断开"));
-        }
-    };
+            _ = WebCancelToken::wait_cancelled(&mut cancelled) => {
+    #[cfg(debug_assertions)]
+    tracing::debug!("[MOCKTEST]  forward-cancel main={main_request_id} sub={sub_request_id}");
+                // 取消时的日志收尾失败只记录，不再向上传播。
+                if let Err(error) = cancel_callback
+                    .on_cancel(&ForwardOutcome::default())
+                    .await
+                {
+                    tracing::warn!("取消回调执行失败：{error:#}");
+                }
+                return Err(anyhow!("客户端已断开"));
+            }
+        };
 
     response
 }
