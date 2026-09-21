@@ -24,11 +24,12 @@ impl ProviderModelRepository {
     pub async fn find_by_id(&self, id: i64) -> Result<Option<ProviderModel>> {
         let query = format!(
             "SELECT {COLUMNS} FROM provider_model pm
-             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.id = $1 LIMIT 1"
+             WHERE pm.provider_id <> $2 AND pm.id = $1 LIMIT 1"
         );
 
         let row = sqlx::query(&query)
             .bind(id)
+            .bind(DEFAULT_PROVIDER_ID)
             .fetch_optional(&self.pool)
             .await
             .context("查询供应商模型失败")?;
@@ -39,12 +40,13 @@ impl ProviderModelRepository {
     pub async fn find_by_provider_id(&self, provider_id: i64) -> Result<Vec<ProviderModel>> {
         let query = format!(
             "SELECT {COLUMNS} FROM provider_model pm
-             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.provider_id = $1
+             WHERE pm.provider_id <> $2 AND pm.provider_id = $1
              ORDER BY pm.model ASC"
         );
 
         let rows = sqlx::query(&query)
             .bind(provider_id)
+            .bind(DEFAULT_PROVIDER_ID)
             .fetch_all(&self.pool)
             .await
             .context("查询供应商模型失败")?;
@@ -60,12 +62,13 @@ impl ProviderModelRepository {
 
         let query = format!(
             "SELECT {COLUMNS} FROM provider_model pm
-             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.provider_id = ANY($1)
+             WHERE pm.provider_id <> $2 AND pm.provider_id = ANY($1)
              ORDER BY pm.provider_id ASC, pm.model ASC"
         );
 
         let rows = sqlx::query(&query)
             .bind(provider_ids)
+            .bind(DEFAULT_PROVIDER_ID)
             .fetch_all(&self.pool)
             .await
             .context("查询供应商模型失败")?;
@@ -77,11 +80,12 @@ impl ProviderModelRepository {
     pub async fn find_enabled(&self) -> Result<Vec<ProviderModel>> {
         let query = format!(
             "SELECT {COLUMNS} FROM provider_model pm
-             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.enabled = true
+             WHERE pm.provider_id <> $1 AND pm.enabled = true
              ORDER BY pm.model ASC"
         );
 
         let rows = sqlx::query(&query)
+            .bind(DEFAULT_PROVIDER_ID)
             .fetch_all(&self.pool)
             .await
             .context("查询启用供应商模型失败")?;
@@ -96,12 +100,13 @@ impl ProviderModelRepository {
             "SELECT DISTINCT ON (pm.model) {COLUMNS}
              FROM provider_model pm
              JOIN provider p ON p.id = pm.provider_id
-             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID}
+             WHERE pm.provider_id <> $1
                AND pm.enabled = true AND p.enabled = true AND p.deleted_at = 0
              ORDER BY pm.model ASC, p.priority ASC, p.create_time ASC"
         );
 
         let rows = sqlx::query(&query)
+            .bind(DEFAULT_PROVIDER_ID)
             .fetch_all(&self.pool)
             .await
             .context("查询启用供应商模型失败")?;
@@ -115,9 +120,10 @@ impl ProviderModelRepository {
             "SELECT DISTINCT pm.model
              FROM provider_model pm
              JOIN provider p ON p.id = pm.provider_id
-             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.enabled = true AND p.enabled = true
+             WHERE pm.provider_id <> $1 AND pm.enabled = true AND p.enabled = true
              ORDER BY pm.model ASC",
         )
+        .bind(DEFAULT_PROVIDER_ID)
         .fetch_all(&self.pool)
         .await
         .context("查询可用模型失败")?;
@@ -132,13 +138,14 @@ impl ProviderModelRepository {
     ) -> Result<Option<ProviderModel>> {
         let query = format!(
             "SELECT {COLUMNS} FROM provider_model pm
-             WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID} AND pm.provider_id = $1 AND pm.model = $2
+             WHERE pm.provider_id <> $3 AND pm.provider_id = $1 AND pm.model = $2
              LIMIT 1"
         );
 
         let row = sqlx::query(&query)
             .bind(provider_id)
             .bind(model)
+            .bind(DEFAULT_PROVIDER_ID)
             .fetch_optional(&self.pool)
             .await
             .context("查询供应商模型失败")?;
@@ -150,10 +157,11 @@ impl ProviderModelRepository {
     pub async fn find_default(&self) -> Result<Vec<ProviderModel>> {
         let query = format!(
             "SELECT {COLUMNS} FROM provider_model pm
-             WHERE pm.provider_id = {DEFAULT_PROVIDER_ID} ORDER BY pm.model ASC"
+             WHERE pm.provider_id = $1 ORDER BY pm.model ASC"
         );
 
         let rows = sqlx::query(&query)
+            .bind(DEFAULT_PROVIDER_ID)
             .fetch_all(&self.pool)
             .await
             .context("查询默认模型数据失败")?;
@@ -165,10 +173,11 @@ impl ProviderModelRepository {
     pub async fn find_models(&self, provider_id: i64) -> Result<Vec<String>> {
         let rows = sqlx::query(
             "SELECT model FROM provider_model
-             WHERE provider_id = $1 AND provider_id <> {DEFAULT_PROVIDER_ID}
+             WHERE provider_id = $1 AND provider_id <> $2
              ORDER BY model ASC",
         )
         .bind(provider_id)
+        .bind(DEFAULT_PROVIDER_ID)
         .fetch_all(&self.pool)
         .await
         .context("查询供应商模型名称失败")?;
@@ -248,13 +257,19 @@ impl ProviderModelRepository {
         models: &[String],
         transaction: &mut PgTransaction<'_>,
     ) -> Result<u64> {
+        // 空数组对 SQL 无意义，直接熔断。
+        if models.is_empty() {
+            return Ok(0);
+        }
+
         let result = sqlx::query(
             "UPDATE provider_model SET enabled = false, update_time = $1
-             WHERE provider_id = $2 AND provider_id <> {DEFAULT_PROVIDER_ID}
-               AND enabled = true AND model <> ALL($3)",
+             WHERE provider_id = $2 AND provider_id <> $3
+               AND enabled = true AND model <> ALL($4)",
         )
         .bind(lib_core::current_millis()?)
         .bind(provider_id)
+        .bind(DEFAULT_PROVIDER_ID)
         .bind(models)
         .execute(&mut **transaction)
         .await
@@ -263,11 +278,31 @@ impl ProviderModelRepository {
         Ok(result.rows_affected())
     }
 
+    /// 关闭供应商全部已启用模型；远程返回空模型列表时使用，避免把空数组交给 SQL。
+    pub async fn disable_all(
+        &self,
+        provider_id: i64,
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<u64> {
+        let result = sqlx::query(
+            "UPDATE provider_model SET enabled = false, update_time = $1
+             WHERE provider_id = $2 AND provider_id <> $3 AND enabled = true",
+        )
+        .bind(lib_core::current_millis()?)
+        .bind(provider_id)
+        .bind(DEFAULT_PROVIDER_ID)
+        .execute(&mut **transaction)
+        .await
+        .context("关闭供应商全部模型失败")?;
+
+        Ok(result.rows_affected())
+    }
+
     pub async fn update(&self, params: &ProviderModelUpdatePO) -> Result<()> {
         sqlx::query(
             "UPDATE provider_model SET display_name = $1, levels = $2, level_default = $3,
                 enabled = $4, update_time = $5
-             WHERE id = $6 AND provider_id <> {DEFAULT_PROVIDER_ID}",
+             WHERE id = $6 AND provider_id <> $7",
         )
         .bind(&params.display_name)
         .bind(sqlx::types::Json(&params.levels))
@@ -275,6 +310,7 @@ impl ProviderModelRepository {
         .bind(params.enabled)
         .bind(lib_core::current_millis()?)
         .bind(params.id)
+        .bind(DEFAULT_PROVIDER_ID)
         .execute(&self.pool)
         .await
         .context("更新供应商模型失败")?;
@@ -339,7 +375,9 @@ fn push_provider_model_conditions<'a>(
     query: &mut QueryBuilder<'a, Postgres>,
     conditions: &'a ProviderModelQO,
 ) {
-    query.push(format!(" WHERE pm.provider_id <> {DEFAULT_PROVIDER_ID}"));
+    query
+        .push(" WHERE pm.provider_id <> ")
+        .push_bind(DEFAULT_PROVIDER_ID);
     query.eq("pm.id", conditions.id);
     query.eq("pm.provider_id", conditions.provider_id);
     query.like("pm.model", conditions.model.as_deref());

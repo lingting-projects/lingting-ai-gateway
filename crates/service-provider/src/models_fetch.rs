@@ -6,7 +6,7 @@ use std::sync::{Arc, LazyLock};
 use anyhow::{Result, anyhow};
 use chrono::NaiveDate;
 use dashmap::DashMap;
-use lib_db::{DbContext, PgPoolExt, scope_db, use_pool};
+use lib_db::{DbContext, PgPoolExt, scope_db, use_db, use_pool};
 use lib_provider::build_client;
 use serde::{Deserialize, Deserializer};
 use service_admin::service::{ProviderModelRedirectService, ProviderModelService, ProviderService};
@@ -23,7 +23,12 @@ static SYNCHRONIZING: LazyLock<DashMap<i64, Arc<Mutex<()>>>> = LazyLock::new(Das
 /// 启动供应商模型同步：`None` 同步所有启用的供应商，`Some` 只同步指定供应商。
 ///
 /// 同步在独立异步任务中执行，调用方立即返回。
-pub async fn async_run(db: Arc<DbContext>, provider: Option<i64>) {
+pub async fn async_run(provider: Option<i64>) -> Result<()> {
+    async_run_with(use_db()?.clone(), provider).await;
+    Ok(())
+}
+
+pub async fn async_run_with(db: Arc<DbContext>, provider: Option<i64>) {
     tokio::spawn(async move {
         scope_db(db, async move {
             if let Err(error) = run(provider).await {
@@ -51,7 +56,7 @@ async fn run(provider: Option<i64>) -> Result<()> {
 
     for provider in providers {
         if let Err(error) = fetch(provider.id, &default_map, &redirect_map).await {
-            tracing::warn!("同步供应商 {} 模型失败：{error}", provider.name);
+            tracing::warn!("同步供应商 {} 模型失败：{error:#}", provider.name);
         }
     }
 
@@ -95,6 +100,27 @@ async fn fetch(
     let Some(remote) = fetch_remote(&provider).await? else {
         return Ok(());
     };
+    // 空列表视为异常响应：不写入任何模型，禁用该供应商全部已启用模型后结束。
+    // 在此熔断，后续链路不会再把空数组交给 SQL。
+    if remote.is_empty() {
+        tracing::warn!(
+            "供应商 {} 返回空模型列表，将禁用其全部已启用模型",
+            provider.name
+        );
+
+        let service = ProviderModelService::new()?;
+        let disabled = use_pool()?
+            .with_transaction(async |transaction| {
+                service.disable_all(provider_id, transaction).await
+            })
+            .await?;
+
+        tracing::info!(
+            "供应商 {} 模型同步完成：更新 0 个，禁用 {disabled} 个",
+            provider.name
+        );
+        return Ok(());
+    }
 
     let params: Vec<ProviderModelCreatePO> = remote
         .into_iter()
@@ -102,22 +128,12 @@ async fn fetch(
         .collect();
     let models: Vec<String> = params.iter().map(|param| param.model.clone()).collect();
 
-    // 空列表视为异常响应：不写入任何模型，并禁用该供应商全部已启用模型。
-    if params.is_empty() {
-        tracing::warn!(
-            "供应商 {} 返回空模型列表，将禁用其全部已启用模型",
-            provider.name
-        );
-    }
-
     let service = ProviderModelService::new()?;
     let removed = missing_models(&service, provider_id, &models).await?;
 
     use_pool()?
         .with_transaction(async |transaction| {
-            if !params.is_empty() {
-                service.upsert(&params, transaction).await?;
-            }
+            service.upsert(&params, transaction).await?;
             service
                 .disable_missing(provider_id, &models, transaction)
                 .await?;

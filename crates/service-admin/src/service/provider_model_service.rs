@@ -95,6 +95,15 @@ impl ProviderModelService {
             .await
     }
 
+    /// 关闭供应商全部已启用模型；远程返回空模型列表时使用。
+    pub async fn disable_all(
+        &self,
+        provider_id: i64,
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<u64> {
+        self.repository.disable_all(provider_id, transaction).await
+    }
+
     /// 更新供应商模型的可编辑字段。
     pub async fn update(&self, params: &ProviderModelUpdatePO) -> Result<()> {
         self.repository.update(params).await
