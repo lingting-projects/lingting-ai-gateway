@@ -117,7 +117,8 @@ impl ForwardCallback for OpenAiForwardCallback {
     /// 请求即将发出：记录子请求的转发开始时间。
     async fn on_start(&self) -> Result<()> {
         let start_time = lib_core::current_millis()?;
-        tracing::debug!("[MOCKTEST] upstream-start sub={}", self.sub_request_id);
+#[cfg(debug_assertions)]
+tracing::debug!("[MOCKTEST]  upstream-start sub={}", self.sub_request_id);
         self.request_service
             .update_sub_start_time(self.sub_request_id, start_time)
             .await

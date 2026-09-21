@@ -20,7 +20,6 @@ mark_gateway_log
 mark_mock_log
 
 # 分片很快发完（每片 0.2s），随后 mock 进入挂起。
-disconnect_at="$(now_clock)"
 call_gateway_disconnect "$SCENARIO" \
     "{\"model\":\"$TEST_MODEL\",\"stream\":true,\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}" \
     2 \
@@ -44,8 +43,8 @@ title "$SCENARIO 判定"
 if printf '%s' "$mock_log" | grep -qF "$MARK_MOCK"; then
     ok "上游感知到客户端断开"
     mock_mark_clock="$(first_clock_of "$mock_log" "$MARK_MOCK")"
-    delay="$(clock_diff "$disconnect_at" "$mock_mark_clock")"
-    detail "客户端断开 $disconnect_at，上游感知 $mock_mark_clock，偏差 ${delay}s"
+    delay="$(clock_diff "$CLIENT_DISCONNECT_AT" "$mock_mark_clock")"
+    detail "客户端断开 $CLIENT_DISCONNECT_AT，上游感知 $mock_mark_clock，偏差 ${delay}s"
     if awk -v d="$delay" 'BEGIN { exit !(d <= 1.0) }'; then
         ok "取消即时（偏差 ${delay}s ≤ 1.0s）"
     else

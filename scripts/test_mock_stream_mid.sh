@@ -21,7 +21,6 @@ mark_gateway_log
 mark_mock_log
 
 # 首片 0.3s，之后每 1.5s 一片：断开时（2.0s）正卡在分片 2 与分片 3 之间。
-disconnect_at="$(now_clock)"
 call_gateway_disconnect "$SCENARIO" \
     "{\"model\":\"$TEST_MODEL\",\"stream\":true,\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}" \
     2 \
@@ -57,8 +56,8 @@ fi
 # 取消时效：客户端断开到上游感知的偏差。
 mock_mark_clock="$(first_clock_of "$mock_log" "$MARK_MOCK")"
 if [ -n "$mock_mark_clock" ]; then
-    delay="$(clock_diff "$disconnect_at" "$mock_mark_clock")"
-    detail "客户端断开 $disconnect_at，上游感知 $mock_mark_clock，偏差 ${delay}s"
+    delay="$(clock_diff "$CLIENT_DISCONNECT_AT" "$mock_mark_clock")"
+    detail "客户端断开 $CLIENT_DISCONNECT_AT，上游感知 $mock_mark_clock，偏差 ${delay}s"
     if awk -v d="$delay" 'BEGIN { exit !(d <= 1.0) }'; then
         ok "取消即时（偏差 ${delay}s ≤ 1.0s）"
     else

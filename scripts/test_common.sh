@@ -262,7 +262,10 @@ call_gateway_disconnect() {
         -H "content-type: application/json" \
         "${args[@]}" \
         -d "$body" >/dev/null 2>&1
-    info "客户端已断开"
+
+    # 断开发生在请求开始后的第 $max_seconds 秒，此处作为比对基准。
+    CLIENT_DISCONNECT_AT="$(now_clock)"
+    info "客户端已断开（$CLIENT_DISCONNECT_AT）"
 }
 
 # 正常完成一次请求，输出响应体。

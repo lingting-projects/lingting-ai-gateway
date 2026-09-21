@@ -19,7 +19,6 @@ fi
 mark_gateway_log
 mark_mock_log
 
-disconnect_at="$(now_clock)"
 call_gateway_disconnect "$SCENARIO" \
     "{\"model\":\"$TEST_MODEL\",\"stream\":true,\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}" \
     2 \
@@ -37,7 +36,7 @@ dump "mock 日志（$MARK_MOCK）" "$(mock_marked_lines "$mock_log")"
 title "$SCENARIO 判定"
 
 assert_contains "$mock_log" "$MARK_MOCK" "上游感知到客户端断开"
-assert_contains "$gateway_log" "$MARK_GATEWAY handler-drop" "网关感知到 handler 被 drop"
+assert_contains "$gateway_log" "$MARK_GATEWAY request-cancel" "网关感知到客户端断开（request-cancel）"
 assert_contains "$gateway_log" "$MARK_GATEWAY forward-start" "转发已开始"
 
 if printf '%s' "$gateway_log" | grep -qF "$MARK_GATEWAY finish"; then
@@ -48,8 +47,8 @@ fi
 
 mock_mark_clock="$(first_clock_of "$mock_log" "$MARK_MOCK")"
 if [ -n "$mock_mark_clock" ]; then
-    delay="$(clock_diff "$disconnect_at" "$mock_mark_clock")"
-    detail "客户端断开 $disconnect_at，上游感知 $mock_mark_clock，偏差 ${delay}s"
+    delay="$(clock_diff "$CLIENT_DISCONNECT_AT" "$mock_mark_clock")"
+    detail "客户端断开 $CLIENT_DISCONNECT_AT，上游感知 $mock_mark_clock，偏差 ${delay}s"
 fi
 
 finish_report "$SCENARIO"

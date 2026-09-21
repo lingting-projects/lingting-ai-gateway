@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
+use std::time::Duration;
 
 use anyhow::{Result, anyhow};
 use bytes::Bytes;
@@ -11,14 +12,30 @@ use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, HeaderMap, HeaderName, Header
 use reqwest::{Client, RequestBuilder, Response, StatusCode};
 use types_admin::entity::Provider;
 
+/// 建立连接的超时时间。
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// 两次读取之间的最长间隔；流式响应按分片间隔计算，不会误伤慢速推理。
+const READ_TIMEOUT: Duration = Duration::from_secs(300);
+
 /// 供应商 HTTP 客户端缓存：同一个供应商始终复用同一个客户端。
 static CLIENTS: LazyLock<DashMap<i64, Arc<Client>>> = LazyLock::new(DashMap::new);
 
 /// 取供应商对应的 HTTP 客户端，首次调用时创建并缓存。
+///
+/// 必须配置超时：上游长时间不响应时，否则连接与任务会一直挂起。
 pub fn build_client(provider: &Provider) -> Arc<Client> {
-    let entry = CLIENTS
-        .entry(provider.id)
-        .or_insert_with(|| Arc::new(Client::new()));
+    let entry = CLIENTS.entry(provider.id).or_insert_with(|| {
+        let client = Client::builder()
+            .connect_timeout(CONNECT_TIMEOUT)
+            .read_timeout(READ_TIMEOUT)
+            .build()
+            .unwrap_or_else(|error| {
+                tracing::warn!("创建 HTTP 客户端失败，回退默认配置：{error}");
+                Client::new()
+            });
+        Arc::new(client)
+    });
     Arc::clone(entry.value())
 }
 

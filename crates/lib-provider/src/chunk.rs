@@ -48,6 +48,11 @@ impl ChunkSink {
         self.sender.is_closed()
     }
 
+    /// 等待调用方断开；可放进 `select!` 与分片读取同时等待。
+    pub async fn closed(&self) {
+        self.sender.closed().await;
+    }
+
     /// 更新本次转发的累积结果。
     pub fn record(&self, outcome: ForwardOutcome) {
         if let Ok(mut current) = self.outcome.lock() {

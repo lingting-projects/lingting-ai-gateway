@@ -35,13 +35,21 @@ pub async fn forward_stream<P>(
     let debug_mode = callback.is_debug();
     let mut stream = response.bytes_stream();
 
-    while let Some(item) = stream.next().await {
-        if sink.is_closed() {
-            let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode);
-            utils::notify(callback.on_cancel(&outcome).await);
-            return;
-        }
+    loop {
+        // 客户端断开与分片到达同时等待：断开时立即取消，
+        // 不再等到下一个分片才检查，避免上游连接长时间滞留。
+        let item = tokio::select! {
+            _ = sink.closed() => {
+                let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode);
+                utils::notify(callback.on_cancel(&outcome).await);
+                return;
+            }
+            item = stream.next() => item,
+        };
 
+        let Some(item) = item else {
+            break;
+        };
         let chunk = match item {
             Ok(chunk) => chunk,
             Err(error) => {

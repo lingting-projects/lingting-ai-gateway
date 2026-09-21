@@ -4,8 +4,10 @@ use std::future::Future;
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
-use lib_provider::{ForwardCallback, RouteRequest};
-use lib_web_core::{WebResponse, use_app, use_authorization, use_web};
+use lib_provider::{ForwardCallback, ForwardOutcome, RouteRequest};
+use lib_web_core::{
+    WebCancelToken, WebResponse, use_app, use_authorization, use_web, use_web_cancel,
+};
 use service_admin::service::provider_service::ProviderService;
 use service_admin::service::request_service::RequestService;
 use types_admin::dto::{RequestMainCreatePO, RequestSubCreatePO};
@@ -99,7 +101,31 @@ where
         request.stream
     );
 
-    let response = executor(provider, request, callback).await;
-    tracing::debug!("[MOCKTEST] forward-return main={main_request_id} sub={sub_request_id}");
+    // 客户端断开时取消上游转发，并补写请求日志收尾。
+    // 走取消分支时 executor 的 future 被 drop，reqwest 随之关闭上游连接。
+    let cancel_token = use_web_cancel()?;
+    let mut cancelled = cancel_token.subscribe();
+    let cancel_callback = Arc::clone(&callback);
+
+    let response = tokio::select! {
+        response = executor(provider, request, callback) => {
+#[cfg(debug_assertions)]
+tracing::debug!("[MOCKTEST]  forward-return main={main_request_id} sub={sub_request_id}");
+            response
+        }
+        _ = WebCancelToken::wait_cancelled(&mut cancelled) => {
+#[cfg(debug_assertions)]
+tracing::debug!("[MOCKTEST]  forward-cancel main={main_request_id} sub={sub_request_id}");
+            // 取消时的日志收尾失败只记录，不再向上传播。
+            if let Err(error) = cancel_callback
+                .on_cancel(&ForwardOutcome::default())
+                .await
+            {
+                tracing::warn!("取消回调执行失败：{error:#}");
+            }
+            return Err(anyhow!("客户端已断开"));
+        }
+    };
+
     response
 }
