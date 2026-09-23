@@ -96,23 +96,38 @@ impl KvConfigService {
         Ok(bind)
     }
 
-    /// 更新配置值。
-    pub async fn update(&self, params: &KvConfigUpdatePO) -> Result<()> {
-        self.repository
-            .update_value(&params.config_key, &params.config_value)
-            .await
-    }
-
     /// 写入或更新配置：key 存在则更新，不存在则新增。
     pub async fn upsert(&self, params: &KvConfigUpdatePO) -> Result<()> {
-        self.repository
-            .upsert(&params.config_key, &params.config_value)
-            .await
+        self.upsert_batch(std::slice::from_ref(params)).await
     }
 
     /// 批量写入或更新配置：key 存在则更新，不存在则新增；
     /// 由单条 SQL 完成，保证多条写入的原子性。
+    ///
+    /// 管理令牌属于敏感配置，写入前统一替换为摘要值，非空值才做替换。
     pub async fn upsert_batch(&self, params: &[KvConfigUpdatePO]) -> Result<()> {
-        self.repository.upsert_batch(params).await
+        let params = params
+            .iter()
+            .map(encode_secret)
+            .collect::<Vec<KvConfigUpdatePO>>();
+
+        self.repository.upsert_batch(&params).await
+    }
+}
+
+/// 敏感配置值编码：管理令牌保存 sha1 摘要，空值保持空串（表示不校验）。
+fn encode_secret(params: &KvConfigUpdatePO) -> KvConfigUpdatePO {
+    let is_admin_token = params
+        .config_key
+        .parse::<KvConfigKey>()
+        .is_ok_and(|key| key == KvConfigKey::AdminToken);
+    let value = params.config_value.trim();
+
+    KvConfigUpdatePO {
+        config_key: params.config_key.clone(),
+        config_value: match is_admin_token && !value.is_empty() {
+            true => lib_core::hash(value),
+            false => params.config_value.clone(),
+        },
     }
 }

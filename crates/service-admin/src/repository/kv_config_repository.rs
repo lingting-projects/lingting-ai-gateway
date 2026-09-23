@@ -56,31 +56,6 @@ impl KvConfigRepository {
         Ok(row.map(|row| row.get("config_value")))
     }
 
-    pub async fn update_value(&self, config_key: &str, config_value: &str) -> Result<()> {
-        sqlx::query(
-            "UPDATE kv_config SET config_value = $1, update_time = $2 WHERE config_key = $3",
-        )
-        .bind(config_value)
-        .bind(lib_core::current_millis()?)
-        .bind(config_key)
-        .execute(&self.pool)
-        .await
-        .context("更新全局配置失败")?;
-
-        Ok(())
-    }
-
-    /// 按 config_key 写入或更新配置，由单条 SQL 完成；description 仅在首次写入时保留默认值。
-    /// 按 config_key 写入或更新配置；description 仅在首次写入时保留默认值。
-    pub async fn upsert(&self, config_key: &str, config_value: &str) -> Result<()> {
-        let params = KvConfigUpdatePO {
-            config_key: config_key.to_string(),
-            config_value: config_value.to_string(),
-        };
-
-        self.upsert_batch(&[params]).await
-    }
-
     /// 批量按 config_key 写入或更新配置，由单条 SQL 完成，保证多条写入的原子性；
     /// description 仅在首次写入时保留默认值。
     pub async fn upsert_batch(&self, params: &[KvConfigUpdatePO]) -> Result<()> {
