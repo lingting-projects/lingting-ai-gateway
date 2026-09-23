@@ -23,11 +23,6 @@ impl ProviderModelRedirectService {
         self.repository.find_by_id(id).await
     }
 
-    /// 按非官方模型名查询映射。
-    pub async fn find_by_source(&self, source: &str) -> Result<Option<ProviderModelRedirect>> {
-        self.repository.find_by_source(source).await
-    }
-
     /// 查询全部模型名称映射；模型同步任务使用。
     pub async fn find_all(&self) -> Result<Vec<ProviderModelRedirect>> {
         self.repository.find_all().await

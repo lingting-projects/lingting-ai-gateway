@@ -29,19 +29,6 @@ impl ProviderRepository {
         row.map(provider_from_row).transpose()
     }
 
-    pub async fn find_by_name(&self, name: &str) -> Result<Option<Provider>> {
-        let query =
-            format!("SELECT {COLUMNS} FROM provider WHERE name = $1 AND deleted_at = 0 LIMIT 1");
-
-        let row = sqlx::query(&query)
-            .bind(name)
-            .fetch_optional(&self.pool)
-            .await
-            .context("查询供应商失败")?;
-
-        row.map(provider_from_row).transpose()
-    }
-
     /// 查询所有启用的供应商，按优先级升序、加入时间升序排列。
     pub async fn find_enabled(&self) -> Result<Vec<Provider>> {
         let query = format!(

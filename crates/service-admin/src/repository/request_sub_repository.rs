@@ -120,10 +120,6 @@ impl RequestSubRepository {
         Ok(())
     }
 
-    pub async fn find_by_main_request_id(&self, main_request_id: i64) -> Result<Vec<RequestSub>> {
-        self.find_by_main_request_ids(&[main_request_id]).await
-    }
-
     /// 批量查询多个主请求下的子请求，用于主请求分页时一次性装配子日志。
     pub async fn find_by_main_request_ids(
         &self,

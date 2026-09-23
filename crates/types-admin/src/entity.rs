@@ -188,7 +188,6 @@ pub struct KvConfig {
 #[auto_type(default = false)]
 pub struct RequestMain {
     pub id: i64,
-    pub request_id: String,
     pub trace_id: String,
     pub client_request_id: String,
     pub session_id: String,
@@ -203,11 +202,9 @@ pub struct RequestMain {
     /// 网关收到的请求头，仅调试模式记录，已移除逐跳头。
     pub request_headers: Option<serde_json::Value>,
     pub status: RequestStatus,
-    pub current_status: String,
     pub error_type: String,
     pub error_code: String,
     pub error_message: String,
-    pub provider_count: i32,
     pub return_model: String,
     pub input_tokens: i64,
     pub output_tokens: i64,

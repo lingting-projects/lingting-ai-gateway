@@ -28,20 +28,6 @@ impl ProviderModelRedirectRepository {
         row.map(provider_model_redirect_from_row).transpose()
     }
 
-    /// 按非官方模型名查询映射；名称映射使用。
-    pub async fn find_by_source(&self, source: &str) -> Result<Option<ProviderModelRedirect>> {
-        let query =
-            format!("SELECT {COLUMNS} FROM provider_model_redirect WHERE source = $1 LIMIT 1");
-
-        let row = sqlx::query(&query)
-            .bind(source)
-            .fetch_optional(&self.pool)
-            .await
-            .context("查询模型名称映射失败")?;
-
-        row.map(provider_model_redirect_from_row).transpose()
-    }
-
     /// 查询全部模型名称映射；模型同步任务使用。
     pub async fn find_all(&self) -> Result<Vec<ProviderModelRedirect>> {
         let query = format!("SELECT {COLUMNS} FROM provider_model_redirect ORDER BY source ASC");

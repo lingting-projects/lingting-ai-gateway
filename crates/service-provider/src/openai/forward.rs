@@ -48,14 +48,13 @@ where
     let forwarded_headers = utils::forwarded_headers(&web_context, &provider.api_key, debug_mode)?;
 
     // 主请求日志
-    let request_id = lib_core::next_id()?.to_string();
-    let trace_id = utils::header(&web_context, "x-trace-id").unwrap_or_else(|| request_id.clone());
-    let client_request_id = utils::header(&web_context, "x-request-id")
-        .unwrap_or_else(|| web_context.request().request_id.clone());
+    // trace_id 由框架生成，网关直接取请求快照中的值写入日志。
+    let trace_id = web_context.request().trace_id.clone();
+    let client_request_id = utils::header(&web_context, "x-client-request-id")
+        .unwrap_or_else(|| web_context.request().trace_id.clone());
 
     let main_request_id = request_service
         .create_main(&RequestMainCreatePO {
-            request_id,
             trace_id,
             client_request_id,
             session_id: request.session_id.clone().unwrap_or_default(),

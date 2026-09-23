@@ -53,13 +53,6 @@ impl ChunkSink {
         self.sender.closed().await;
     }
 
-    /// 更新本次转发的累积结果。
-    pub fn record(&self, outcome: ForwardOutcome) {
-        if let Ok(mut current) = self.outcome.lock() {
-            *current = outcome;
-        }
-    }
-
     /// 追加累积内容的原始字节。
     pub fn append_content(&self, content: impl AsRef<[u8]>) {
         if let Ok(mut current) = self.outcome.lock() {

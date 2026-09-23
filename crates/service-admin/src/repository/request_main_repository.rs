@@ -15,10 +15,10 @@ pub struct RequestMainRepository {
     pool: PgPool,
 }
 
-const COLUMNS: &str = "id, request_id, trace_id, client_request_id, session_id, client_ip,
+const COLUMNS: &str = "id, trace_id, client_request_id, session_id, client_ip,
     user_agent, credential_id, model, stream, method, path, request_params, request_headers,
-    status, current_status,
-    error_type, error_code, error_message, provider_count, return_model, input_tokens,
+    status,
+    error_type, error_code, error_message, return_model, input_tokens,
     output_tokens, cache_read_tokens, cache_write_tokens, inference_tokens, total_tokens,
     http_status, finish_reason, provider_request_id, response_content, response_headers,
     start_time, end_time, duration_ms, create_time";
@@ -40,31 +40,18 @@ impl RequestMainRepository {
         row.map(request_main_from_row).transpose()
     }
 
-    pub async fn find_by_request_id(&self, request_id: &str) -> Result<Option<RequestMain>> {
-        let query = format!("SELECT {COLUMNS} FROM request_main WHERE request_id = $1 LIMIT 1");
-
-        let row = sqlx::query(&query)
-            .bind(request_id)
-            .fetch_optional(&self.pool)
-            .await
-            .context("查询主请求日志失败")?;
-
-        row.map(request_main_from_row).transpose()
-    }
-
     /// 写入主请求日志，返回日志主键。
     pub async fn create(&self, params: &RequestMainCreatePO) -> Result<i64> {
         let now = lib_core::current_millis()?;
 
         let row = sqlx::query(
             "INSERT INTO request_main
-                (request_id, trace_id, client_request_id, session_id, client_ip, user_agent,
+                (trace_id, client_request_id, session_id, client_ip, user_agent,
                  credential_id, model, stream, method, path, request_params, request_headers,
                  status, start_time, create_time)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
              RETURNING id",
         )
-        .bind(&params.request_id)
         .bind(&params.trace_id)
         .bind(&params.client_request_id)
         .bind(&params.session_id)
@@ -85,30 +72,6 @@ impl RequestMainRepository {
         .context("写入主请求日志失败")?;
 
         Ok(row.get("id"))
-    }
-
-    /// 更新处理中状态描述，用于记录当前走到哪一步。
-    pub async fn update_current_status(&self, id: i64, current_status: &str) -> Result<()> {
-        sqlx::query("UPDATE request_main SET current_status = $1 WHERE id = $2")
-            .bind(current_status)
-            .bind(id)
-            .execute(&self.pool)
-            .await
-            .context("更新主请求处理状态失败")?;
-
-        Ok(())
-    }
-
-    /// 记录匹配到的供应商数量。
-    pub async fn update_provider_count(&self, id: i64, provider_count: i32) -> Result<()> {
-        sqlx::query("UPDATE request_main SET provider_count = $1 WHERE id = $2")
-            .bind(provider_count)
-            .bind(id)
-            .execute(&self.pool)
-            .await
-            .context("更新主请求供应商数量失败")?;
-
-        Ok(())
     }
 
     /// 请求结束时写入状态、错误、token 与返回信息。
@@ -212,7 +175,6 @@ impl RequestMainRepository {
 fn request_main_from_row(row: sqlx::postgres::PgRow) -> Result<RequestMain> {
     Ok(RequestMain {
         id: row.get("id"),
-        request_id: row.get("request_id"),
         trace_id: row.get("trace_id"),
         client_request_id: row.get("client_request_id"),
         session_id: row.get("session_id"),
@@ -226,11 +188,9 @@ fn request_main_from_row(row: sqlx::postgres::PgRow) -> Result<RequestMain> {
         request_params: row.get("request_params"),
         request_headers: row.get("request_headers"),
         status: RequestStatus::from_db(&row.get::<String, _>("status")),
-        current_status: row.get("current_status"),
         error_type: row.get("error_type"),
         error_code: row.get("error_code"),
         error_message: row.get("error_message"),
-        provider_count: row.get("provider_count"),
         return_model: row.get("return_model"),
         input_tokens: row.get("input_tokens"),
         output_tokens: row.get("output_tokens"),
@@ -256,7 +216,6 @@ fn push_request_main_conditions<'a>(
 ) {
     query.push(" WHERE 1 = 1");
     query.eq("id", conditions.id);
-    query.eq("request_id", conditions.request_id.as_deref());
     query.like("client_request_id", conditions.client_request_id.as_deref());
     query.eq("session_id", conditions.session_id.as_deref());
     query.like("model", conditions.model.as_deref());

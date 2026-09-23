@@ -43,18 +43,6 @@ impl RequestService {
         self.sub_repository.page(pagination, conditions).await
     }
 
-    /// 按主键查询主请求日志。
-    pub async fn find_main_by_id(&self, id: i64) -> Result<Option<RequestMain>> {
-        self.main_repository.find_by_id(id).await
-    }
-
-    /// 查询单条主请求日志下的全部子请求日志。
-    pub async fn find_sub_by_main(&self, main_request_id: i64) -> Result<Vec<RequestSub>> {
-        self.sub_repository
-            .find_by_main_request_id(main_request_id)
-            .await
-    }
-
     /// 批量查询多条主请求日志下的子请求日志。
     pub async fn find_sub_by_mains(&self, main_request_ids: &[i64]) -> Result<Vec<RequestSub>> {
         self.sub_repository
@@ -70,20 +58,6 @@ impl RequestService {
     /// 写入子请求日志，返回主键。
     pub async fn create_sub(&self, params: &RequestSubCreatePO) -> Result<i64> {
         self.sub_repository.create(params).await
-    }
-
-    /// 更新主请求日志的处理进度描述。
-    pub async fn update_main_progress(&self, id: i64, current_status: &str) -> Result<()> {
-        self.main_repository
-            .update_current_status(id, current_status)
-            .await
-    }
-
-    /// 更新主请求日志命中的供应商数量。
-    pub async fn update_main_provider_count(&self, id: i64, provider_count: i32) -> Result<()> {
-        self.main_repository
-            .update_provider_count(id, provider_count)
-            .await
     }
 
     /// 记录子请求日志的转发开始时间。

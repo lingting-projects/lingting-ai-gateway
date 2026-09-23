@@ -302,7 +302,6 @@ pub struct KvConfigUpdatePO {
 #[auto_type]
 pub struct RequestMainQO {
     pub id: Option<i64>,
-    pub request_id: Option<String>,
     pub client_request_id: Option<String>,
     pub session_id: Option<String>,
     pub model: Option<String>,
@@ -316,7 +315,6 @@ pub struct RequestMainQO {
 #[auto_type(default = false)]
 pub struct RequestMainVO {
     pub id: i64,
-    pub request_id: String,
     pub trace_id: String,
     pub client_request_id: String,
     pub session_id: String,
@@ -331,11 +329,9 @@ pub struct RequestMainVO {
     pub request_headers: Option<serde_json::Value>,
     pub status: RequestStatus,
     pub status_label: String,
-    pub current_status: String,
     pub error_type: String,
     pub error_code: String,
     pub error_message: String,
-    pub provider_count: i32,
     pub return_model: String,
     pub input_tokens: i64,
     pub output_tokens: i64,
@@ -358,7 +354,6 @@ impl From<RequestMain> for RequestMainVO {
     fn from(main: RequestMain) -> Self {
         Self {
             id: main.id,
-            request_id: main.request_id,
             trace_id: main.trace_id,
             client_request_id: main.client_request_id,
             session_id: main.session_id,
@@ -373,11 +368,9 @@ impl From<RequestMain> for RequestMainVO {
             request_headers: main.request_headers,
             status_label: main.status.label().to_string(),
             status: main.status,
-            current_status: main.current_status,
             error_type: main.error_type,
             error_code: main.error_code,
             error_message: main.error_message,
-            provider_count: main.provider_count,
             return_model: main.return_model,
             input_tokens: main.input_tokens,
             output_tokens: main.output_tokens,
@@ -497,7 +490,6 @@ pub struct AvailableModelsResult {
 /// 请求日志写入时的初始数据。
 #[auto_type(default = false)]
 pub struct RequestMainCreatePO {
-    pub request_id: String,
     pub trace_id: String,
     pub client_request_id: String,
     pub session_id: String,

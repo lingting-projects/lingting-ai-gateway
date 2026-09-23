@@ -37,23 +37,6 @@ impl ProviderModelRepository {
         row.map(provider_model_from_row).transpose()
     }
 
-    pub async fn find_by_provider_id(&self, provider_id: i64) -> Result<Vec<ProviderModel>> {
-        let query = format!(
-            "SELECT {COLUMNS} FROM provider_model pm
-             WHERE pm.provider_id <> $2 AND pm.provider_id = $1
-             ORDER BY pm.model ASC"
-        );
-
-        let rows = sqlx::query(&query)
-            .bind(provider_id)
-            .bind(DEFAULT_PROVIDER_ID)
-            .fetch_all(&self.pool)
-            .await
-            .context("查询供应商模型失败")?;
-
-        rows.into_iter().map(provider_model_from_row).collect()
-    }
-
     /// 批量查询多个供应商的模型，用于供应商分页时一次性装配模型。
     pub async fn find_by_provider_ids(&self, provider_ids: &[i64]) -> Result<Vec<ProviderModel>> {
         if provider_ids.is_empty() {
@@ -112,45 +95,6 @@ impl ProviderModelRepository {
             .context("查询启用供应商模型失败")?;
 
         rows.into_iter().map(provider_model_from_row).collect()
-    }
-
-    /// 查询启用的模型名称，已去重并排序；用于可用模型列表接口。
-    pub async fn find_enabled_names(&self) -> Result<Vec<String>> {
-        let rows = sqlx::query(
-            "SELECT DISTINCT pm.model
-             FROM provider_model pm
-             JOIN provider p ON p.id = pm.provider_id
-             WHERE pm.provider_id <> $1 AND pm.enabled = true AND p.enabled = true
-             ORDER BY pm.model ASC",
-        )
-        .bind(DEFAULT_PROVIDER_ID)
-        .fetch_all(&self.pool)
-        .await
-        .context("查询可用模型失败")?;
-
-        Ok(rows.into_iter().map(|row| row.get("model")).collect())
-    }
-
-    pub async fn find_by_provider_and_model(
-        &self,
-        provider_id: i64,
-        model: &str,
-    ) -> Result<Option<ProviderModel>> {
-        let query = format!(
-            "SELECT {COLUMNS} FROM provider_model pm
-             WHERE pm.provider_id <> $3 AND pm.provider_id = $1 AND pm.model = $2
-             LIMIT 1"
-        );
-
-        let row = sqlx::query(&query)
-            .bind(provider_id)
-            .bind(model)
-            .bind(DEFAULT_PROVIDER_ID)
-            .fetch_optional(&self.pool)
-            .await
-            .context("查询供应商模型失败")?;
-
-        row.map(provider_model_from_row).transpose()
     }
 
     /// 查询默认模型数据，唯一读取该数据的入口；其余查询均已排除默认 provider_id。

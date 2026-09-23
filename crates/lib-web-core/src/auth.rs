@@ -53,10 +53,6 @@ impl Authorization {
         Self::new(AuthKind::Anonymous, "")
     }
 
-    pub fn kind(&self) -> AuthKind {
-        self.kind
-    }
-
     pub fn value(&self) -> &str {
         &self.value
     }

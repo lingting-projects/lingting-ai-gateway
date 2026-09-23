@@ -81,12 +81,14 @@ export function renderTokenSummary(record?: RequestTokenFields) {
     (item) => `${item.label} ${record[item.key]}`,
   );
 
+  if (details.length < 1) {
+    return "-";
+  }
+
   return (
     <Flex className="request-token" gap={2} vertical>
       <Typography.Text>{record.totalTokens}</Typography.Text>
-      {details.length > 0 && (
-        <Typography.Text type="secondary">{details.join(" · ")}</Typography.Text>
-      )}
+      <Typography.Text type="secondary">{details.join(" · ")}</Typography.Text>
     </Flex>
   );
 }
@@ -140,7 +142,7 @@ function createOptionColumn<T extends Record<string, unknown>>(
   return {
     dataIndex: "option",
     search: false,
-    render: (_dom, record) => <LinkButton onClick={() => onDetail(record)} text="详情"/>,
+    render: (_dom, record) => <LinkButton onClick={() => onDetail(record)} text="详情" />,
     title: "操作",
     valueType: "option",
   };
@@ -151,7 +153,6 @@ export function createRequestMainColumns(
   onDetail: (record: RequestMainVO) => void,
 ): ExTableColumn<RequestMainDetailVO>[] {
   return [
-    { dataIndex: ["request", "requestId"], search: false, title: "请求ID" },
     { dataIndex: ["request", "model"], search: false, title: "模型" },
     {
       dataIndex: ["request", "status"],
@@ -160,7 +161,6 @@ export function createRequestMainColumns(
       title: "状态",
     },
     { dataIndex: ["request", "returnModel"], search: false, title: "返回模型" },
-    { dataIndex: ["request", "providerCount"], search: false, title: "供应商数" },
     {
       dataIndex: ["request", "totalTokens"],
       render: (_dom, record) => renderTokenSummary(record.request),
@@ -190,7 +190,6 @@ export function createRequestMainColumns(
     { dataIndex: ["request", "errorType"], search: false, title: "错误类型" },
     { dataIndex: ["request", "errorMessage"], ellipsis: true, search: false, title: "错误信息" },
     { dataIndex: "id", hideInTable: true, title: "ID" },
-    { dataIndex: "requestId", hideInTable: true, title: "请求ID" },
     { dataIndex: "clientRequestId", hideInTable: true, title: "客户端请求ID" },
     { dataIndex: "sessionId", hideInTable: true, title: "会话ID" },
     { dataIndex: "model", hideInTable: true, title: "模型" },
@@ -260,7 +259,6 @@ export function createRequestSubColumns(
 export function createRequestMainDetailColumns(): ProDescriptionsColumn<RequestMainVO>[] {
   return [
     { dataIndex: "id", title: "ID" },
-    { dataIndex: "requestId", title: "请求ID" },
     { dataIndex: "traceId", title: "链路ID" },
     { dataIndex: "clientRequestId", title: "客户端请求ID" },
     { dataIndex: "sessionId", title: "会话ID" },
@@ -276,11 +274,9 @@ export function createRequestMainDetailColumns(): ProDescriptionsColumn<RequestM
       render: (_dom, record) => record.statusLabel || record.status,
       title: "状态",
     },
-    { dataIndex: "currentStatus", title: "当前状态" },
     { dataIndex: "errorType", title: "错误类型" },
     { dataIndex: "errorCode", title: "错误码" },
     { dataIndex: "errorMessage", title: "错误信息" },
-    { dataIndex: "providerCount", title: "供应商数" },
     { dataIndex: "returnModel", title: "返回模型" },
     ...TOKEN_DETAIL_FIELDS.map((field) => ({ dataIndex: field.key, title: field.title })),
     {

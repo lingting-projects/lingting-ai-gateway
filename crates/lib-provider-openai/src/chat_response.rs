@@ -116,13 +116,6 @@ pub struct ChatChoice {
     pub finish_reason: Option<String>,
 }
 
-impl ChatChoice {
-    /// 取消息体，普通响应看 message，流式分片看 delta。
-    pub fn body(&self) -> Option<&ResponseMessage> {
-        self.message.as_ref().or(self.delta.as_ref())
-    }
-}
-
 /// 对话响应，普通响应与流式分片共用同一结构。
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ChatResponse {
@@ -142,24 +135,6 @@ impl ChatResponse {
         self.choices
             .first()
             .and_then(|choice| choice.finish_reason.clone())
-            .unwrap_or_default()
-    }
-
-    /// 首个候选的文本内容。
-    pub fn content(&self) -> String {
-        self.choices
-            .first()
-            .and_then(ChatChoice::body)
-            .and_then(|message| message.content.clone())
-            .unwrap_or_default()
-    }
-
-    /// 首个候选的推理内容。
-    pub fn reasoning_content(&self) -> String {
-        self.choices
-            .first()
-            .and_then(ChatChoice::body)
-            .and_then(|message| message.reasoning_content.clone())
             .unwrap_or_default()
     }
 
@@ -225,11 +200,6 @@ impl ChatResponse {
                 None => self.usage = Some(usage.clone()),
             }
         }
-    }
-
-    /// 该分片是否只携带用量，没有正文。
-    pub fn is_usage_only(&self) -> bool {
-        self.choices.is_empty() && self.usage.is_some()
     }
 }
 

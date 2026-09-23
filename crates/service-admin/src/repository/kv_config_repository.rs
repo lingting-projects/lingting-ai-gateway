@@ -17,18 +17,6 @@ impl KvConfigRepository {
         Self { pool }
     }
 
-    pub async fn find_by_key(&self, config_key: &str) -> Result<Option<KvConfig>> {
-        let query = format!("SELECT {COLUMNS} FROM kv_config WHERE config_key = $1 LIMIT 1");
-
-        let row = sqlx::query(&query)
-            .bind(config_key)
-            .fetch_optional(&self.pool)
-            .await
-            .context("查询全局配置失败")?;
-
-        row.map(kv_config_from_row).transpose()
-    }
-
     pub async fn find_all(&self) -> Result<Vec<KvConfig>> {
         let query = format!("SELECT {COLUMNS} FROM kv_config ORDER BY id ASC");
 

@@ -1,7 +1,6 @@
 //! OpenAI 兼容接口的通用类型与计算方法。
 
 use serde::{Deserialize, Serialize};
-use types_admin::TokenInfo;
 use types_admin::entity::ProviderModel;
 
 /// OpenAI 模型对象。
@@ -76,16 +75,4 @@ impl OpenAiModelList {
             data,
         }
     }
-}
-
-/// 把一次转发的用量累加进目标用量。
-///
-/// 流式场景下每个分片都会上报用量，全部字段（含总量）逐片累加。
-pub fn accumulate_token_info(target: &mut TokenInfo, source: &TokenInfo) {
-    target.input_tokens += source.input_tokens;
-    target.output_tokens += source.output_tokens;
-    target.cache_read_tokens += source.cache_read_tokens;
-    target.cache_write_tokens += source.cache_write_tokens;
-    target.inference_tokens += source.inference_tokens;
-    target.total_tokens += source.total_tokens;
 }

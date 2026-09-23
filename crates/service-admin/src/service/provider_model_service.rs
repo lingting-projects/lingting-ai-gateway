@@ -28,11 +28,6 @@ impl ProviderModelService {
         self.repository.page(pagination, conditions).await
     }
 
-    /// 查询指定供应商的全部模型。
-    pub async fn find_by_provider(&self, provider_id: i64) -> Result<Vec<ProviderModel>> {
-        self.repository.find_by_provider_id(provider_id).await
-    }
-
     /// 批量查询多个供应商的模型。
     pub async fn find_by_providers(&self, provider_ids: &[i64]) -> Result<Vec<ProviderModel>> {
         self.repository.find_by_provider_ids(provider_ids).await
@@ -46,22 +41,6 @@ impl ProviderModelService {
     /// 查询全部启用且按名称去重的模型，同名取路由优先级最高的一条；用于可用模型列表。
     pub async fn find_enabled_distinct(&self) -> Result<Vec<ProviderModel>> {
         self.repository.find_enabled_distinct().await
-    }
-
-    /// 查询全部启用且去重后的模型名称。
-    pub async fn find_enabled_names(&self) -> Result<Vec<String>> {
-        self.repository.find_enabled_names().await
-    }
-
-    /// 按供应商与模型名查询。
-    pub async fn find_by_provider_and_model(
-        &self,
-        provider_id: i64,
-        model: &str,
-    ) -> Result<Option<ProviderModel>> {
-        self.repository
-            .find_by_provider_and_model(provider_id, model)
-            .await
     }
 
     /// 查询默认模型数据；默认数据仅作为模型基础配置，不参与路由与展示。
