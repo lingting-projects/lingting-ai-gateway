@@ -7,47 +7,48 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 
-import { type MenuRouteDefinition, PlaceholderPage, type StandaloneRouteDefinition } from "@lri";
+import { type MenuRouteDefinition, type StandaloneRouteDefinition } from "@lri";
 import { ApiKeyMain } from "@/pages/api-key/ApiKeyMain";
 import { DashboardMain } from "@/pages/dashboard/DashboardMain";
 import { ModelMain } from "@/pages/model/ModelMain";
 import { ProviderMain } from "@/pages/provider/ProviderMain";
 import { RequestMain } from "@/pages/request/RequestMain";
+import { SettingsMain } from "@/pages/settings/SettingsMain";
 
 export const menuRoutes: readonly MenuRouteDefinition[] = [
   {
     component: DashboardMain,
-    icon: <DashboardOutlined/>,
+    icon: <DashboardOutlined />,
     path: "dashboard",
     title: "仪表盘",
   },
   {
     component: ProviderMain,
-    icon: <CloudServerOutlined/>,
+    icon: <CloudServerOutlined />,
     path: "provider",
     title: "供应商",
   },
   {
     component: ModelMain,
-    icon: <DeploymentUnitOutlined/>,
+    icon: <DeploymentUnitOutlined />,
     path: "models",
     title: "模型配置",
   },
   {
     component: RequestMain,
-    icon: <FileTextOutlined/>,
+    icon: <FileTextOutlined />,
     path: "request",
     title: "请求日志",
   },
   {
     component: ApiKeyMain,
-    icon: <KeyOutlined/>,
+    icon: <KeyOutlined />,
     path: "api-key",
     title: "API Key",
   },
   {
-    component: PlaceholderPage,
-    icon: <SettingOutlined/>,
+    component: SettingsMain,
+    icon: <SettingOutlined />,
     path: "settings",
     title: "软件设置",
   },

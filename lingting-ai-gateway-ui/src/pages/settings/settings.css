@@ -1,0 +1,30 @@
+@reference "../../index.css";
+
+.settings-main {
+  @apply w-full;
+}
+
+.settings-card {
+  @apply w-full;
+}
+
+.settings-field {
+  @apply w-full;
+}
+
+.settings-field-label {
+  @apply min-w-0 flex-1;
+}
+
+.settings-field-control {
+  @apply w-72 shrink-0;
+}
+
+.settings-field-input {
+  @apply min-w-0 flex-1;
+}
+
+/* 有变更时出现的底部操作区，与上方字段之间用分割线隔开 */
+.settings-card-actions {
+  @apply w-full border-t border-solid border-(--ant-color-split) pt-4;
+}
