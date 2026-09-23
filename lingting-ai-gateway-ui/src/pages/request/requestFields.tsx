@@ -72,7 +72,11 @@ export function formatRequestDuration(value?: string | null) {
 }
 
 /** Token 列：总 Token 与明细同列展示，明细只保留非零项。 */
-export function renderTokenSummary(record: RequestTokenFields) {
+export function renderTokenSummary(record?: RequestTokenFields) {
+  if (!record) {
+    return <>-</>;
+  }
+
   const details = TOKEN_DETAILS.filter((item) => Number(record[item.key]) > 0).map(
     (item) => `${item.label} ${record[item.key]}`,
   );
@@ -165,13 +169,13 @@ export function createRequestMainColumns(
     },
     {
       dataIndex: ["request", "durationMs"],
-      render: (_dom, record) => formatRequestDuration(record.request.durationMs),
+      render: (_dom, record) => formatRequestDuration(record.request?.durationMs),
       search: false,
       title: "耗时",
     },
     {
       dataIndex: ["request", "startTime"],
-      render: (_dom, record) => formatRequestTime(record.request.startTime),
+      render: (_dom, record) => formatRequestTime(record.request?.startTime),
       search: false,
       title: "开始时间",
     },
@@ -179,7 +183,7 @@ export function createRequestMainColumns(
     { dataIndex: ["request", "clientIp"], search: false, title: "客户端IP" },
     {
       dataIndex: ["request", "httpStatus"],
-      render: (_dom, record) => record.request.httpStatus ?? "-",
+      render: (_dom, record) => record.request?.httpStatus ?? "-",
       search: false,
       title: "HTTP状态",
     },

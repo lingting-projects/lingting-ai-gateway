@@ -1,5 +1,5 @@
 import type { RequestMainDetailVO, RequestMainQO, RequestMainVO } from "@lingting/ai-gateway-sdk";
-import { ExTable, type PaginationParams } from "@lri";
+import { ExTable, ExTableProps, type PaginationParams } from "@lri";
 import { useCallback, useMemo, useState } from "react";
 
 import { bizApi } from "@/api/BizApi";
@@ -31,15 +31,14 @@ export function RequestMain() {
     [],
   );
 
-  const expandable = useMemo(
-    () => ({
-      expandedRowRender: (record: RequestMainDetailVO) => (
-        <RequestSubTable subs={record.children}/>
-      ),
-      rowExpandable: (record: RequestMainDetailVO) => record.children.length > 0,
-    }),
-    [],
-  );
+  const expandable = useMemo(() => {
+    const v: ExTableProps<RequestMainDetailVO>["expandable"] = {
+      childrenColumnName: "________children",
+      expandedRowRender: (record) => <RequestSubTable subs={record?.children || []}/>,
+      rowExpandable: (record) => !!record?.children?.length,
+    };
+    return v;
+  }, []);
 
   const handleOpenChange = useCallback((open: boolean) => {
     if (!open) {
