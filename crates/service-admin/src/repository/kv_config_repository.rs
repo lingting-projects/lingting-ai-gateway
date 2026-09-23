@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::{PgPool, QueryBuilderExt};
 use sqlx::{Postgres, QueryBuilder, Row};
-use types_admin::dto::KvConfigQO;
+use types_admin::dto::{KvConfigQO, KvConfigUpdatePO};
 use types_admin::entity::KvConfig;
 
 /// 全局配置数据访问。
@@ -71,18 +71,41 @@ impl KvConfigRepository {
     }
 
     /// 按 config_key 写入或更新配置，由单条 SQL 完成；description 仅在首次写入时保留默认值。
+    /// 按 config_key 写入或更新配置；description 仅在首次写入时保留默认值。
     pub async fn upsert(&self, config_key: &str, config_value: &str) -> Result<()> {
-        let now = lib_core::current_millis()?;
+        let params = KvConfigUpdatePO {
+            config_key: config_key.to_string(),
+            config_value: config_value.to_string(),
+        };
 
-        sqlx::query(
-            "INSERT INTO kv_config (config_key, config_value, description, create_time, update_time)
-             VALUES ($1, $2, '', $3, $3)
-             ON CONFLICT (config_key) DO UPDATE
+        self.upsert_batch(&[params]).await
+    }
+
+    /// 批量按 config_key 写入或更新配置，由单条 SQL 完成，保证多条写入的原子性；
+    /// description 仅在首次写入时保留默认值。
+    pub async fn upsert_batch(&self, params: &[KvConfigUpdatePO]) -> Result<()> {
+        if params.is_empty() {
+            return Ok(());
+        }
+
+        let now = lib_core::current_millis()?;
+        let mut query = QueryBuilder::<Postgres>::new(
+            "INSERT INTO kv_config (config_key, config_value, description, create_time, update_time) ",
+        );
+        query.push_values(params, |mut row, param| {
+            row.push_bind(&param.config_key)
+                .push_bind(&param.config_value)
+                .push_bind("")
+                .push_bind(now)
+                .push_bind(now);
+        });
+        query.push(
+            " ON CONFLICT (config_key) DO UPDATE
              SET config_value = EXCLUDED.config_value, update_time = EXCLUDED.update_time",
-        )
-            .bind(config_key)
-            .bind(config_value)
-            .bind(now)
+        );
+
+        query
+            .build()
             .execute(&self.pool)
             .await
             .context("写入全局配置失败")?;

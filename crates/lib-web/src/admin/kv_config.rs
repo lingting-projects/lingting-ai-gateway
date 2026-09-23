@@ -23,3 +23,9 @@ pub async fn kv_config_page(
 pub async fn kv_config_upsert(Json(params): Json<KvConfigUpdatePO>) -> Result<()> {
     KvConfigService::new()?.upsert(&params).await
 }
+
+/// 全局配置批量写入：单条 SQL 同时处理多条，保证写入的原子性。
+#[web_api_post(path = "/___/kv-config/upsert-batch")]
+pub async fn kv_config_upsert_batch(Json(params): Json<Vec<KvConfigUpdatePO>>) -> Result<()> {
+    KvConfigService::new()?.upsert_batch(&params).await
+}

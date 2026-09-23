@@ -109,4 +109,10 @@ impl KvConfigService {
             .upsert(&params.config_key, &params.config_value)
             .await
     }
+
+    /// 批量写入或更新配置：key 存在则更新，不存在则新增；
+    /// 由单条 SQL 完成，保证多条写入的原子性。
+    pub async fn upsert_batch(&self, params: &[KvConfigUpdatePO]) -> Result<()> {
+        self.repository.upsert_batch(params).await
+    }
 }
