@@ -3,7 +3,7 @@ import { ProCard } from "@ant-design/pro-components";
 import { useQuery } from "@tanstack/react-query";
 import type { DashboardQO } from "@lingting/ai-gateway-sdk";
 import { AppHolder, DictSelect } from "@lri";
-import { Checkbox, DatePicker, Flex, Radio } from "antd";
+import { Checkbox, DatePicker, Flex, Radio, Spin } from "antd";
 import type { Dayjs } from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -12,8 +12,8 @@ import { bizApi } from "@/api/BizApi";
 import {
   buildTokenPoints,
   DASHBOARD_RANGE_OPTIONS,
-  DEFAULT_DASHBOARD_RANGE,
   type DashboardRangeKey,
+  DEFAULT_DASHBOARD_RANGE,
   formatTokenValue,
   resolveRangeTime,
 } from "./dashboardTokenChartUtils";
@@ -44,6 +44,7 @@ export function DashboardTokenChart() {
     queryKey: ["dashboard-provider-options"],
     retry: false,
   });
+
   const { data: providerModels } = useQuery({
     queryFn: () => bizApi.providerModelDefault(),
     queryKey: ["dashboard-model-options"],
@@ -58,6 +59,7 @@ export function DashboardTokenChart() {
       })),
     [providers],
   );
+
   const modelOptions = useMemo(
     () =>
       Array.from(new Set((providerModels ?? []).map((model) => model.model))).map((model) => ({
@@ -68,6 +70,7 @@ export function DashboardTokenChart() {
   );
 
   const rangeTime = useMemo(() => resolveRangeTime(range, customRange), [customRange, range]);
+
   const query = useMemo<DashboardQO>(
     () => ({
       endTime: rangeTime ? String(rangeTime[1]) : null,
@@ -95,8 +98,8 @@ export function DashboardTokenChart() {
   }, [error]);
 
   const points = useMemo(
-    () => buildTokenPoints(data ?? [], withProvider, withModel),
-    [data, withModel, withProvider],
+    () => buildTokenPoints(data ?? [], withProvider, withModel, rangeTime),
+    [data, rangeTime, withModel, withProvider],
   );
 
   const handleCustomRangeChange = useCallback((value: CustomRange) => {
@@ -104,6 +107,7 @@ export function DashboardTokenChart() {
       setCustomRange([value[0], value[1]]);
       return;
     }
+
     setCustomRange(null);
   }, []);
 
@@ -117,48 +121,68 @@ export function DashboardTokenChart() {
           >
             供应商分组
           </Checkbox>
+
           <DictSelect
             className="dashboard-token-chart-select"
             dict={providerOptions}
             mode="multiple"
-            onChange={setProviderIds}
+            onChange={(value) => {
+              setProviderIds(Array.isArray(value) ? value.map(String) : []);
+            }}
             placeholder="供应商"
             value={providerIds}
           />
+
           <Checkbox checked={withModel} onChange={(event) => setWithModel(event.target.checked)}>
             模型分组
           </Checkbox>
+
           <DictSelect
             className="dashboard-token-chart-select"
             dict={modelOptions}
             mode="multiple"
-            onChange={setModels}
+            onChange={(value) => {
+              setModels(Array.isArray(value) ? value.map(String) : []);
+            }}
             placeholder="模型"
             value={models}
           />
+
           <Radio.Group
             onChange={(event) => setRange(event.target.value)}
             optionType="button"
             options={DASHBOARD_RANGE_OPTIONS}
             value={range}
           />
+
           {range === "custom" && (
             <RangePicker onChange={handleCustomRangeChange} value={customRange}/>
           )}
         </Flex>
-        <Line
-          axis={{
-            x: { title: false },
-            y: { labelFormatter: (value: number) => formatTokenValue(value), title: false },
-          }}
-          colorField="series"
-          data={points}
-          height={CHART_HEIGHT}
-          legend={{ color: { position: "top" } }}
-          loading={isFetching}
-          xField="day"
-          yField="value"
-        />
+
+        <Spin spinning={isFetching}>
+          <Line
+            axis={{
+              x: {
+                title: false,
+              },
+              y: {
+                labelFormatter: (value: number) => formatTokenValue(value),
+                title: false,
+              },
+            }}
+            colorField="series"
+            data={points}
+            height={CHART_HEIGHT}
+            legend={{
+              color: {
+                position: "top",
+              },
+            }}
+            xField="day"
+            yField="value"
+          />
+        </Spin>
       </Flex>
     </ProCard>
   );
