@@ -40,6 +40,7 @@ const App = () => {
           title={PRODUCT_TITLE}
         />,
       ]}
+      headerShow={false}
       logoutPosition="hidden"
       menuRoutes={menuRoutes}
       standaloneRoutes={standaloneRoutes}
