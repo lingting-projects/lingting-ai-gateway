@@ -4,6 +4,7 @@ import type { DashboardQO, DashboardRequestVO, DashboardTokenVO } from "@lingtin
 import { Col, Row } from "antd";
 
 import { bizApi } from "@/api/BizApi";
+import { formatCachePercent, formatTokenCount } from "@/utils/tokenUtils";
 
 import "./dashboard.css";
 
@@ -58,22 +59,29 @@ function RequestStatCard({ data, loading, title }: RequestStatCardProps) {
   );
 }
 
-/** Token 统计卡片：总数、缓存、读、写。 */
+/** Token 统计卡片：总数、缓存（含占比）、读、写。 */
 function TokenStatCard({ data, loading, title }: TokenStatCardProps) {
+  const total = Number(data?.total ?? 0);
+  const cache = cacheTokens(data);
+
   return (
     <ProCard className="dashboard-stat-card" loading={loading} title={title}>
       <Row gutter={[16, 16]}>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="总数" value={data?.total ?? 0}/>
+          <Statistic title="总数" value={formatTokenCount(total)}/>
         </Col>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="缓存" value={cacheTokens(data)}/>
+          <Statistic
+            suffix={`(${formatCachePercent(cache, total)})`}
+            title="缓存"
+            value={formatTokenCount(cache)}
+          />
         </Col>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="读" value={data?.input ?? 0}/>
+          <Statistic title="读" value={formatTokenCount(data?.input)}/>
         </Col>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="写" value={data?.output ?? 0}/>
+          <Statistic title="写" value={formatTokenCount(data?.output)}/>
         </Col>
       </Row>
     </ProCard>

@@ -2,11 +2,10 @@ import type { DashboardProviderVO, DashboardTokenFilterVO } from "@lingting/ai-g
 import dayjs, { type Dayjs } from "dayjs";
 
 /** 快捷时间范围。 */
-export type DashboardRangeKey = "today" | "last7" | "last30" | "week" | "month" | "custom";
+export type DashboardRangeKey = "last7" | "last30" | "week" | "month" | "custom";
 
 /** 快捷时间范围选项。 */
 export const DASHBOARD_RANGE_OPTIONS: { label: string; value: DashboardRangeKey }[] = [
-  { label: "当天", value: "today" },
   { label: "近7天", value: "last7" },
   { label: "近30天", value: "last30" },
   { label: "本周", value: "week" },
@@ -48,9 +47,6 @@ export function resolveRangeTime(
   customRange: [Dayjs, Dayjs] | null,
 ): [number, number] | null {
   const now = dayjs();
-  if (range === "today") {
-    return [now.startOf("day").valueOf(), now.valueOf()];
-  }
   if (range === "last7") {
     return [now.subtract(6, "day").startOf("day").valueOf(), now.valueOf()];
   }
@@ -66,10 +62,7 @@ export function resolveRangeTime(
   if (!customRange) {
     return null;
   }
-  return [
-    customRange[0].startOf("day").valueOf(),
-    customRange[1].endOf("day").valueOf(),
-  ];
+  return [customRange[0].startOf("day").valueOf(), customRange[1].endOf("day").valueOf()];
 }
 
 /** 供应商展示名：优先展示名，其次名称，均为空时回退主键。 */
@@ -159,10 +152,7 @@ function resolveGroup(
   withProvider: boolean,
   withModel: boolean,
 ): string {
-  return [
-    withProvider ? providerLabel(row.provider) : "",
-    withModel ? (row.model ?? "") : "",
-  ]
+  return [withProvider ? providerLabel(row.provider) : "", withModel ? (row.model ?? "") : ""]
     .filter(Boolean)
     .join(" · ");
 }
@@ -277,12 +267,7 @@ export function buildTokenPoints(
     }
 
     for (const metric of TOKEN_METRICS) {
-      const series = resolveSeries(
-        row,
-        withProvider,
-        withModel,
-        metric.label,
-      );
+      const series = resolveSeries(row, withProvider, withModel, metric.label);
 
       seriesSet.add(series);
 
@@ -295,10 +280,7 @@ export function buildTokenPoints(
        * 这样可以避免最终生成多个相同 day + series 的点，
        * 同时也兼容服务端按更细粒度返回数据的情况。
        */
-      valueMap.set(
-        key,
-        (valueMap.get(key) ?? 0) + value,
-      );
+      valueMap.set(key, (valueMap.get(key) ?? 0) + value);
     }
   }
 
@@ -348,9 +330,4 @@ export function buildTokenPoints(
       value: valueMap.get(`${day}::${series}`) ?? 0,
     })),
   );
-}
-
-/** 坐标轴与提示的数值展示：千分位。 */
-export function formatTokenValue(value: number): string {
-  return value.toLocaleString("zh-CN");
 }

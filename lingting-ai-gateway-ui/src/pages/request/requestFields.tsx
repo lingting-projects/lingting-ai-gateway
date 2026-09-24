@@ -11,6 +11,8 @@ import {
 import { Flex, Typography } from "antd";
 import dayjs from "dayjs";
 
+import { formatCachePercent, formatTokenCount } from "@/utils/tokenUtils";
+
 /** 请求状态字典，展示与搜索共用。 */
 const REQUEST_STATUS_ITEMS = RequestStatusAll.map((value) => ({
   color: RequestStatusMap[value].color,
@@ -71,24 +73,25 @@ export function formatRequestDuration(value?: string | null) {
   return millis >= 1000 ? `${(millis / 1000).toFixed(2)} s` : `${millis} ms`;
 }
 
-/** Token 列：总 Token 与明细同列展示，明细只保留非零项。 */
+/** Token 列：第一行总 / 缓存 / 缓存占比，第二行明细只保留非零项。 */
 export function renderTokenSummary(record?: RequestTokenFields) {
   if (!record) {
     return <>-</>;
   }
 
+  const total = Number(record.totalTokens);
+  const cache = Number(record.cacheReadTokens) + Number(record.cacheWriteTokens);
+  const summary = `总 ${formatTokenCount(total)} · 缓存 ${formatTokenCount(cache)} · ${formatCachePercent(cache, total)}`;
   const details = TOKEN_DETAILS.filter((item) => Number(record[item.key]) > 0).map(
-    (item) => `${item.label} ${record[item.key]}`,
+    (item) => `${item.label} ${formatTokenCount(record[item.key])}`,
   );
-
-  if (details.length < 1) {
-    return "-";
-  }
 
   return (
     <Flex className="request-token" gap={2} vertical>
-      <Typography.Text>{record.totalTokens}</Typography.Text>
-      <Typography.Text type="secondary">{details.join(" · ")}</Typography.Text>
+      <Typography.Text>{summary}</Typography.Text>
+      {details.length > 0 && (
+        <Typography.Text type="secondary">{details.join(" · ")}</Typography.Text>
+      )}
     </Flex>
   );
 }
@@ -153,7 +156,6 @@ export function createRequestMainColumns(
   onDetail: (record: RequestMainVO) => void,
 ): ExTableColumn<RequestMainDetailVO>[] {
   return [
-    { dataIndex: ["request", "model"], search: false, title: "模型" },
     {
       dataIndex: ["request", "status"],
       dict: REQUEST_STATUS_TABLE_DICT,
@@ -179,14 +181,13 @@ export function createRequestMainColumns(
       search: false,
       title: "开始时间",
     },
-    { dataIndex: ["request", "sessionId"], search: false, title: "会话ID" },
-    { dataIndex: ["request", "clientIp"], search: false, title: "客户端IP" },
     {
-      dataIndex: ["request", "httpStatus"],
-      render: (_dom, record) => record.request?.httpStatus ?? "-",
+      dataIndex: ["request", "firstChunkTime"],
+      render: (_dom, record) => formatRequestTime(record.request?.firstChunkTime),
       search: false,
-      title: "HTTP状态",
+      title: "首包时间",
     },
+    { dataIndex: ["request", "sessionId"], search: false, title: "会话ID" },
     { dataIndex: ["request", "errorType"], search: false, title: "错误类型" },
     { dataIndex: ["request", "errorMessage"], ellipsis: true, search: false, title: "错误信息" },
     { dataIndex: "id", hideInTable: true, title: "ID" },
@@ -223,15 +224,8 @@ export function createRequestSubColumns(
 ): ExTableColumn<RequestSubVO>[] {
   return [
     { dataIndex: "providerName", search: false, title: "供应商" },
-    { dataIndex: "model", search: false, title: "模型" },
     { dataIndex: "status", dict: REQUEST_STATUS_TABLE_DICT, search: false, title: "状态" },
     { dataIndex: "returnModel", search: false, title: "返回模型" },
-    {
-      dataIndex: "httpStatus",
-      render: (_dom, record) => record.httpStatus ?? "-",
-      search: false,
-      title: "HTTP状态",
-    },
     {
       dataIndex: "totalTokens",
       render: (_dom, record) => renderTokenSummary(record),
@@ -249,6 +243,12 @@ export function createRequestSubColumns(
       render: (_dom, record) => formatRequestTime(record.startTime),
       search: false,
       title: "开始时间",
+    },
+    {
+      dataIndex: "firstChunkTime",
+      render: (_dom, record) => formatRequestTime(record.firstChunkTime),
+      search: false,
+      title: "首包时间",
     },
     { dataIndex: "errorMessage", ellipsis: true, search: false, title: "错误信息" },
     createOptionColumn<RequestSubVO>(onDetail),
@@ -290,6 +290,11 @@ export function createRequestMainDetailColumns(): ProDescriptionsColumn<RequestM
       dataIndex: "startTime",
       render: (_dom, record) => formatRequestTime(record.startTime),
       title: "开始时间",
+    },
+    {
+      dataIndex: "firstChunkTime",
+      render: (_dom, record) => formatRequestTime(record.firstChunkTime),
+      title: "首包时间",
     },
     {
       dataIndex: "endTime",

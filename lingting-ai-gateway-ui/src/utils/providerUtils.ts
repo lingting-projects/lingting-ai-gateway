@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import type { ProviderDetailVO } from "@lingting/ai-gateway-sdk";
 
 import { includesKeyword } from "./textUtils";
+import { formatTokenCount as formatTokenAmount } from "./tokenUtils";
 
 /** 供应商搜索：匹配供应商名称、接口地址与模型名称。 */
 export function filterProviderDetails(
@@ -43,16 +44,5 @@ export function formatTokenCount(value: string): string {
   if (!Number.isFinite(count) || count <= 0) {
     return "-";
   }
-  if (count >= 1_000_000) {
-    return `${formatUnitValue(count / 1_000_000)}M`;
-  }
-  if (count >= 1000) {
-    return `${formatUnitValue(count / 1000)}K`;
-  }
-  return String(count);
-}
-
-/** 单位数值保留一位小数并去掉多余的 0。 */
-function formatUnitValue(value: number): string {
-  return String(Math.round(value * 10) / 10);
+  return formatTokenAmount(count);
 }

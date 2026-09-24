@@ -8,13 +8,13 @@ import type { Dayjs } from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { bizApi } from "@/api/BizApi";
+import { formatTokenCount } from "@/utils/tokenUtils";
 
 import {
   buildTokenPoints,
   DASHBOARD_RANGE_OPTIONS,
   type DashboardRangeKey,
   DEFAULT_DASHBOARD_RANGE,
-  formatTokenValue,
   resolveRangeTime,
 } from "./dashboardTokenChartUtils";
 
@@ -112,7 +112,7 @@ export function DashboardTokenChart() {
   }, []);
 
   return (
-    <ProCard className="dashboard-token-chart" title="Token统计">
+    <ProCard className="dashboard-token-chart">
       <Flex gap="middle" vertical>
         <Flex align="center" className="dashboard-token-chart-filter" gap="middle" wrap>
           <Checkbox
@@ -167,7 +167,7 @@ export function DashboardTokenChart() {
                 title: false,
               },
               y: {
-                labelFormatter: (value: number) => formatTokenValue(value),
+                labelFormatter: (value: number) => formatTokenCount(value),
                 title: false,
               },
             }}
