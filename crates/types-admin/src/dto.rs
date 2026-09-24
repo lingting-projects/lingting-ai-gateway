@@ -220,7 +220,8 @@ pub struct ApiKeyQO {
 #[auto_type(default = false)]
 pub struct ApiKeyCreatePO {
     pub name: String,
-    pub remark: String,
+    /// 备注；不传表示无备注。
+    pub remark: Option<String>,
 }
 
 #[auto_type(default = false)]
@@ -228,7 +229,8 @@ pub struct ApiKeyUpdatePO {
     pub id: i64,
     pub name: String,
     pub enabled: bool,
-    pub remark: String,
+    /// 备注；为空表示不修改已保存的备注。
+    pub remark: Option<String>,
 }
 
 #[auto_type(default = false)]

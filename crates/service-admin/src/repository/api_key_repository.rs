@@ -55,7 +55,7 @@ impl ApiKeyRepository {
         )
             .bind(&params.name)
             .bind(key_hash)
-            .bind(&params.remark)
+            .bind(params.remark.as_deref().unwrap_or_default())
             .bind(now)
             .fetch_one(&self.pool)
             .await
@@ -65,18 +65,29 @@ impl ApiKeyRepository {
     }
 
     pub async fn update(&self, params: &ApiKeyUpdatePO) -> Result<()> {
-        sqlx::query(
-            "UPDATE api_key SET name = $1, enabled = $2, remark = $3, update_time = $4
-             WHERE id = $5",
-        )
-        .bind(&params.name)
-        .bind(params.enabled)
-        .bind(&params.remark)
-        .bind(lib_core::current_millis()?)
-        .bind(params.id)
-        .execute(&self.pool)
-        .await
-        .context("更新 API Key 失败")?;
+        let mut query = QueryBuilder::<Postgres>::new("UPDATE api_key SET ");
+        query
+            .push("name = ")
+            .push_bind(&params.name)
+            .push(", enabled = ")
+            .push_bind(params.enabled);
+
+        // 为空表示不修改已保存的备注。
+        if let Some(remark) = &params.remark {
+            query.push(", remark = ").push_bind(remark);
+        }
+
+        query
+            .push(", update_time = ")
+            .push_bind(lib_core::current_millis()?)
+            .push(" WHERE id = ")
+            .push_bind(params.id);
+
+        query
+            .build()
+            .execute(&self.pool)
+            .await
+            .context("更新 API Key 失败")?;
 
         Ok(())
     }
