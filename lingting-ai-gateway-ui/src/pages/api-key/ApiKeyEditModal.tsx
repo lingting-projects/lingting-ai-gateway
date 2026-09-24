@@ -70,7 +70,6 @@ export function ApiKeyEditModal({
         label="备注"
         name="remark"
         placeholder="请输入备注"
-        rules={[{ message: "请输入备注", required: true }]}
       />
     </ModalForm>
   );
