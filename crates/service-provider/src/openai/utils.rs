@@ -6,6 +6,7 @@ use framework_core::MultiStringValue;
 use lib_web_core::{WebBody, WebContext, WebResponse};
 use serde::Serialize;
 use serde_json::{Map, Value, json};
+use types_admin::entity::RequestStatus;
 
 /// 日志中需要脱敏的头名。
 const MASKED_HEADER: &str = "authorization";
@@ -42,9 +43,14 @@ pub fn request_params(context: &WebContext, debug_mode: bool) -> Option<Value> {
     context.body_json().ok().cloned()
 }
 
-/// 请求日志中的返回内容：仅调试模式记录，保留供应商返回的原始字节。
-pub fn response_content(content: &Option<Bytes>, debug_mode: bool) -> Option<String> {
-    if !debug_mode {
+/// 请求日志中的返回内容：调试模式全部保留，非调试模式只在请求失败时保留，
+/// 便于排查供应商返回的错误；内容本身由转发链路给出（非流式为原始响应体，流式为累积响应 JSON）。
+pub fn response_content(
+    content: &Option<Bytes>,
+    status: &RequestStatus,
+    debug_mode: bool,
+) -> Option<String> {
+    if !debug_mode && *status != RequestStatus::Failed {
         return None;
     }
     content

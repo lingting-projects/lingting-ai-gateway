@@ -10,6 +10,7 @@ use lib_provider::{ForwardCallback, ForwardFailure, ForwardOutcome};
 use lib_web_core::{WebBody, WebResponse};
 use reqwest::StatusCode;
 use reqwest::header::HeaderMap;
+use serde::Serialize;
 use types_admin::entity::Provider;
 
 use crate::chat_response::{ChatResponse, ProviderResponse};
@@ -41,8 +42,8 @@ pub fn responses_url(provider: &Provider) -> String {
 
 /// 由 chat 供应商响应体构造日志用的转发结果；解析失败时只保留状态码。
 ///
-/// 原始字节仅在调试模式下收集。
-pub fn chat_outcome(http_status: u16, body: &Bytes, debug_mode: bool) -> ForwardOutcome {
+/// 原始字节一律带上，是否落库由回调按请求状态与调试模式决定。
+pub fn chat_outcome(http_status: u16, body: &Bytes) -> ForwardOutcome {
     let status = i32::from(http_status);
     let mut outcome = match serde_json::from_slice::<ChatResponse>(body) {
         Ok(response) => ProviderResponse {
@@ -55,16 +56,14 @@ pub fn chat_outcome(http_status: u16, body: &Bytes, debug_mode: bool) -> Forward
             ..ForwardOutcome::default()
         },
     };
-    if debug_mode {
-        outcome.content = Some(body.clone());
-    }
+    outcome.content = Some(body.clone());
     outcome
 }
 
 /// 由 Responses 供应商响应体构造日志用的转发结果；解析失败时只保留状态码。
 ///
-/// 原始字节仅在调试模式下收集。
-pub fn responses_outcome(http_status: u16, body: &Bytes, debug_mode: bool) -> ForwardOutcome {
+/// 原始字节一律带上，是否落库由回调按请求状态与调试模式决定。
+pub fn responses_outcome(http_status: u16, body: &Bytes) -> ForwardOutcome {
     let status = i32::from(http_status);
     let mut outcome = match serde_json::from_slice::<ResponsesResponse>(body) {
         Ok(response) => ForwardOutcome {
@@ -81,10 +80,13 @@ pub fn responses_outcome(http_status: u16, body: &Bytes, debug_mode: bool) -> Fo
             ..ForwardOutcome::default()
         },
     };
-    if debug_mode {
-        outcome.content = Some(body.clone());
-    }
+    outcome.content = Some(body.clone());
     outcome
+}
+
+/// 把累积后的响应序列化为日志用的返回内容；流式请求失败时使用。
+pub fn json_content<T: Serialize>(value: &T) -> Option<Bytes> {
+    serde_json::to_vec(value).ok().map(Bytes::from)
 }
 
 /// 供应商响应头转成网关响应头；逐跳头已由 `ForwardRequest::call` 移除。

@@ -17,8 +17,11 @@ pub trait StreamParser {
     /// 处理流结束时残留的、没有换行符的最后一行。
     fn finish(&mut self);
 
-    /// 取当前累积的转发结果；原始内容取走后继续累积后续分片。
-    fn outcome(&mut self, http_status: u16) -> ForwardOutcome;
+    /// 取当前累积的转发结果。
+    ///
+    /// `terminal` 为真表示这是本次转发的最后一次取值，只有此时才序列化返回内容，
+    /// 避免每个分片都做一次全量序列化。
+    fn outcome(&mut self, http_status: u16, terminal: bool) -> ForwardOutcome;
 }
 
 /// 消费供应商分片：原样写出、解析累积，并按进度通知回调。
@@ -40,7 +43,7 @@ pub async fn forward_stream<P>(
         // 不再等到下一个分片才检查，避免上游连接长时间滞留。
         let item = tokio::select! {
             _ = sink.closed() => {
-                let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode);
+                let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode, true);
                 utils::notify(callback.on_cancel(&outcome).await);
                 return;
             }
@@ -56,7 +59,7 @@ pub async fn forward_stream<P>(
                 let failure = ForwardFailure::new(
                     utils::transport_error_type(&error),
                     error.to_string(),
-                    take_outcome(&mut parser, status, &response_headers, debug_mode),
+                    take_outcome(&mut parser, status, &response_headers, debug_mode, true),
                 );
                 utils::notify(callback.on_failure(&failure).await);
                 sink.send_error(error.to_string());
@@ -66,12 +69,12 @@ pub async fn forward_stream<P>(
 
         parser.push(&chunk);
         sink.send(chunk);
-        let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode);
+        let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode, false);
         utils::notify(callback.on_progress(&outcome).await);
     }
 
     parser.finish();
-    let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode);
+    let outcome = take_outcome(&mut parser, status, &response_headers, debug_mode, true);
     utils::notify(callback.on_success(&outcome).await);
 }
 
@@ -81,11 +84,12 @@ fn take_outcome<P>(
     status: u16,
     response_headers: &MultiStringValue,
     debug_mode: bool,
+    terminal: bool,
 ) -> ForwardOutcome
 where
     P: StreamParser,
 {
-    let mut outcome = parser.outcome(status);
+    let mut outcome = parser.outcome(status, terminal);
     utils::record_response_headers(&mut outcome, response_headers, debug_mode);
     outcome
 }

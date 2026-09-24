@@ -63,6 +63,8 @@ impl OpenAiForwardCallback {
     ) -> Result<RequestFinishPO> {
         let end_time = lib_core::current_millis()?;
         let token_info = &outcome.token_info;
+        // 失败时不受调试模式限制，保留返回内容。
+        let response_content = utils::response_content(&outcome.content, &status, self.debug_mode);
 
         Ok(RequestFinishPO {
             status,
@@ -79,7 +81,7 @@ impl OpenAiForwardCallback {
             http_status: outcome.http_status,
             finish_reason: Some(outcome.finish_reason.clone()),
             provider_request_id: Some(outcome.provider_request_id.clone()),
-            response_content: utils::response_content(&outcome.content, self.debug_mode),
+            response_content,
             response_headers: utils::response_headers(
                 outcome.response_headers.as_ref(),
                 self.debug_mode,

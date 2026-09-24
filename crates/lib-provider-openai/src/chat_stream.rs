@@ -3,7 +3,6 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use bytes::{Bytes, BytesMut};
 use lib_provider::client::ForwardRequest;
 use lib_provider::{ChunkSink, ForwardCallback, ForwardOutcome};
 use lib_web_core::{WebBody, WebContext, WebResponse};
@@ -49,13 +48,13 @@ impl OpenaiChatStreamRequest {
                 Ok(body) => body,
                 Err(error) => return utils::fail_transport(&self.callback, error).await,
             };
-            let outcome = utils::chat_outcome(status.as_u16(), &body, self.callback.is_debug());
+            let outcome = utils::chat_outcome(status.as_u16(), &body);
             return utils::finish_response(&self.callback, status, headers, body, outcome).await;
         }
 
         let (sink, stream) = ChunkSink::channel();
         let callback = Arc::clone(&self.callback);
-        let parser = ChatStreamParser::new(callback.is_debug());
+        let parser = ChatStreamParser::new();
         tokio::spawn(forward_stream(
             response,
             sink,
@@ -72,26 +71,19 @@ impl OpenaiChatStreamRequest {
     }
 }
 
-/// SSE 分片解析器：按数据行累积响应，并按调试模式保留原始内容。
+/// SSE 分片解析器：按数据行累积响应，终态时把累积结果序列化为日志用的返回内容。
 struct ChatStreamParser {
     /// 尚未构成完整行的残余字节。
     pending: Vec<u8>,
     /// 累积后的响应。
     response: ChatResponse,
-    /// 原始内容，仅调试模式下收集。
-    content: BytesMut,
-    /// 是否处于调试模式。
-    debug_mode: bool,
 }
 
 impl ChatStreamParser {
-    /// 按调试模式创建解析器。
-    fn new(debug_mode: bool) -> Self {
+    fn new() -> Self {
         Self {
             pending: Vec::new(),
             response: ChatResponse::default(),
-            content: BytesMut::new(),
-            debug_mode,
         }
     }
 
@@ -106,22 +98,11 @@ impl ChatStreamParser {
         };
         self.response.merge_chunk(&chunk);
     }
-
-    /// 取走已收集的原始内容。
-    fn take_content(&mut self) -> Option<Bytes> {
-        if self.content.is_empty() {
-            return None;
-        }
-        Some(self.content.split().freeze())
-    }
 }
 
 impl StreamParser for ChatStreamParser {
     /// 追加一段原始分片，解析其中已完整的数据行。
     fn push(&mut self, chunk: &[u8]) {
-        if self.debug_mode {
-            self.content.extend_from_slice(chunk);
-        }
         self.pending.extend_from_slice(chunk);
 
         while let Some(position) = self.pending.iter().position(|byte| *byte == b'\n') {
@@ -136,11 +117,13 @@ impl StreamParser for ChatStreamParser {
         self.merge_line(&line);
     }
 
-    /// 当前累积结果；原始内容取走后继续累积后续分片。
-    fn outcome(&mut self, http_status: u16) -> ForwardOutcome {
+    /// 当前累积结果；仅在终态序列化返回内容，供失败时落库。
+    fn outcome(&mut self, http_status: u16, terminal: bool) -> ForwardOutcome {
         ForwardOutcome {
             token_info: self.response.token_info(),
-            content: self.take_content(),
+            content: terminal
+                .then(|| utils::json_content(&self.response))
+                .flatten(),
             return_model: self.response.model.clone(),
             finish_reason: self.response.finish_reason(),
             provider_request_id: self.response.id.clone(),

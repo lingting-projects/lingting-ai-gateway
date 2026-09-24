@@ -9,7 +9,8 @@ use types_admin::TokenInfo;
 pub struct ForwardOutcome {
     /// 输入、输出、缓存读、缓存写、推理与总量。
     pub token_info: TokenInfo,
-    /// 返回内容的原始字节，是否落库由回调按调试模式决定。
+    /// 返回内容，是否落库由回调按请求状态与调试模式决定；
+    /// 非流式为供应商原始响应体，流式为累积后的响应 JSON。
     pub content: Option<Bytes>,
     /// 供应商返回的响应头，是否落库由回调按调试模式决定。
     pub response_headers: Option<MultiStringValue>,
@@ -61,7 +62,7 @@ impl ForwardFailure {
 /// 回调返回的错误不得影响正常请求的完成。
 #[async_trait]
 pub trait ForwardCallback: Send + Sync {
-    /// 是否处于调试模式；客户端据此决定是否把返回的原始内容交给回调。
+    /// 是否处于调试模式；回调据此决定返回内容与响应头是否落库。
     fn is_debug(&self) -> bool {
         false
     }

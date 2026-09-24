@@ -46,7 +46,7 @@ impl OpenaiResponsesRequest {
             Err(error) => return utils::fail_transport(&self.callback, error).await,
         };
 
-        let outcome = utils::responses_outcome(status.as_u16(), &body, self.callback.is_debug());
+        let outcome = utils::responses_outcome(status.as_u16(), &body);
         utils::finish_response(&self.callback, status, headers, body, outcome).await
     }
 }
