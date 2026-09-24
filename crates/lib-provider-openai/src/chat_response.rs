@@ -215,14 +215,16 @@ pub struct ProviderResponse {
 impl ProviderResponse {
     /// 构造转发累积结果。
     pub fn into_outcome(self) -> ForwardOutcome {
-        ForwardOutcome {
+        let mut outcome = ForwardOutcome {
             token_info: self.response.token_info(),
             content: None,
             response_headers: None,
             return_model: self.response.model.clone(),
             finish_reason: self.response.finish_reason(),
-            provider_request_id: self.response.id.clone(),
+            provider_request_ids: Vec::new(),
             http_status: Some(self.http_status),
-        }
+        };
+        crate::utils::push_request_id(&mut outcome.provider_request_ids, &self.response.id);
+        outcome
     }
 }

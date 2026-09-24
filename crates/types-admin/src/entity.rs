@@ -214,7 +214,8 @@ pub struct RequestMain {
     pub total_tokens: i64,
     pub http_status: Option<i32>,
     pub finish_reason: String,
-    pub provider_request_id: String,
+    /// 供应商返回的请求 ID 集合。
+    pub provider_request_ids: Vec<String>,
     pub response_content: Option<String>,
     /// 返回给客户端的响应头，仅调试模式记录，已移除逐跳头。
     pub response_headers: Option<serde_json::Value>,
@@ -252,7 +253,8 @@ pub struct RequestSub {
     pub total_tokens: i64,
     pub http_status: Option<i32>,
     pub finish_reason: String,
-    pub provider_request_id: String,
+    /// 供应商返回的请求 ID 集合。
+    pub provider_request_ids: Vec<String>,
     pub response_content: Option<String>,
     /// 供应商返回的响应头，仅调试模式记录，已移除逐跳头。
     pub response_headers: Option<serde_json::Value>,

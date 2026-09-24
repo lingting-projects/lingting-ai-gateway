@@ -3,6 +3,7 @@
 use anyhow::Result;
 use bytes::Bytes;
 use framework_core::MultiStringValue;
+use lib_provider::ForwardFailure;
 use lib_web_core::{WebBody, WebContext, WebResponse};
 use serde::Serialize;
 use serde_json::{Map, Value, json};
@@ -56,6 +57,51 @@ pub fn response_content(
     content
         .as_ref()
         .map(|bytes| String::from_utf8_lossy(bytes).to_string())
+}
+
+/// 请求日志中的错误信息。
+#[derive(Debug, Default)]
+pub struct ErrorInfo {
+    /// 错误类别。
+    pub error_type: Option<String>,
+    /// 错误码。
+    pub error_code: Option<String>,
+    /// 错误描述。
+    pub error_message: Option<String>,
+}
+
+/// 请求日志中的错误信息：优先从返回内容解析 [OI] 错误结构，
+/// 解析不出时沿用失败本身的描述。
+///
+/// `content` 传已落库的那份文本，避免重复把字节转成文本。
+pub fn error_info(failure: Option<&ForwardFailure>, content: Option<&str>) -> ErrorInfo {
+    let Some(failure) = failure else {
+        return ErrorInfo::default();
+    };
+
+    let Some(error) = content.and_then(lib_provider_openai::error_response::parse_error) else {
+        return ErrorInfo {
+            error_type: Some(failure.error_type.clone()),
+            error_code: Some(failure.error_code.clone()),
+            error_message: Some(failure.message.clone()),
+        };
+    };
+
+    // 上游缺失的字段回退到失败本身的描述，避免把已有信息覆盖为空。
+    ErrorInfo {
+        error_type: Some(pick(&error.error_type, &failure.error_type)),
+        error_code: Some(pick(&error.code, &failure.error_code)),
+        error_message: Some(error.message),
+    }
+}
+
+/// 取首个非空值。
+fn pick(primary: &str, fallback: &str) -> String {
+    if primary.is_empty() {
+        fallback.to_string()
+    } else {
+        primary.to_string()
+    }
 }
 
 /// 请求日志中的客户端请求头：仅调试模式记录，已移除逐跳头。

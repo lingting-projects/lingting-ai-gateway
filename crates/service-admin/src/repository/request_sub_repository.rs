@@ -19,7 +19,7 @@ const COLUMNS: &str = "id, main_request_id, provider_id, provider_name, model, p
     request_params, request_headers, status, error_type, error_code, error_message, return_model,
     input_tokens,
     output_tokens, cache_read_tokens, cache_write_tokens, inference_tokens, total_tokens,
-    http_status, finish_reason, provider_request_id, response_content, response_headers,
+    http_status, finish_reason, provider_request_ids, response_content, response_headers,
     start_time, first_chunk_time, end_time, duration_ms, create_time";
 
 impl RequestSubRepository {
@@ -88,7 +88,7 @@ impl RequestSubRepository {
                 return_model = COALESCE($5, ''), input_tokens = $6, output_tokens = $7,
                 cache_read_tokens = $8, cache_write_tokens = $9, inference_tokens = $10,
                 total_tokens = $11, http_status = $12,
-                finish_reason = COALESCE($13, ''), provider_request_id = COALESCE($14, ''),
+                finish_reason = COALESCE($13, ''), provider_request_ids = $14,
                 response_content = $15,
                 response_headers = $16, end_time = $17,
                 first_chunk_time = COALESCE($18, first_chunk_time), duration_ms = $17 - start_time
@@ -107,7 +107,7 @@ impl RequestSubRepository {
         .bind(params.total_tokens)
         .bind(params.http_status)
         .bind(&params.finish_reason)
-        .bind(&params.provider_request_id)
+        .bind(sqlx::types::Json(&params.provider_request_ids))
         .bind(&params.response_content)
         .bind(&params.response_headers)
         .bind(params.end_time)
@@ -273,7 +273,9 @@ fn request_sub_from_row(row: sqlx::postgres::PgRow) -> Result<RequestSub> {
         total_tokens: row.get("total_tokens"),
         http_status: row.get("http_status"),
         finish_reason: row.get("finish_reason"),
-        provider_request_id: row.get("provider_request_id"),
+        provider_request_ids: row
+            .get::<sqlx::types::Json<Vec<String>>, _>("provider_request_ids")
+            .0,
         response_content: row.get("response_content"),
         response_headers: row.get("response_headers"),
         start_time: row.get("start_time"),

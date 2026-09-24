@@ -8,7 +8,7 @@ import {
   RequestStatusMap,
   type RequestSubVO,
 } from "@lingting/ai-gateway-sdk";
-import { Flex, Typography } from "antd";
+import { Flex, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 
 import { formatCachePercent, formatTokenCount } from "@/utils/tokenUtils";
@@ -255,6 +255,20 @@ export function createRequestSubColumns(
   ];
 }
 
+/** 供应商请求 ID：逐个以标签展示，无值时展示占位符。 */
+function renderProviderRequestIds(ids?: readonly string[] | null) {
+  if (!ids || ids.length === 0) {
+    return "-";
+  }
+
+  return (
+    <Flex gap={4} wrap>
+      {ids.map((id) => (
+        <Tag key={id}>{id}</Tag>
+      ))}
+    </Flex>
+  );
+}
 /** 主请求详情弹窗字段，展示全部字段。 */
 export function createRequestMainDetailColumns(): ProDescriptionsColumn<RequestMainVO>[] {
   return [
@@ -285,7 +299,11 @@ export function createRequestMainDetailColumns(): ProDescriptionsColumn<RequestM
       title: "HTTP状态",
     },
     { dataIndex: "finishReason", title: "结束原因" },
-    { dataIndex: "providerRequestId", title: "供应商请求ID" },
+    {
+      dataIndex: "providerRequestIds",
+      render: (_dom, record) => renderProviderRequestIds(record.providerRequestIds),
+      title: "供应商请求ID",
+    },
     {
       dataIndex: "startTime",
       render: (_dom, record) => formatRequestTime(record.startTime),
@@ -339,7 +357,11 @@ export function createRequestSubDetailColumns(): ProDescriptionsColumn<RequestSu
       title: "HTTP状态",
     },
     { dataIndex: "finishReason", title: "结束原因" },
-    { dataIndex: "providerRequestId", title: "供应商请求ID" },
+    {
+      dataIndex: "providerRequestIds",
+      render: (_dom, record) => renderProviderRequestIds(record.providerRequestIds),
+      title: "供应商请求ID",
+    },
     {
       dataIndex: "startTime",
       render: (_dom, record) => formatRequestTime(record.startTime),

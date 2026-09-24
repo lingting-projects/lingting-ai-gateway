@@ -18,8 +18,8 @@ pub struct ForwardOutcome {
     pub return_model: String,
     /// 结束原因。
     pub finish_reason: String,
-    /// 供应商返回的请求 ID。
-    pub provider_request_id: String,
+    /// 供应商返回的请求 ID 集合：响应体 `id` 与响应头 `x-oneapi-request-id`。
+    pub provider_request_ids: Vec<String>,
     /// 供应商返回的 HTTP 状态码。
     pub http_status: Option<i32>,
 }

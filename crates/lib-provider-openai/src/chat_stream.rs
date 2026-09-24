@@ -119,16 +119,18 @@ impl StreamParser for ChatStreamParser {
 
     /// 当前累积结果；仅在终态序列化返回内容，供失败时落库。
     fn outcome(&mut self, http_status: u16, terminal: bool) -> ForwardOutcome {
-        ForwardOutcome {
+        let mut outcome = ForwardOutcome {
             token_info: self.response.token_info(),
             content: terminal
                 .then(|| utils::json_content(&self.response))
                 .flatten(),
             return_model: self.response.model.clone(),
             finish_reason: self.response.finish_reason(),
-            provider_request_id: self.response.id.clone(),
+            provider_request_ids: Vec::new(),
             http_status: Some(i32::from(http_status)),
             response_headers: None,
-        }
+        };
+        utils::push_request_id(&mut outcome.provider_request_ids, &self.response.id);
+        outcome
     }
 }

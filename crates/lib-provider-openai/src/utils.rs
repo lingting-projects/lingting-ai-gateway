@@ -16,6 +16,8 @@ use types_admin::entity::Provider;
 use crate::chat_response::{ChatResponse, ProviderResponse};
 use crate::responses_response::ResponsesResponse;
 
+/// 供应商回传请求 ID 的响应头；oneapi 系上游使用该头。
+const ONEAPI_REQUEST_ID_HEADER: &str = "x-oneapi-request-id";
 /// 对话补全接口的路径后缀。
 pub const CHAT_COMPLETIONS_SUFFIX: &str = "/chat/completions";
 
@@ -66,15 +68,19 @@ pub fn chat_outcome(http_status: u16, body: &Bytes) -> ForwardOutcome {
 pub fn responses_outcome(http_status: u16, body: &Bytes) -> ForwardOutcome {
     let status = i32::from(http_status);
     let mut outcome = match serde_json::from_slice::<ResponsesResponse>(body) {
-        Ok(response) => ForwardOutcome {
-            token_info: response.token_info(),
-            content: None,
-            response_headers: None,
-            return_model: response.model.clone(),
-            finish_reason: response.finish_reason(),
-            provider_request_id: response.id.clone(),
-            http_status: Some(status),
-        },
+        Ok(response) => {
+            let mut outcome = ForwardOutcome {
+                token_info: response.token_info(),
+                content: None,
+                response_headers: None,
+                return_model: response.model.clone(),
+                finish_reason: response.finish_reason(),
+                provider_request_ids: Vec::new(),
+                http_status: Some(status),
+            };
+            push_request_id(&mut outcome.provider_request_ids, &response.id);
+            outcome
+        }
         Err(_) => ForwardOutcome {
             http_status: Some(status),
             ..ForwardOutcome::default()
@@ -95,14 +101,30 @@ pub fn response_headers(headers: &HeaderMap) -> MultiStringValue {
 }
 
 /// 按调试模式把供应商响应头并入转发结果；关闭调试时不收集。
+///
+/// 供应商请求 ID 与调试模式无关，始终收集，便于按上游 ID 追溯。
 pub fn record_response_headers(
     outcome: &mut ForwardOutcome,
     headers: &MultiStringValue,
     debug_mode: bool,
 ) {
+    if let Some(value) = headers.get_first(ONEAPI_REQUEST_ID_HEADER) {
+        push_request_id(&mut outcome.provider_request_ids, value);
+    }
+
     if debug_mode {
         outcome.response_headers = Some(headers.clone());
     }
+}
+
+/// 追加供应商请求 ID：跳过空值并去重。
+pub(crate) fn push_request_id(ids: &mut Vec<String>, id: &str) {
+    let id = id.trim();
+    if id.is_empty() || ids.iter().any(|existing| existing == id) {
+        return;
+    }
+
+    ids.push(id.to_string());
 }
 /// 传输层失败：构造失败信息、通知回调，并把错误原样抛出。
 pub async fn fail_transport(

@@ -63,14 +63,15 @@ impl OpenAiForwardCallback {
     ) -> Result<RequestFinishPO> {
         let end_time = lib_core::current_millis()?;
         let token_info = &outcome.token_info;
-        // 失败时不受调试模式限制，保留返回内容。
+        // 返回内容只转一次文本，错误解析与落库复用同一份。
         let response_content = utils::response_content(&outcome.content, &status, self.debug_mode);
+        let error = utils::error_info(failure, response_content.as_deref());
 
         Ok(RequestFinishPO {
             status,
-            error_type: failure.map(|item| item.error_type.clone()),
-            error_code: failure.map(|item| item.error_code.clone()),
-            error_message: failure.map(|item| item.message.clone()),
+            error_type: error.error_type,
+            error_code: error.error_code,
+            error_message: error.error_message,
             return_model: Some(outcome.return_model.clone()),
             input_tokens: token_info.input_tokens,
             output_tokens: token_info.output_tokens,
@@ -80,7 +81,7 @@ impl OpenAiForwardCallback {
             total_tokens: token_info.total_tokens,
             http_status: outcome.http_status,
             finish_reason: Some(outcome.finish_reason.clone()),
-            provider_request_id: Some(outcome.provider_request_id.clone()),
+            provider_request_ids: outcome.provider_request_ids.clone(),
             response_content,
             response_headers: utils::response_headers(
                 outcome.response_headers.as_ref(),
