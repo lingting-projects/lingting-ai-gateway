@@ -1,4 +1,5 @@
 import {
+  ApiOutlined,
   CloudServerOutlined,
   DashboardOutlined,
   DeploymentUnitOutlined,
@@ -10,6 +11,7 @@ import {
 import { type MenuRouteDefinition, type StandaloneRouteDefinition } from "@lri";
 import { ApiKeyMain } from "@/pages/api-key/ApiKeyMain";
 import { DashboardMain } from "@/pages/dashboard/DashboardMain";
+import { IntegrationMain } from "@/pages/integration/IntegrationMain";
 import { ModelMain } from "@/pages/model/ModelMain";
 import { ProviderMain } from "@/pages/provider/ProviderMain";
 import { RequestMain } from "@/pages/request/RequestMain";
@@ -45,6 +47,12 @@ export const menuRoutes: readonly MenuRouteDefinition[] = [
     icon: <KeyOutlined />,
     path: "api-key",
     title: "API Key",
+  },
+  {
+    component: IntegrationMain,
+    icon: <ApiOutlined/>,
+    path: "integration",
+    title: "集成",
   },
   {
     component: SettingsMain,

@@ -1,0 +1,40 @@
+@reference "../../index.css";
+
+.integration-main {
+    @apply h-full min-h-0 w-full;
+}
+
+.integration-agent-list {
+    @apply h-full min-h-0 w-80 shrink-0;
+}
+
+/* 未传 header 时 ListCard 仍会渲染空标题区，去掉其内边距 */
+.integration-agent-list .ant-pro-card-header {
+    padding: 0;
+    padding-inline: 0 !important;
+    padding-block: 0 !important;
+}
+
+.integration-agent-item {
+    @apply h-full w-full cursor-pointer rounded-md border border-solid border-(--ant-color-border-secondary) bg-(--ant-color-bg-container) px-3 py-2;
+}
+
+.integration-agent-item:hover {
+    @apply border-(--ant-color-primary);
+}
+
+.integration-agent-item-selected {
+    @apply border-(--ant-color-primary) bg-(--ant-color-primary-bg);
+}
+
+.integration-config-panel {
+    @apply min-w-0 flex-1;
+}
+
+.integration-config-panel .ant-pro-card-body {
+    @apply flex min-h-0 flex-1 flex-col overflow-auto;
+}
+
+.integration-config-empty {
+    @apply w-full flex-1;
+}
