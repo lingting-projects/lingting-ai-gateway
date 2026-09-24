@@ -1,8 +1,6 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 
 use crate::config::ServiceConfig;
-use crate::{linux, macos, windows};
-
 /// 系统服务管理入口；按当前操作系统选择实现。
 pub struct ServiceManager {
     platform: Box<dyn Platform>,
@@ -53,16 +51,25 @@ pub(crate) trait Platform {
 }
 
 /// 当前操作系统的实现。
+#[cfg(target_os = "windows")]
 fn current_platform() -> Result<Box<dyn Platform>> {
-    let platform: Box<dyn Platform> = if cfg!(target_os = "windows") {
-        Box::new(windows::WindowsService)
-    } else if cfg!(target_os = "linux") {
-        Box::new(linux::LinuxService)
-    } else if cfg!(target_os = "macos") {
-        Box::new(macos::MacosService)
-    } else {
-        return Err(anyhow!("当前操作系统不支持注册系统服务"));
-    };
+    Ok(Box::new(crate::windows::WindowsService))
+}
 
-    Ok(platform)
+/// 当前操作系统的实现。
+#[cfg(target_os = "linux")]
+fn current_platform() -> Result<Box<dyn Platform>> {
+    Ok(Box::new(crate::linux::LinuxService))
+}
+
+/// 当前操作系统的实现。
+#[cfg(target_os = "macos")]
+fn current_platform() -> Result<Box<dyn Platform>> {
+    Ok(Box::new(crate::macos::MacosService))
+}
+
+/// 当前操作系统的实现。
+#[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
+fn current_platform() -> Result<Box<dyn Platform>> {
+    Err(anyhow::anyhow!("当前操作系统不支持注册系统服务"))
 }

@@ -18,7 +18,9 @@ pub struct ServiceConfig {
 }
 
 impl ServiceConfig {
-    /// 完整的启动命令行：可执行文件绝对路径加启动参数，含空格的路径加引号。
+    /// 完整的启动命令行：可执行文件绝对路径加启动参数，含空格的路径加引号；
+    /// 供 Windows 计划任务与 systemd 单元使用，launchd 需要拆成独立的参数元素。
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
     pub(crate) fn command_line(&self) -> String {
         let mut line = quote(&self.program.to_string_lossy());
         for arg in &self.args {
@@ -30,6 +32,7 @@ impl ServiceConfig {
 }
 
 /// 命令行参数加引号；参数本身含双引号时原样返回，避免破坏用户输入。
+#[cfg(any(target_os = "windows", target_os = "linux"))]
 fn quote(value: &str) -> String {
     if value.contains('"') || !value.contains(' ') {
         return value.to_string();

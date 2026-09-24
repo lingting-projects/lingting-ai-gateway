@@ -7,15 +7,23 @@
 //! - Linux：systemd（`/etc/systemd/system` + `systemctl`）
 //! - macOS：launchd（`/Library/LaunchDaemons` + `launchctl`）
 //!
-//! 三个平台的实现始终参与编译，避免非本机平台的代码长期失检。
+//! 各平台的实现按编译目标门控，非目标平台的代码与依赖不参与编译。
 
 pub mod config;
 pub mod manager;
 
 mod command;
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 mod file;
+
+#[cfg(target_os = "linux")]
 mod linux;
+
+#[cfg(target_os = "macos")]
 mod macos;
+
+#[cfg(target_os = "windows")]
 mod windows;
 
 pub use config::ServiceConfig;
