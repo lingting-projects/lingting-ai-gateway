@@ -9,3 +9,6 @@ license.workspace = true
 anyhow.workspace = true
 framework-core.workspace = true
 sha1.workspace = true
+tracing.workspace = true
+tracing-appender.workspace = true
+tracing-subscriber.workspace = true

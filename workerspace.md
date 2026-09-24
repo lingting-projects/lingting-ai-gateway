@@ -12,6 +12,8 @@
 所有 crate 统一位于 `crates/` 目录下。
 
 - `lib-core`: 日志, 程序文件夹等
+- `lib-system-service`: 系统服务注册与卸载。对外提供统一配置与调用入口，按操作系统选择实现：Windows 计划程序、
+  Linux systemd、macOS launchd。
 - `lib-provider`: 供应商基础类型和trait以及公用方法定义。只放与协议无关的通用能力：`RouteRequest`(网关路由与日志所需字段)、
   `ForwardRequest`、`ForwardCallback` / `ForwardOutcome`、`ChunkSink`。具体协议的请求/响应模型不放在这里。
 - `lib-provider-openai`: `[OI]` 协议的转发实现。按协议分文件: `chat.rs` / `chat_response.rs` / `chat_stream.rs`、

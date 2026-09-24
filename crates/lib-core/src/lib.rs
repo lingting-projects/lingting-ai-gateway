@@ -1,9 +1,14 @@
 //! 项目基础能力：日志初始化、程序文件夹与通用工具函数。
 
+mod directory;
+mod logger;
+
 use sha1::Digest;
 
+pub use directory::Directorys;
 pub use framework_core::logging;
 pub use framework_core::{ApplicationDirectory, Money, current_millis, next_id};
+pub use logger::init_logging;
 
 /// 应用标识，用于程序文件夹与日志目录命名。
 pub const APP_ID: &str = "lingting-ai-gateway";

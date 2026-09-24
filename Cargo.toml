@@ -3,6 +3,7 @@ members = [
     "crates/bin-mock-ai",
     "crates/bin-server",
     "crates/lib-core",
+    "crates/lib-system-service",
     "crates/lib-db",
     "crates/lib-provider",
     "crates/lib-provider-openai",
@@ -32,6 +33,7 @@ framework-region = { path = "../lingting-rust-framework/framework-region" }
 
 # Internal crates
 lib-core = { path = "crates/lib-core" }
+lib-system-service = { path = "crates/lib-system-service" }
 lib-db = { path = "crates/lib-db" }
 lib-provider = { path = "crates/lib-provider" }
 lib-provider-openai = { path = "crates/lib-provider-openai" }

@@ -299,12 +299,12 @@ dependencies = [
  "anyhow",
  "async-trait",
  "axum",
- "framework-core",
  "framework-web",
  "framework-web-axum",
  "lib-core",
  "lib-db",
  "lib-provider",
+ "lib-system-service",
  "lib-web",
  "lib-web-core",
  "serde",
@@ -314,7 +314,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-appender",
- "tracing-subscriber",
  "types-admin",
 ]
 
@@ -2442,6 +2441,9 @@ dependencies = [
  "anyhow",
  "framework-core",
  "sha1",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -2495,6 +2497,13 @@ dependencies = [
  "tokio",
  "tracing",
  "types-admin",
+]
+
+[[package]]
+name = "lib-system-service"
+version = "2026.9.15"
+dependencies = [
+ "anyhow",
 ]
 
 [[package]]
