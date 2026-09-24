@@ -1,51 +1,29 @@
 import type { RequestSubVO } from "@lingting/ai-gateway-sdk";
 import { ExTable } from "@lri";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 
-import { RequestDetailModal } from "./RequestDetailModal";
-import {
-  buildRequestSubSections,
-  createRequestSubColumns,
-  createRequestSubDetailColumns,
-} from "./requestFields";
-
-const SUB_DETAIL_COLUMNS = createRequestSubDetailColumns();
+import { createRequestSubColumns } from "./requestFields";
 
 type RequestSubTableProps = {
+  onDetail: (record: RequestSubVO) => void;
   subs: RequestSubVO[];
 };
 
 /**
- * 展开区域：静态展示该主请求下的全部子请求日志，并提供子请求详情弹窗。
+ * 展开区域：静态展示该主请求下的全部子请求日志。
+ *
+ * 详情弹窗由 RequestMain 统一渲染，避免每个展开行各渲染一个弹窗。
  */
-export function RequestSubTable({ subs }: RequestSubTableProps) {
-  const [detail, setDetail] = useState<RequestSubVO | null>(null);
-  const columns = useMemo(() => createRequestSubColumns(setDetail), []);
-  const sections = useMemo(() => (detail ? buildRequestSubSections(detail) : []), [detail]);
-
-  const handleOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      setDetail(null);
-    }
-  }, []);
+export function RequestSubTable({ onDetail, subs }: RequestSubTableProps) {
+  const columns = useMemo(() => createRequestSubColumns(onDetail), [onDetail]);
 
   return (
-    <>
-      <ExTable<RequestSubVO>
-        columns={columns}
-        dataSource={subs}
-        options={false}
-        pagination={false}
-        search={false}
-      />
-      <RequestDetailModal<RequestSubVO>
-        columns={SUB_DETAIL_COLUMNS}
-        data={detail ?? undefined}
-        onOpenChange={handleOpenChange}
-        open={Boolean(detail)}
-        sections={sections}
-        title="子请求详情"
-      />
-    </>
+    <ExTable<RequestSubVO>
+      columns={columns}
+      dataSource={subs}
+      options={false}
+      pagination={false}
+      search={false}
+    />
   );
 }

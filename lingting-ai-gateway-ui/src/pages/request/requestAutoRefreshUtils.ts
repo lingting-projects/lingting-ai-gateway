@@ -8,7 +8,7 @@ const DEFAULT_ENABLED = true;
 const DEFAULT_SECONDS = 3;
 
 /** 自动刷新允许的最小间隔，单位秒。 */
-export const MIN_AUTO_REFRESH_SECONDS = 1;
+export const MIN_AUTO_REFRESH_SECONDS = 2;
 
 export type RequestAutoRefreshSetting = {
   /** 是否开启自动刷新 */

@@ -1,46 +1,33 @@
 import { Checkbox, type CheckboxChangeEvent, Flex, InputNumber } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 
 import {
   MIN_AUTO_REFRESH_SECONDS,
   normalizeAutoRefreshSeconds,
-  readAutoRefreshSetting,
-  saveAutoRefreshSetting,
+  type RequestAutoRefreshSetting,
 } from "./requestAutoRefreshUtils";
 
 type RequestAutoRefreshProps = {
-  /** 到达设定间隔时刷新表格数据 */
-  onRefresh: () => void;
+  onChange: (setting: RequestAutoRefreshSetting) => void;
+  setting: RequestAutoRefreshSetting;
 };
 
 /**
- * 自动刷新开关：勾选后按设定秒数定时刷新表格，设置持久化在本地存储。
+ * 自动刷新开关：设置表格轮询间隔，设置本身由调用方持久化。
  *
- * 勾选后间隔输入框禁用，避免刷新过程中改动间隔。
+ * 勾选后间隔输入框禁用，避免轮询过程中改动间隔。
  */
-export function RequestAutoRefresh({ onRefresh }: RequestAutoRefreshProps) {
-  const [setting, setSetting] = useState(readAutoRefreshSetting);
+export function RequestAutoRefresh({ onChange, setting }: RequestAutoRefreshProps) {
+  const handleEnabledChange = useCallback(
+    (event: CheckboxChangeEvent) => onChange({ ...setting, enabled: event.target.checked }),
+    [onChange, setting],
+  );
 
-  useEffect(() => {
-    saveAutoRefreshSetting(setting);
-  }, [setting]);
-
-  useEffect(() => {
-    if (!setting.enabled) {
-      return;
-    }
-
-    const timer = window.setInterval(onRefresh, setting.seconds * 1000);
-    return () => window.clearInterval(timer);
-  }, [onRefresh, setting]);
-
-  const handleEnabledChange = useCallback((event: CheckboxChangeEvent) => {
-    setSetting((current) => ({ ...current, enabled: event.target.checked }));
-  }, []);
-
-  const handleSecondsChange = useCallback((value: number | string | null) => {
-    setSetting((current) => ({ ...current, seconds: normalizeAutoRefreshSeconds(value) }));
-  }, []);
+  const handleSecondsChange = useCallback(
+    (value: number | string | null) =>
+      onChange({ ...setting, seconds: normalizeAutoRefreshSeconds(value) }),
+    [onChange, setting],
+  );
 
   return (
     <Flex align="center" gap="small">
