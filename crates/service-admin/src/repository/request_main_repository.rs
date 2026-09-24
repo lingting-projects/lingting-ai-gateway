@@ -21,7 +21,7 @@ const COLUMNS: &str = "id, trace_id, client_request_id, session_id, client_ip,
     error_type, error_code, error_message, return_model, input_tokens,
     output_tokens, cache_read_tokens, cache_write_tokens, inference_tokens, total_tokens,
     http_status, finish_reason, provider_request_id, response_content, response_headers,
-    start_time, end_time, duration_ms, create_time";
+    start_time, first_chunk_time, end_time, duration_ms, create_time";
 
 impl RequestMainRepository {
     pub fn new(pool: PgPool) -> Self {
@@ -85,8 +85,10 @@ impl RequestMainRepository {
                 total_tokens = $11, http_status = $12,
                 finish_reason = COALESCE($13, ''), provider_request_id = COALESCE($14, ''),
                 response_content = $15,
-                response_headers = $16, end_time = $17, duration_ms = $17 - start_time
-             WHERE id = $18",
+                response_headers = $16, end_time = $17,
+                first_chunk_time = COALESCE($18, first_chunk_time),
+                duration_ms = $17 - start_time
+             WHERE id = $19",
         )
         .bind(params.status.as_str())
         .bind(&params.error_type)
@@ -105,6 +107,7 @@ impl RequestMainRepository {
         .bind(&params.response_content)
         .bind(&params.response_headers)
         .bind(params.end_time)
+        .bind(params.first_chunk_time)
         .bind(id)
         .execute(&self.pool)
         .await
@@ -204,6 +207,7 @@ fn request_main_from_row(row: sqlx::postgres::PgRow) -> Result<RequestMain> {
         response_content: row.get("response_content"),
         response_headers: row.get("response_headers"),
         start_time: row.get("start_time"),
+        first_chunk_time: row.get("first_chunk_time"),
         end_time: row.get("end_time"),
         duration_ms: row.get("duration_ms"),
         create_time: row.get("create_time"),

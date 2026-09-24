@@ -347,6 +347,8 @@ pub struct RequestMainVO {
     pub response_content: Option<String>,
     pub response_headers: Option<serde_json::Value>,
     pub start_time: i64,
+    /// 首字时间（毫秒时间戳），非流式与完成时间一致，为空表示未产生分片。
+    pub first_chunk_time: Option<i64>,
     pub end_time: Option<i64>,
     pub duration_ms: Option<i64>,
     pub create_time: i64,
@@ -386,6 +388,7 @@ impl From<RequestMain> for RequestMainVO {
             response_content: main.response_content,
             response_headers: main.response_headers,
             start_time: main.start_time,
+            first_chunk_time: main.first_chunk_time,
             end_time: main.end_time,
             duration_ms: main.duration_ms,
             create_time: main.create_time,
@@ -538,7 +541,7 @@ pub struct RequestFinishPO {
     pub provider_request_id: Option<String>,
     pub response_content: Option<String>,
     pub response_headers: Option<serde_json::Value>,
-    /// 子请求首字时间；仅子请求日志使用，非流式请求取完成时间。
+    /// 首字时间；主、子请求日志共用，非流式请求取完成时间，为空表示未产生分片。
     pub first_chunk_time: Option<i64>,
     pub end_time: i64,
 }
