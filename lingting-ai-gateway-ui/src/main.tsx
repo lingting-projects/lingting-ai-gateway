@@ -33,6 +33,7 @@ if (!root) {
 const App = () => {
   return (
     <AppSidebarLayout
+      routeType={"hash"}
       baseItems={[
         <ProductBrand
           icon={<img alt={PRODUCT_TITLE} src={PRODUCT_ICON}/>}
