@@ -12,6 +12,15 @@
   @apply h-full;
 }
 
+/* 标题后的说明小字：与标题同行，放不下时省略，标题保持自身宽度不被压缩 */
+.dashboard-stat-card .ant-pro-core-label-tip-title {
+  @apply flex-none;
+}
+
+.dashboard-stat-card .ant-pro-core-label-tip-subtitle {
+  @apply min-w-0 overflow-hidden text-ellipsis whitespace-nowrap;
+}
+
 .dashboard-filter-select {
   @apply min-w-48;
 }

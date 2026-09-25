@@ -13,6 +13,13 @@ import "./dashboard.css";
 /** 卡片内的统计项两列排布。 */
 const STAT_COL_SPAN = 12;
 
+/**
+ * 主请求类统计不参与供应商筛选，卡片标题后补充说明。
+ *
+ * 后端的主请求统计 SQL 没有供应商字段，`provider_ids` 只对子请求统计生效。
+ */
+const PROVIDER_FILTER_HINT = "此数据不受供应商筛选条件约束";
+
 /** 成功率：未失败且未取消的请求占总请求的比例。 */
 function successRate(vo: DashboardRequestVO | undefined): number {
   const total = Number(vo?.total ?? 0);
@@ -29,6 +36,8 @@ function cacheTokens(vo: DashboardTokenVO | undefined): number {
 
 type StatCardProps = {
   loading: boolean;
+  /** 标题后的说明，用于标注该卡片不参与某些筛选 */
+  subTitle?: string;
   title: string;
 };
 
@@ -37,9 +46,9 @@ type RequestStatCardProps = StatCardProps & { data: DashboardRequestVO | undefin
 type TokenStatCardProps = StatCardProps & { data: DashboardTokenVO | undefined };
 
 /** 请求统计卡片：总数、异常、取消、成功率。 */
-function RequestStatCard({ data, loading, title }: RequestStatCardProps) {
+function RequestStatCard({ data, loading, subTitle, title }: RequestStatCardProps) {
   return (
-    <ProCard className="dashboard-stat-card" loading={loading} title={title}>
+    <ProCard className="dashboard-stat-card" loading={loading} subTitle={subTitle} title={title}>
       <Row gutter={[16, 16]}>
         <Col span={STAT_COL_SPAN}>
           <Statistic title="总数" value={data?.total ?? 0} />
@@ -59,12 +68,12 @@ function RequestStatCard({ data, loading, title }: RequestStatCardProps) {
 }
 
 /** Token 统计卡片：总数、缓存（含占比）、读、写。 */
-function TokenStatCard({ data, loading, title }: TokenStatCardProps) {
+function TokenStatCard({ data, loading, subTitle, title }: TokenStatCardProps) {
   const total = Number(data?.total ?? 0);
   const cache = cacheTokens(data);
 
   return (
-    <ProCard className="dashboard-stat-card" loading={loading} title={title}>
+    <ProCard className="dashboard-stat-card" loading={loading} subTitle={subTitle} title={title}>
       <Row gutter={[16, 16]}>
         <Col span={STAT_COL_SPAN}>
           <Statistic title="总数" value={formatTokenCount(total)} />
@@ -128,10 +137,20 @@ export function DashboardStatCards({ query, rangeTime }: DashboardStatCardsProps
   return (
     <Row gutter={[16, 16]}>
       <Col lg={12} xl={6} xs={24}>
-        <RequestStatCard data={requestMain} loading={requestMainLoading} title="请求统计" />
+        <RequestStatCard
+          data={requestMain}
+          loading={requestMainLoading}
+          subTitle={PROVIDER_FILTER_HINT}
+          title="请求统计"
+        />
       </Col>
       <Col lg={12} xl={6} xs={24}>
-        <TokenStatCard data={tokenMain} loading={tokenMainLoading} title="Token统计" />
+        <TokenStatCard
+          data={tokenMain}
+          loading={tokenMainLoading}
+          subTitle={PROVIDER_FILTER_HINT}
+          title="Token统计"
+        />
       </Col>
       <Col lg={12} xl={6} xs={24}>
         <RequestStatCard data={requestSub} loading={requestSubLoading} title="子请求统计" />
