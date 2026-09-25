@@ -53,7 +53,7 @@ pnpm-debug.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.development
-!.env.production
+!.env.desktop
 
 # typescript
 *.tsbuildinfo

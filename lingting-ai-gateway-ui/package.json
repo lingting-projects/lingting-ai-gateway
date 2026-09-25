@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev",
-    "build:web": "vp build --mode production",
     "build:desktop": "vp build --mode desktop",
     "lint": "vp fmt && vp lint --fix && tsc --noEmit"
   },
