@@ -46,7 +46,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // 必须带尾部斜杠：vite 的代理 key 按前缀匹配，写成 "/api" 会把前端路由 /api-key 也转发给后端
         "^/api/": {
-          target: "http://localhost:26380",
+          target: "http://localhost:26384",
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ""),
         },

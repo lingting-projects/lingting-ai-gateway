@@ -49,9 +49,15 @@ async fn serve(directorys: Directorys) -> Result<()> {
     let db = lib_db::init(&db_config).await?;
     let db_context = Arc::new(DbContext::new(db.pool().clone()));
 
-    let bind = KvConfigService::from(db.pool().clone())
+    let mut bind = KvConfigService::from(db.pool().clone())
         .server_bind()
         .await?;
+
+    // 开发模式下固定占用端口, 避免本机安装时开发和正式版本抢端口
+    #[cfg(debug_assertions)]
+    {
+        bind.port = 26384;
+    }
 
     let server = axum_builder(bind.address.as_str(), bind.port)
         .bind()
