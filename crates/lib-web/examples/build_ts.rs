@@ -20,6 +20,9 @@ const PACKAGE_NAME: &str = "@lingting/ai-gateway-sdk";
 /// API 抽象类名，调用方继承后实现 `call` 即可获得全部接口方法。
 const API_CLASS_NAME: &str = "BasicAiGatewayApi";
 
+/// 不参与导出的接口函数名前缀：内嵌前端资源与 AI 协议转发接口都在此列。
+const IGNORE_PREFIX: &str = "ignore_";
+
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // 强制链接本 crate 的路由注册项，否则元数据会被链接器丢弃。
     let _ = lib_web::web_routes();
@@ -37,7 +40,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     builder.push(
         "api",
         TypescriptApiBuilder::new()
-            .apis(api_metadata_iter())
+            // 过滤掉以 ignore_ 开头的网关内部接口。
+            .apis(api_metadata_iter().filter(|api| !api.name.starts_with(IGNORE_PREFIX)))
             .class_name(API_CLASS_NAME),
     );
 

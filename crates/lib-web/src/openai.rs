@@ -8,7 +8,7 @@ use service_provider::openai::OpenaiService;
 
 /// 聊天接口
 #[web_api_post(path = "/v1/chat/completions")]
-pub async fn openai_chat() -> Result<WebResponse> {
+pub async fn ignore_openai_chat() -> Result<WebResponse> {
     let web_context = use_web()?;
     let request = forward_request(&web_context, web_context.body_json()?)?;
 
@@ -17,7 +17,7 @@ pub async fn openai_chat() -> Result<WebResponse> {
 
 /// Responses 接口
 #[web_api_post(path = "/v1/responses")]
-pub async fn openai_responses() -> Result<WebResponse> {
+pub async fn ignore_openai_responses() -> Result<WebResponse> {
     let web_context = use_web()?;
     let request = forward_request(&web_context, web_context.body_json()?)?;
 
@@ -60,6 +60,6 @@ fn header_session_id(context: &WebContext) -> Option<String> {
 
 /// 模型列表接口
 #[web_api_get(path = "/v1/models")]
-pub async fn openai_models() -> Result<WebResponse> {
+pub async fn ignore_openai_models() -> Result<WebResponse> {
     OpenaiService::models().await
 }
