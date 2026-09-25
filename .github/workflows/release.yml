@@ -9,6 +9,7 @@ permissions:
   contents: write
 
 env:
+  RUST_VERSION: "1.98.0"
   RELEASE_PUBKEY_FINGERPRINT: "SHA256:+7HthGNGniZd5oo+s4+eDB7PzTATkKgofDRuWRtbgS4"
 
 jobs:
@@ -23,23 +24,8 @@ jobs:
           ref: refs/tags/${{ github.ref_name }}
           fetch-depth: 0
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: 1.98.0
-
       - name: Verify release
         run: bash .release/ci_verify.sh
-
-      - name: Upload release metadata
-        uses: actions/upload-artifact@v7
-        with:
-          name: release-metadata
-          path: |
-            .release/info
-            .release/info.sig
-            .release/pubkey
-          if-no-files-found: error
 
   linux:
     name: Build Linux
@@ -56,7 +42,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.93.0
+          toolchain: ${{ env.RUST_VERSION }}
           targets: x86_64-unknown-linux-musl,x86_64-unknown-linux-gnu
 
       - name: Verify release
@@ -95,7 +81,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.93.0
+          toolchain: ${{ env.RUST_VERSION }}
           targets: x86_64-pc-windows-msvc
 
       - name: Verify release
@@ -138,7 +124,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.93.0
+          toolchain: ${{ env.RUST_VERSION }}
           targets: x86_64-apple-darwin
 
       - name: Verify release

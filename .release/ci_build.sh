@@ -65,23 +65,9 @@ if [[ $# -ne 0 ]]; then
     fail "unexpected arguments: $*"
 fi
 
-PLATFORM_COUNT=$(
-    (
-        ((BUILD_LINUX)) &&
-            echo 1 ||
-            true
-
-        ((BUILD_WINDOWS)) &&
-            echo 1 ||
-            true
-
-        ((BUILD_MACOS)) &&
-            echo 1 ||
-            true
-    ) | wc -l
-)
-
-if [[ "$PLATFORM_COUNT" -eq 0 ]]; then
+if [[ "$BUILD_LINUX" -eq 0 &&
+      "$BUILD_WINDOWS" -eq 0 &&
+      "$BUILD_MACOS" -eq 0 ]]; then
     fail "at least one platform is required: -l, -w or -m"
 fi
 
@@ -115,6 +101,12 @@ echo "  $PACKAGE"
 echo "variant:"
 echo "  $BUILD_VARIANT"
 
+echo "rust:"
+rustc --version
+
+echo "cargo:"
+cargo --version
+
 echo "platforms:"
 
 if [[ "$BUILD_LINUX" -eq 1 ]]; then
@@ -129,25 +121,19 @@ if [[ "$BUILD_MACOS" -eq 1 ]]; then
     echo "  macos"
 fi
 
-print_environment
+#
+# Linux
+#
 
 build_linux() {
     local target
     local output
-    local cargo_args=()
 
     info "Building Linux"
 
     if [[ "$SLIM" -eq 1 ]]; then
         target="x86_64-unknown-linux-gnu"
         output="$DIST_DIR/lingting-ai-gateway-linux-slim"
-
-        rustup target add "$target"
-
-        cargo_args+=(
-            "--target"
-            "$target"
-        )
 
         echo "target:"
         echo "  $target"
@@ -159,9 +145,11 @@ build_linux() {
         target="x86_64-unknown-linux-musl"
         output="$DIST_DIR/lingting-ai-gateway-linux"
 
-        if [[ "$(uname -s)" != "Linux" ]]; then
-            fail "Linux static build must run on Linux"
-        fi
+        echo "target:"
+        echo "  $target"
+
+        echo "link mode:"
+        echo "  static musl"
 
         if ! command -v musl-gcc >/dev/null 2>&1; then
             info "Installing musl-tools"
@@ -169,20 +157,9 @@ build_linux() {
             sudo apt-get update
             sudo apt-get install -y musl-tools
         fi
-
-        rustup target add "$target"
-
-        cargo_args+=(
-            "--target"
-            "$target"
-        )
-
-        echo "target:"
-        echo "  $target"
-
-        echo "link mode:"
-        echo "  static musl"
     fi
+
+    rustup target add "$target"
 
     (
         cd "$ROOT_DIR"
@@ -191,7 +168,7 @@ build_linux() {
             --release \
             --locked \
             --package "$PACKAGE" \
-            "${cargo_args[@]}"
+            --target "$target"
     )
 
     cp \
@@ -207,6 +184,10 @@ build_linux() {
     file "$output" || true
 }
 
+#
+# Windows
+#
+
 build_windows() {
     local target
     local output
@@ -214,15 +195,7 @@ build_windows() {
 
     info "Building Windows"
 
-    if [[ "$(uname -s)" != "MINGW"* &&
-          "$(uname -s)" != "MSYS"* &&
-          "${RUNNER_OS:-}" != "Windows" ]]; then
-        fail "Windows build must run on Windows"
-    fi
-
     target="x86_64-pc-windows-msvc"
-
-    rustup target add "$target"
 
     if [[ "$SLIM" -eq 1 ]]; then
         output="$DIST_DIR/lingting-ai-gateway-windows-slim.exe"
@@ -247,6 +220,8 @@ build_windows() {
         echo "  static MSVC CRT"
     fi
 
+    rustup target add "$target"
+
     (
         cd "$ROOT_DIR"
 
@@ -269,19 +244,17 @@ build_windows() {
     file "$output" || true
 }
 
+#
+# macOS
+#
+
 build_macos() {
     local target
     local output
 
     info "Building macOS"
 
-    if [[ "$(uname -s)" != "Darwin" ]]; then
-        fail "macOS build must run on macOS"
-    fi
-
     target="x86_64-apple-darwin"
-
-    rustup target add "$target"
 
     if [[ "$SLIM" -eq 1 ]]; then
         output="$DIST_DIR/lingting-ai-gateway-macos-slim"
@@ -290,7 +263,7 @@ build_macos() {
         echo "  $target"
 
         echo "link mode:"
-        echo "  dynamic / platform-dependent"
+        echo "  platform-dependent"
 
     else
         output="$DIST_DIR/lingting-ai-gateway-macos"
@@ -301,6 +274,8 @@ build_macos() {
         echo "link mode:"
         echo "  platform-dependent"
     fi
+
+    rustup target add "$target"
 
     (
         cd "$ROOT_DIR"
@@ -324,6 +299,10 @@ build_macos() {
 
     file "$output" || true
 }
+
+#
+# Build
+#
 
 if [[ "$BUILD_LINUX" -eq 1 ]]; then
     build_linux
