@@ -1,7 +1,10 @@
 version=1
-tag=v2026.9.151
-repository=https://github.com/lingting-projects/lingting-rust-framework.git
-branch=main
-commit=62e819a385f818d0f9e65e2fdfd0a734430421ef
-timestamp=2026-09-25T15:09:46Z
-timestamp_unix=1790348986
+tag=v2026.9.152
+framework_repository=https://github.com/lingting-projects/lingting-rust-framework.git
+framework_branch=main
+framework_commit=62e819a385f818d0f9e65e2fdfd0a734430421ef
+react_ui_repository=https://github.com/lingting/lingting-react-ui.git
+react_ui_branch=master
+react_ui_commit=32ea8451304d678edb15ae70aa55c33af2ae92eb
+timestamp=2026-09-25T15:38:24Z
+timestamp_unix=1790350704
