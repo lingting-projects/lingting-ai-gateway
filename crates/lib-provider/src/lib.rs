@@ -10,6 +10,6 @@ pub mod forward;
 pub mod request;
 
 pub use chunk::ChunkSink;
-pub use client::{ForwardRequest, build_client};
+pub use client::{ForwardRequest, build_client, transport_error_type};
 pub use forward::{ForwardCallback, ForwardFailure, ForwardOutcome};
 pub use request::RouteRequest;

@@ -89,18 +89,17 @@ pub fn error_info(failure: Option<&ForwardFailure>, content: Option<&str>) -> Er
 
     // 上游缺失的字段回退到失败本身的描述，避免把已有信息覆盖为空。
     ErrorInfo {
-        error_type: Some(pick(&error.error_type, &failure.error_type)),
-        error_code: Some(pick(&error.code, &failure.error_code)),
-        error_message: Some(error.message),
+        error_type: Some(pick(error.error_type.as_deref(), &failure.error_type)),
+        error_code: Some(pick(error.code.as_deref(), &failure.error_code)),
+        error_message: error.message,
     }
 }
 
 /// 取首个非空值。
-fn pick(primary: &str, fallback: &str) -> String {
-    if primary.is_empty() {
-        fallback.to_string()
-    } else {
-        primary.to_string()
+fn pick(primary: Option<&str>, fallback: &str) -> String {
+    match primary.filter(|value| !value.is_empty()) {
+        Some(value) => value.to_string(),
+        None => fallback.to_string(),
     }
 }
 

@@ -57,7 +57,7 @@ pub async fn forward_stream<P>(
             Ok(chunk) => chunk,
             Err(error) => {
                 let failure = ForwardFailure::new(
-                    utils::transport_error_type(&error),
+                    lib_provider::transport_error_type(&error),
                     error.to_string(),
                     take_outcome(&mut parser, status, &response_headers, debug_mode, true),
                 );

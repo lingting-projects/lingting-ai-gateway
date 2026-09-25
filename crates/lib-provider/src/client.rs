@@ -145,11 +145,17 @@ pub fn headers_to_multi(headers: &HeaderMap) -> MultiStringValue {
     MultiStringValue::create(true, values)
 }
 
-/// 传输层异常：合成 502 响应，失败原因放在 JSON 响应体中。
+/// 传输层异常：合成 502 响应，失败原因按 [OI] 错误结构放在响应体中。
+///
+/// 用 [OI] 错误结构而不是自定义形状，调用方无需为传输错误单独准备解析分支。
 fn transport_response(error: &reqwest::Error) -> Response {
     let body = serde_json::json!({
-        "code": StatusCode::BAD_GATEWAY.as_u16(),
-        "message": error.to_string(),
+        "error": {
+            "message": error.to_string(),
+            "type": transport_error_type(error),
+            "param": null,
+            "code": null,
+        },
     })
     .to_string();
 
@@ -160,6 +166,17 @@ fn transport_response(error: &reqwest::Error) -> Response {
         HeaderValue::from_static("application/json; charset=utf-8"),
     );
     response.into()
+}
+
+/// 传输层错误的类别。
+pub fn transport_error_type(error: &reqwest::Error) -> &'static str {
+    if error.is_timeout() {
+        "timeout"
+    } else if error.is_connect() {
+        "connect"
+    } else {
+        "internal"
+    }
 }
 
 /// 是否为需要跳过的请求头 / 响应头。

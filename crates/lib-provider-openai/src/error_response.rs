@@ -14,20 +14,23 @@
 use serde::Deserialize;
 
 /// 错误详情。
+///
+/// 各字段都是可空的：上游对 `param`、`code` 常直接返回 `null`，
+/// 用 `Option` 而不是 `default` 才能接受 `null`（`default` 只处理字段缺失）。
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct OpenAiError {
     /// 具体错误信息。
     #[serde(default)]
-    pub message: String,
+    pub message: Option<String>,
     /// 错误类别，例如 `server_error`、`invalid_request_error`。
     #[serde(default, rename = "type")]
-    pub error_type: String,
-    /// 出错参数名；通常为 null。
+    pub error_type: Option<String>,
+    /// 出错参数名。
     #[serde(default)]
-    pub param: String,
+    pub param: Option<String>,
     /// 错误码。
     #[serde(default)]
-    pub code: String,
+    pub code: Option<String>,
 }
 
 /// 错误响应体。
@@ -44,7 +47,11 @@ pub struct OpenAiErrorResponse {
 pub fn parse_error(content: &str) -> Option<OpenAiError> {
     let response = serde_json::from_str::<OpenAiErrorResponse>(content).ok()?;
     let error = response.error?;
-    if error.message.is_empty() {
+    if !error
+        .message
+        .as_deref()
+        .is_some_and(|message| !message.is_empty())
+    {
         return None;
     }
 

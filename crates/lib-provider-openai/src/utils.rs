@@ -132,7 +132,7 @@ pub async fn fail_transport(
     error: reqwest::Error,
 ) -> Result<WebResponse> {
     let failure = ForwardFailure::new(
-        transport_error_type(&error),
+        lib_provider::transport_error_type(&error),
         error.to_string(),
         ForwardOutcome::default(),
     );
@@ -177,16 +177,5 @@ pub async fn finish_response(
 pub fn notify(result: Result<()>) {
     if let Err(error) = result {
         tracing::warn!("转发回调执行失败：{error:#}");
-    }
-}
-
-/// 传输层错误的类别。
-pub fn transport_error_type(error: &reqwest::Error) -> &'static str {
-    if error.is_timeout() {
-        "timeout"
-    } else if error.is_connect() {
-        "connect"
-    } else {
-        "internal"
     }
 }
