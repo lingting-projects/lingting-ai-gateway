@@ -123,7 +123,7 @@ async fn build_models(params: &PiAgentPO) -> Result<String> {
         APP_ID.to_string(),
         json!({
             "baseUrl": format!("{}/v1", params.host()?),
-            "api": "openai-completions",
+            "api": "openai-responses",
             "apiKey": format!("${}", params.key_name()),
             "models": models,
         }),
