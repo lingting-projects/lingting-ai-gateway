@@ -271,7 +271,12 @@ fn cargo_version(root: &Path) -> Result<String> {
 
 fn verify_tag_does_not_exist(root: &Path, tag: &str) -> Result<()> {
     let local = Command::new("git")
-        .args(["rev-parse", "-q", "--verify", &format!("refs/tags/{tag}")])
+        .args([
+            "rev-parse",
+            "-q",
+            "--verify",
+            &format!("refs/tags/{tag}"),
+        ])
         .current_dir(root)
         .output()
         .context("failed to check local release tag")?;

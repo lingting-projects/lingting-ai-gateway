@@ -1,6 +1,7 @@
 use anyhow::{bail, Context, Result};
+use std::fs;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 const SIGN_IDENTITY: &str = "lingting-release";
 const SIGN_NAMESPACE: &str = "lingting-release";
@@ -8,6 +9,17 @@ const SIGN_NAMESPACE: &str = "lingting-release";
 pub fn sign(info_file: &Path, signature_file: &Path, key_file: &Path) -> Result<()> {
     if !key_file.is_file() {
         bail!("signing key does not exist: {}", key_file.display());
+    }
+
+    let generated_file = info_file.with_extension("sig");
+
+    if generated_file.exists() {
+        fs::remove_file(&generated_file).with_context(|| {
+            format!(
+                "failed to remove existing signature: {}",
+                generated_file.display()
+            )
+        })?;
     }
 
     let output = Command::new("ssh-keygen")
@@ -21,26 +33,24 @@ pub fn sign(info_file: &Path, signature_file: &Path, key_file: &Path) -> Result<
             &info_file.to_string_lossy(),
         ])
         .output()
-        .with_context(|| "failed to execute ssh-keygen")?;
+        .context("failed to execute ssh-keygen")?;
 
     if !output.status.success() {
         bail!(
-        "failed to sign release metadata\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&output.stdout).trim(),
-        String::from_utf8_lossy(&output.stderr).trim()
-    );
+            "failed to sign release metadata\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout).trim(),
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
     }
-
-    let generated_file = info_file.with_extension("sig");
 
     if !generated_file.is_file() {
         bail!(
-        "ssh-keygen did not create signature file: {}",
-        generated_file.display()
-    );
+            "ssh-keygen did not create signature file: {}",
+            generated_file.display()
+        );
     }
 
-    std::fs::rename(&generated_file, signature_file).with_context(|| {
+    fs::rename(&generated_file, signature_file).with_context(|| {
         format!(
             "failed to move signature from {} to {}",
             generated_file.display(),
@@ -49,7 +59,6 @@ pub fn sign(info_file: &Path, signature_file: &Path, key_file: &Path) -> Result<
     })?;
 
     Ok(())
-
 }
 
 pub fn verify(
@@ -63,19 +72,19 @@ pub fn verify(
 
     if !signature_file.is_file() {
         bail!(
-        "release metadata signature does not exist: {}",
-        signature_file.display()
-    );
+            "release metadata signature does not exist: {}",
+            signature_file.display()
+        );
     }
 
     if !public_key_file.is_file() {
         bail!(
-        "release public key does not exist: {}",
-        public_key_file.display()
-    );
+            "release public key does not exist: {}",
+            public_key_file.display()
+        );
     }
 
-    let info = std::fs::File::open(info_file)
+    let info = fs::File::open(info_file)
         .with_context(|| format!("failed to open {}", info_file.display()))?;
 
     let mut command = Command::new("ssh-keygen");
@@ -93,23 +102,18 @@ pub fn verify(
         &signature_file.to_string_lossy(),
     ]);
 
-    let output = {
-        use std::process::Stdio;
-
-        command
-            .stdin(Stdio::from(info))
-            .output()
-            .context("failed to execute ssh-keygen")?
-    };
+    let output = command
+        .stdin(Stdio::from(info))
+        .output()
+        .context("failed to execute ssh-keygen")?;
 
     if !output.status.success() {
         bail!(
-        "release metadata signature verification failed\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&output.stdout).trim(),
-        String::from_utf8_lossy(&output.stderr).trim()
-    );
+            "release metadata signature verification failed\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout).trim(),
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
     }
 
     Ok(())
-
 }

@@ -41,9 +41,7 @@ impl ReleaseInfo {
 
     pub fn render(&self) -> String {
         format!(
-            "\
-
-version={}
+            "version={}
 tag={}
 
 framework_repository={}
@@ -98,10 +96,10 @@ timestamp_unix={}
 
             let Some((key, value)) = line.split_once('=') else {
                 bail!(
-                "invalid release metadata at line {}: {}",
-                line_number + 1,
-                line
-            );
+                    "invalid release metadata at line {}: {}",
+                    line_number + 1,
+                    line
+                );
             };
 
             if key.is_empty() {
@@ -179,7 +177,6 @@ timestamp_unix={}
 
         Ok(())
     }
-
 }
 
 pub fn release_dir(root: &Path) -> PathBuf {
@@ -209,7 +206,6 @@ fn required(values: &BTreeMap<String, String>, key: &str) -> Result<String> {
     }
 
     Ok(value)
-
 }
 
 fn parse_u32(values: &BTreeMap<String, String>, key: &str) -> Result<u32> {
@@ -230,5 +226,4 @@ fn validate_sha1(value: &str, field: &str) -> Result<()> {
     }
 
     Ok(())
-
 }
