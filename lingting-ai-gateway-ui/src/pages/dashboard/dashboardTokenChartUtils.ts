@@ -8,15 +8,42 @@ export type DashboardTokenPoint = {
   value: number;
 };
 
-/** 折线指标：总、缓存、读、写。 */
-const TOKEN_METRICS: {
+/**
+ * 折线指标：分子必填；分母存在时按「分子之和 ÷ 分母之和」换算成百分比，用于占比折线。
+ */
+type TokenMetric = {
+  denominator?: (row: DashboardTokenFilterVO) => number;
   label: string;
-  resolve: (row: DashboardTokenFilterVO) => number;
-}[] = [
-  { label: "总", resolve: (row) => Number(row.total) },
-  { label: "缓存", resolve: (row) => Number(row.cacheRead) + Number(row.cacheWrite) },
-  { label: "读", resolve: (row) => Number(row.input) },
-  { label: "写", resolve: (row) => Number(row.output) },
+  numerator: (row: DashboardTokenFilterVO) => number;
+};
+
+/** 「日期 + 系列」的累加项：占比指标同时累加分子与分母。 */
+type MetricAccumulator = {
+  denominator: number;
+  metric: TokenMetric;
+  numerator: number;
+};
+
+/** Token 用量指标：总、缓存、读、写。 */
+const TOKEN_METRICS: TokenMetric[] = [
+  { label: "总", numerator: (row) => Number(row.total) },
+  { label: "缓存", numerator: (row) => Number(row.cacheRead) + Number(row.cacheWrite) },
+  { label: "读", numerator: (row) => Number(row.input) },
+  { label: "写", numerator: (row) => Number(row.output) },
+];
+
+/** 缓存占比指标：缓存读占总读、缓存写占总写。 */
+const CACHE_RATIO_METRICS: TokenMetric[] = [
+  {
+    denominator: (row) => Number(row.input),
+    label: "缓存读占比",
+    numerator: (row) => Number(row.cacheRead),
+  },
+  {
+    denominator: (row) => Number(row.output),
+    label: "缓存写占比",
+    numerator: (row) => Number(row.cacheWrite),
+  },
 ];
 
 /** 供应商展示名：优先展示名，其次名称，均为空时回退主键。 */
@@ -145,7 +172,7 @@ function resolveSeries(
  * 1. 日期轴以 rangeTime 为准，而不是以后端返回的数据为准。
  * 2. 每个「日期 + 系列」只生成一个点。
  * 3. 后端没有返回的「日期 + 系列」自动补 0。
- * 4. 同一个「日期 + 系列」存在多条数据时进行累加。
+ * 4. 同一个「日期 + 系列」存在多条数据时：普通指标累加分子，占比指标分别累加分子与分母后相除。
  *
  * 例如服务端返回：
  *
@@ -166,8 +193,9 @@ function resolveSeries(
  *   { day: "2026-09-22", series: "A · 总", value: 300 },
  * ]
  */
-export function buildTokenPoints(
+function buildPoints(
   rows: DashboardTokenFilterVO[],
+  metrics: TokenMetric[],
   withProvider: boolean,
   withModel: boolean,
   rangeTime: [number, number] | null,
@@ -201,17 +229,13 @@ export function buildTokenPoints(
   const seriesSet = new Set<string>();
 
   /**
-   * 3. 建立「day + series -> value」索引。
+   * 3. 建立「day + series -> 累加项」索引。
    *
    * Map key：
    *
    *   2026-09-20::OpenAI · 总
-   *
-   * value：
-   *
-   *   100
    */
-  const valueMap = new Map<string, number>();
+  const accumulatorMap = new Map<string, MetricAccumulator>();
 
   for (const row of rows) {
     const day = normalizeDay(row.day);
@@ -220,21 +244,24 @@ export function buildTokenPoints(
       continue;
     }
 
-    for (const metric of TOKEN_METRICS) {
+    for (const metric of metrics) {
       const series = resolveSeries(row, withProvider, withModel, metric.label);
 
       seriesSet.add(series);
 
       const key = `${day}::${series}`;
-      const value = metric.resolve(row);
+      const accumulator = accumulatorMap.get(key) ?? { denominator: 0, metric, numerator: 0 };
 
       /**
        * 如果同一天同一系列有多条记录，则累加。
        *
-       * 这样可以避免最终生成多个相同 day + series 的点，
-       * 同时也兼容服务端按更细粒度返回数据的情况。
+       * 占比指标累加分子与分母，最后统一相除，避免直接累加百分比。
        */
-      valueMap.set(key, (valueMap.get(key) ?? 0) + value);
+      accumulator.numerator += metric.numerator(row);
+      if (metric.denominator) {
+        accumulator.denominator += metric.denominator(row);
+      }
+      accumulatorMap.set(key, accumulator);
     }
   }
 
@@ -242,46 +269,58 @@ export function buildTokenPoints(
    * 没有任何服务端数据时，没有办法知道有哪些分组。
    *
    * 这种情况下：
-   * - 如果没有分组，仍然可以生成「总 / 缓存 / 读 / 写」四条 0 线。
+   * - 如果没有分组，仍然可以生成各指标对应的 0 线。
    * - 如果启用了供应商/模型分组，则无法凭空知道有哪些分组，
    *   因此不生成不存在的 series。
    */
   if (seriesSet.size === 0 && !withProvider && !withModel) {
-    for (const metric of TOKEN_METRICS) {
+    for (const metric of metrics) {
       seriesSet.add(metric.label);
     }
   }
 
   /**
-   * 4. 根据「完整日期轴 × 所有 series」生成最终数据。
-   *
-   * 这是整个补 0 逻辑的核心。
-   *
-   * 例如：
-   *
-   * days:
-   *   20, 21, 22
-   *
-   * series:
-   *   A · 总
-   *   A · 缓存
-   *
-   * 最终一定生成：
-   *
-   *   20 A·总
-   *   20 A·缓存
-   *   21 A·总
-   *   21 A·缓存
-   *   22 A·总
-   *   22 A·缓存
-   *
-   * 不存在的数据通过 ?? 0 补齐。
+   * 4. 根据「完整日期轴 × 所有 series」生成最终数据，不存在的数据通过 ?? 0 补齐。
    */
   return days.flatMap((day) =>
     [...seriesSet].map((series) => ({
       day,
       series,
-      value: valueMap.get(`${day}::${series}`) ?? 0,
+      value: resolveAccumulatorValue(accumulatorMap.get(`${day}::${series}`)),
     })),
   );
+}
+
+/** 累加项取值：占比指标用「分子之和 ÷ 分母之和」换算成百分比，其余直接取分子之和。 */
+function resolveAccumulatorValue(accumulator: MetricAccumulator | undefined): number {
+  if (!accumulator) {
+    return 0;
+  }
+  if (!accumulator.metric.denominator) {
+    return accumulator.numerator;
+  }
+  if (accumulator.denominator <= 0) {
+    return 0;
+  }
+  return (accumulator.numerator / accumulator.denominator) * 100;
+}
+
+/** Token 用量折线数据点：总、缓存、读、写。 */
+export function buildTokenPoints(
+  rows: DashboardTokenFilterVO[],
+  withProvider: boolean,
+  withModel: boolean,
+  rangeTime: [number, number] | null,
+): DashboardTokenPoint[] {
+  return buildPoints(rows, TOKEN_METRICS, withProvider, withModel, rangeTime);
+}
+
+/** 缓存占比折线数据点：缓存读占总读、缓存写占总写。 */
+export function buildCacheRatioPoints(
+  rows: DashboardTokenFilterVO[],
+  withProvider: boolean,
+  withModel: boolean,
+  rangeTime: [number, number] | null,
+): DashboardTokenPoint[] {
+  return buildPoints(rows, CACHE_RATIO_METRICS, withProvider, withModel, rangeTime);
 }

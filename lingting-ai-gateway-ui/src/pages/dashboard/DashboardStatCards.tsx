@@ -42,16 +42,16 @@ function RequestStatCard({ data, loading, title }: RequestStatCardProps) {
     <ProCard className="dashboard-stat-card" loading={loading} title={title}>
       <Row gutter={[16, 16]}>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="总数" value={data?.total ?? 0}/>
+          <Statistic title="总数" value={data?.total ?? 0} />
         </Col>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="异常" value={data?.failed ?? 0}/>
+          <Statistic title="异常" value={data?.failed ?? 0} />
         </Col>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="取消" value={data?.cancelled ?? 0}/>
+          <Statistic title="取消" value={data?.cancelled ?? 0} />
         </Col>
         <Col span={STAT_COL_SPAN}>
-          <Statistic precision={2} suffix="%" title="成功率" value={successRate(data) * 100}/>
+          <Statistic precision={2} suffix="%" title="成功率" value={successRate(data) * 100} />
         </Col>
       </Row>
     </ProCard>
@@ -67,7 +67,7 @@ function TokenStatCard({ data, loading, title }: TokenStatCardProps) {
     <ProCard className="dashboard-stat-card" loading={loading} title={title}>
       <Row gutter={[16, 16]}>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="总数" value={formatTokenCount(total)}/>
+          <Statistic title="总数" value={formatTokenCount(total)} />
         </Col>
         <Col span={STAT_COL_SPAN}>
           <Statistic
@@ -77,10 +77,10 @@ function TokenStatCard({ data, loading, title }: TokenStatCardProps) {
           />
         </Col>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="读" value={formatTokenCount(data?.input)}/>
+          <Statistic title="读" value={formatTokenCount(data?.input)} />
         </Col>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="写" value={formatTokenCount(data?.output)}/>
+          <Statistic title="写" value={formatTokenCount(data?.output)} />
         </Col>
       </Row>
     </ProCard>
@@ -135,16 +135,16 @@ export function DashboardStatCards({ rangeTime }: DashboardStatCardsProps) {
   return (
     <Row gutter={[16, 16]}>
       <Col lg={12} xl={6} xs={24}>
-        <RequestStatCard data={requestMain} loading={requestMainLoading} title="请求统计"/>
+        <RequestStatCard data={requestMain} loading={requestMainLoading} title="请求统计" />
       </Col>
       <Col lg={12} xl={6} xs={24}>
-        <TokenStatCard data={tokenMain} loading={tokenMainLoading} title="Token统计"/>
+        <TokenStatCard data={tokenMain} loading={tokenMainLoading} title="Token统计" />
       </Col>
       <Col lg={12} xl={6} xs={24}>
-        <RequestStatCard data={requestSub} loading={requestSubLoading} title="子请求统计"/>
+        <RequestStatCard data={requestSub} loading={requestSubLoading} title="子请求统计" />
       </Col>
       <Col lg={12} xl={6} xs={24}>
-        <TokenStatCard data={tokenSub} loading={tokenSubLoading} title="子请求Token统计"/>
+        <TokenStatCard data={tokenSub} loading={tokenSubLoading} title="子请求Token统计" />
       </Col>
     </Row>
   );

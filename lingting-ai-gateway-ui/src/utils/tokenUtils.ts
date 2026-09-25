@@ -13,21 +13,25 @@ export function formatTokenCount(value: string | number | null | undefined): str
   return String(count);
 }
 
+/** 百分比展示：最多保留 2 位小数。 */
+export function formatPercent(value: number): string {
+  if (!Number.isFinite(value)) {
+    return "0%";
+  }
+  return `${Number(value.toFixed(2))}%`;
+}
+
 /** 缓存占比：缓存(读+写)占总 Token 的百分比，最多保留 2 位小数。 */
 export function formatCachePercent(
   cache: string | number | null | undefined,
   total: string | number | null | undefined,
 ): string {
   const totalCount = Number(total ?? 0);
-  if (!Number.isFinite(totalCount) || totalCount <= 0) {
-    return "0%";
-  }
-
   const cacheCount = Number(cache ?? 0);
-  if (!Number.isFinite(cacheCount)) {
-    return "0%";
+  if (!Number.isFinite(totalCount) || totalCount <= 0 || !Number.isFinite(cacheCount)) {
+    return formatPercent(0);
   }
-  return `${Number(((cacheCount / totalCount) * 100).toFixed(2))}%`;
+  return formatPercent((cacheCount / totalCount) * 100);
 }
 
 /** 单位数值保留一位小数并去掉多余的 0。 */

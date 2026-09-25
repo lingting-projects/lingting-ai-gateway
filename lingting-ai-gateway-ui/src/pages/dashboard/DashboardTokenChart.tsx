@@ -7,15 +7,41 @@ import { Checkbox, Flex, Spin } from "antd";
 import { useEffect, useMemo, useState } from "react";
 
 import { bizApi } from "@/api/BizApi";
-import { formatTokenCount } from "@/utils/tokenUtils";
+import { formatPercent, formatTokenCount } from "@/utils/tokenUtils";
 
 import { DASHBOARD_QUERY_ROOT } from "./dashboardQueryKeys";
-import { buildTokenPoints } from "./dashboardTokenChartUtils";
+import {
+  buildCacheRatioPoints,
+  buildTokenPoints,
+  type DashboardTokenPoint,
+} from "./dashboardTokenChartUtils";
 
 import "./dashboard.css";
 
 /** 折线图高度。 */
 const CHART_HEIGHT = 400;
+
+type TokenLineChartProps = {
+  data: DashboardTokenPoint[];
+  /** 数值展示：Token 用量用 K / M 缩写，占比用百分比 */
+  formatValue: (value: number) => string;
+};
+
+/** 折线图：按天展示各系列，坐标轴与提示共用同一数值格式化。 */
+function TokenLineChart({ data, formatValue }: TokenLineChartProps) {
+  return (
+    <Line
+      axis={{ x: { title: false }, y: { labelFormatter: formatValue, title: false } }}
+      colorField="series"
+      data={data}
+      height={CHART_HEIGHT}
+      legend={{ color: { position: "top" } }}
+      tooltip={{ items: [{ channel: "y", valueFormatter: formatValue }] }}
+      xField="day"
+      yField="value"
+    />
+  );
+}
 
 type DashboardTokenChartProps = {
   /** 统计时间范围，未选择时跳过查询 */
@@ -91,6 +117,12 @@ export function DashboardTokenChart({ rangeTime }: DashboardTokenChartProps) {
     [data, rangeTime, withModel, withProvider],
   );
 
+  /** 缓存读占比与缓存写占比：与 Token 图共用同一份查询数据。 */
+  const ratioPoints = useMemo(
+    () => buildCacheRatioPoints(data ?? [], withProvider, withModel, rangeTime),
+    [data, rangeTime, withModel, withProvider],
+  );
+
   return (
     <ProCard className="dashboard-token-chart">
       <Flex gap="middle" vertical>
@@ -130,30 +162,10 @@ export function DashboardTokenChart({ rangeTime }: DashboardTokenChartProps) {
         </Flex>
 
         <Spin spinning={isFetching}>
-          <Line
-            axis={{
-              x: {
-                title: false,
-              },
-              y: {
-                labelFormatter: (value: number) => formatTokenCount(value),
-                title: false,
-              },
-            }}
-            colorField="series"
-            data={points}
-            height={CHART_HEIGHT}
-            legend={{
-              color: {
-                position: "top",
-              },
-            }}
-            tooltip={{
-              items: [{ channel: "y", valueFormatter: (value: number) => formatTokenCount(value) }],
-            }}
-            xField="day"
-            yField="value"
-          />
+          <Flex gap="middle" vertical>
+            <TokenLineChart data={points} formatValue={formatTokenCount} />
+            <TokenLineChart data={ratioPoints} formatValue={formatPercent} />
+          </Flex>
         </Spin>
       </Flex>
     </ProCard>

@@ -72,11 +72,11 @@ export function DashboardMain() {
       <Flex align="center" className="dashboard-actions" gap="middle" wrap>
         <Button
           disabled={autoRefresh.enabled}
-          icon={<ReloadOutlined/>}
+          icon={<ReloadOutlined />}
           onClick={handleRefresh}
           tooltip="刷新仪表盘数据"
         />
-        <AutoRefreshControl onChange={setAutoRefresh} setting={autoRefresh}/>
+        <AutoRefreshControl onChange={setAutoRefresh} setting={autoRefresh} />
         <Radio.Group
           onChange={(event) => setRange(event.target.value)}
           optionType="button"
@@ -84,11 +84,11 @@ export function DashboardMain() {
           value={range}
         />
         {range === "custom" && (
-          <RangePicker onChange={handleCustomRangeChange} value={customRange}/>
+          <RangePicker onChange={handleCustomRangeChange} value={customRange} />
         )}
       </Flex>
-      <DashboardStatCards rangeTime={rangeTime}/>
-      <DashboardTokenChart rangeTime={rangeTime}/>
+      <DashboardStatCards rangeTime={rangeTime} />
+      <DashboardTokenChart rangeTime={rangeTime} />
     </Flex>
   );
 }
