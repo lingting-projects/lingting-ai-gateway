@@ -11,7 +11,7 @@ members = [
     "crates/lib-web-core",
     "crates/service-admin",
     "crates/service-provider",
-    "crates/types-admin",
+    "crates/types-admin", "bin-release",
 ]
 resolver = "2"
 
@@ -104,3 +104,4 @@ lettre = { version = "0.11", default-features = false, features = ["smtp-transpo
 pglite-oxide = "=0.5.1"
 # pglite-oxide 依赖的 wasmer-wasix 与 virtual-net 0.702.1 不兼容，必须锁定版本
 virtual-net = "=0.702.0-alpha.3"
+clap = { version = "4", features = ["derive"] }
