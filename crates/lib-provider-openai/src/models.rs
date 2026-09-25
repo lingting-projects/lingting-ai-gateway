@@ -13,6 +13,9 @@ const MODELS_SUFFIX: &str = "/models";
 /// 图片模态标识。
 const IMAGE_MODALITY: &str = "image";
 
+/// 日期字段接受 `YYYY-MM-DD`。
+const DATE_FORMAT: &str = "%Y-%m-%d";
+
 /// 拉取供应商模型列表，请求失败、响应异常或解析失败均返回错误。
 ///
 /// 兼容两类响应字段：本网关 `[OI]` 模型列表的 `reasoning` / `levels` / `max_tokens` /
@@ -142,12 +145,17 @@ where
 }
 
 /// 解析 `YYYY-MM-DD` / `YYYY-MM` 为 UTC 零点毫秒时间戳。
+///
+/// chrono 不接受缺少日期的日期串，`YYYY-MM` 先补足为当月 1 日。
 fn parse_date(text: &str) -> Option<i64> {
     let text = text.trim();
-    ["%Y-%m-%d", "%Y-%m"].iter().find_map(|format| {
-        NaiveDate::parse_from_str(text, format)
-            .ok()
-            .and_then(|date| date.and_hms_opt(0, 0, 0))
-            .map(|time| time.and_utc().timestamp_millis())
-    })
+    let text = match text.split('-').count() {
+        2 => format!("{text}-01"),
+        _ => text.to_string(),
+    };
+
+    NaiveDate::parse_from_str(&text, DATE_FORMAT)
+        .ok()
+        .and_then(|date| date.and_hms_opt(0, 0, 0))
+        .map(|time| time.and_utc().timestamp_millis())
 }
