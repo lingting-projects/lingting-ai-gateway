@@ -48,6 +48,7 @@ aes = { version = "0.8" }
 base64 = { version = "0.22" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
+sysinfo = { version = "0.38", default-features = false, features = ["system"] }
 serde_with = { version = "3.21" }
 specta = { version = "=2.0.0-rc.25", features = ["derive", "function", "bytes", "serde_json"] }
 specta-typescript = { version = "0.0.12" }

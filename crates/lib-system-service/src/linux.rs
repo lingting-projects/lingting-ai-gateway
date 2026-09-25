@@ -9,7 +9,7 @@ use anyhow::Result;
 use crate::command;
 use crate::config::ServiceConfig;
 use crate::file;
-use crate::manager::Platform;
+use crate::manager::{Platform, ServiceStatus};
 
 /// systemd 系统级单元目录。
 const SYSTEMD_DIRECTORY: &str = "/etc/systemd/system";
@@ -21,6 +21,16 @@ const UNIT_SUFFIX: &str = ".service";
 pub(crate) struct LinuxService;
 
 impl Platform for LinuxService {
+    fn status(&self, config: &ServiceConfig) -> Result<ServiceStatus> {
+        // 注册即在单元目录落文件，判断文件是否存在即可，无需 root 权限。
+        let installed = unit_path(config).exists();
+
+        Ok(if installed {
+            ServiceStatus::Installed
+        } else {
+            ServiceStatus::NotInstalled
+        })
+    }
     fn install(&self, config: &ServiceConfig) -> Result<()> {
         file::write_file(&unit_path(config), &unit_content(config))?;
         command::run("systemctl", &["daemon-reload"])?;

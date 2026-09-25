@@ -9,7 +9,7 @@ use anyhow::Result;
 use crate::command;
 use crate::config::ServiceConfig;
 use crate::file;
-use crate::manager::Platform;
+use crate::manager::{Platform, ServiceStatus};
 
 /// launchd 系统级守护进程目录。
 const LAUNCHD_DIRECTORY: &str = "/Library/LaunchDaemons";
@@ -21,6 +21,16 @@ const PLIST_SUFFIX: &str = ".plist";
 pub(crate) struct MacosService;
 
 impl Platform for MacosService {
+    fn status(&self, config: &ServiceConfig) -> Result<ServiceStatus> {
+        // 注册即在守护进程目录落 plist，判断文件是否存在即可，无需 root 权限。
+        let installed = plist_path(config).exists();
+
+        Ok(if installed {
+            ServiceStatus::Installed
+        } else {
+            ServiceStatus::NotInstalled
+        })
+    }
     fn install(&self, config: &ServiceConfig) -> Result<()> {
         let plist = plist_path(config);
         let plist_text = plist.to_string_lossy().to_string();

@@ -1,6 +1,16 @@
 use anyhow::Result;
 
 use crate::config::ServiceConfig;
+
+/// 服务注册状态。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ServiceStatus {
+    /// 未注册。
+    NotInstalled,
+    /// 已注册。
+    Installed,
+}
+
 /// 系统服务管理入口；按当前操作系统选择实现。
 pub struct ServiceManager {
     platform: Box<dyn Platform>,
@@ -12,6 +22,11 @@ impl ServiceManager {
         Ok(Self {
             platform: current_platform()?,
         })
+    }
+
+    /// 查询服务是否已注册。
+    pub fn status(&self, config: &ServiceConfig) -> Result<ServiceStatus> {
+        self.platform.status(config)
     }
 
     /// 注册服务；`autostart` 为真时随系统启动。
@@ -33,10 +48,22 @@ impl ServiceManager {
     pub fn stop(&self, config: &ServiceConfig) -> Result<()> {
         self.platform.stop(config)
     }
+
+    /// 重启服务：先停止再启动。
+    ///
+    /// 停止阶段失败只说明服务本来就没在运行，不应阻断启动。
+    pub fn restart(&self, config: &ServiceConfig) -> Result<()> {
+        let _ = self.stop(config);
+
+        self.start(config)
+    }
 }
 
 /// 各操作系统的服务实现。
 pub(crate) trait Platform {
+    /// 查询服务是否已注册。
+    fn status(&self, config: &ServiceConfig) -> Result<ServiceStatus>;
+
     /// 注册服务。
     fn install(&self, config: &ServiceConfig) -> Result<()>;
 

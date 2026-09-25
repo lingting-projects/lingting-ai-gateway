@@ -11,6 +11,7 @@
 
 pub mod config;
 pub mod manager;
+pub mod process;
 
 mod command;
 
@@ -27,4 +28,4 @@ mod macos;
 mod windows;
 
 pub use config::ServiceConfig;
-pub use manager::ServiceManager;
+pub use manager::{ServiceManager, ServiceStatus};

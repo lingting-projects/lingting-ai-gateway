@@ -16,6 +16,12 @@ const INSTALL_COMMAND: &str = "install";
 /// 卸载服务子命令。
 const UNINSTALL_COMMAND: &str = "uninstall";
 
+/// 重新注册服务子命令。
+const REINSTALL_COMMAND: &str = "reinstall";
+
+/// 重启服务子命令。
+const RESTART_COMMAND: &str = "restart";
+
 /// 卸载时先停止服务的参数。
 const STOP_ARGUMENT: &str = "-r";
 
@@ -26,6 +32,42 @@ pub(crate) enum Command {
     Install,
     /// 卸载系统服务；`stop` 为真时先停止再卸载。
     Uninstall { stop: bool },
+    /// 重新注册：先停止并卸载，再注册并启动。
+    Reinstall,
+    /// 重启：已注册时由服务管理器重启，未注册时终止原进程后前台启动。
+    Restart,
+}
+
+/// 解析阶段的子命令名，用于识别与互斥校验。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CommandName {
+    Install,
+    Uninstall,
+    Reinstall,
+    Restart,
+}
+
+impl CommandName {
+    /// 从参数识别子命令。
+    fn parse(arg: &str) -> Option<Self> {
+        match arg {
+            INSTALL_COMMAND => Some(Self::Install),
+            UNINSTALL_COMMAND => Some(Self::Uninstall),
+            REINSTALL_COMMAND => Some(Self::Reinstall),
+            RESTART_COMMAND => Some(Self::Restart),
+            _ => None,
+        }
+    }
+
+    /// 子命令名，用于报错提示。
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Install => INSTALL_COMMAND,
+            Self::Uninstall => UNINSTALL_COMMAND,
+            Self::Reinstall => REINSTALL_COMMAND,
+            Self::Restart => RESTART_COMMAND,
+        }
+    }
 }
 
 /// 启动参数。
@@ -43,39 +85,46 @@ impl Arguments {
     /// 解析启动参数；不支持的参数直接报错，避免用户以为已经生效。
     pub fn parse(args: impl IntoIterator<Item = String>) -> Result<Self> {
         let mut arguments = Self::default();
-        let mut install = false;
-        let mut uninstall = false;
+        let mut name = None;
         let mut stop = false;
         let mut args = args.into_iter();
 
         while let Some(arg) = args.next() {
             match arg.as_str() {
-                INSTALL_COMMAND => install = true,
-                UNINSTALL_COMMAND => uninstall = true,
-                STOP_ARGUMENT => stop = true,
                 PGLITE_ARGUMENT => arguments.pglite = Some(directory(&mut args, PGLITE_ARGUMENT)?),
                 LOGS_ARGUMENT => arguments.logs = Some(directory(&mut args, LOGS_ARGUMENT)?),
-                _ => bail!("不支持的参数：{arg}"),
+                STOP_ARGUMENT => stop = true,
+                _ => name = select(name, &arg)?,
             }
         }
 
-        if install && uninstall {
-            bail!("{INSTALL_COMMAND} 与 {UNINSTALL_COMMAND} 不能同时使用");
-        }
-        if stop && !uninstall {
+        if stop && name != Some(CommandName::Uninstall) {
             bail!("{STOP_ARGUMENT} 只能与 {UNINSTALL_COMMAND} 一起使用");
         }
 
-        arguments.command = if install {
-            Some(Command::Install)
-        } else if uninstall {
-            Some(Command::Uninstall { stop })
-        } else {
-            None
+        arguments.command = match name {
+            None => None,
+            Some(CommandName::Install) => Some(Command::Install),
+            Some(CommandName::Uninstall) => Some(Command::Uninstall { stop }),
+            Some(CommandName::Reinstall) => Some(Command::Reinstall),
+            Some(CommandName::Restart) => Some(Command::Restart),
         };
 
         Ok(arguments)
     }
+}
+
+/// 记录子命令；重复指定或与已有的冲突时报错。
+fn select(current: Option<CommandName>, arg: &str) -> Result<Option<CommandName>> {
+    let Some(parsed) = CommandName::parse(arg) else {
+        bail!("不支持的参数：{arg}");
+    };
+
+    if let Some(existing) = current {
+        bail!("{} 与 {} 不能同时使用", existing.as_str(), parsed.as_str());
+    }
+
+    Ok(Some(parsed))
 }
 
 /// 读取目录参数的值。

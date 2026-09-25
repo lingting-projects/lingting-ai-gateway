@@ -6,12 +6,22 @@ use anyhow::Result;
 
 use crate::command;
 use crate::config::ServiceConfig;
-use crate::manager::Platform;
+use crate::manager::{Platform, ServiceStatus};
 
 /// 计划任务名与服务名一致。
 pub(crate) struct WindowsService;
 
 impl Platform for WindowsService {
+    fn status(&self, config: &ServiceConfig) -> Result<ServiceStatus> {
+        // 任务存在时 query 返回成功，不存在时返回非零退出码。
+        let installed = command::succeeds("schtasks", &["/query", "/tn", &config.name]);
+
+        Ok(if installed {
+            ServiceStatus::Installed
+        } else {
+            ServiceStatus::NotInstalled
+        })
+    }
     fn install(&self, config: &ServiceConfig) -> Result<()> {
         // /f 覆盖同名任务；/sc onstart 开机启动；/ru SYSTEM 与 /rl highest 以系统最高权限运行。
         command::run(
