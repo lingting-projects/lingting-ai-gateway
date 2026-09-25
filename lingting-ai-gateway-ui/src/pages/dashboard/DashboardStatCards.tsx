@@ -1,6 +1,5 @@
 import { ProCard, Statistic } from "@ant-design/pro-components";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 import type { DashboardQO, DashboardRequestVO, DashboardTokenVO } from "@lingting/ai-gateway-sdk";
 import { Col, Row } from "antd";
 
@@ -8,6 +7,7 @@ import { bizApi } from "@/api/BizApi";
 import { formatCachePercent, formatTokenCount } from "@/utils/tokenUtils";
 
 import { DASHBOARD_QUERY_ROOT } from "./dashboardQueryKeys";
+
 import "./dashboard.css";
 
 /** 卡片内的统计项两列排布。 */
@@ -88,23 +88,16 @@ function TokenStatCard({ data, loading, title }: TokenStatCardProps) {
 }
 
 type DashboardStatCardsProps = {
+  /** 统计筛选条件：与仪表盘其它统计接口一致 */
+  query: DashboardQO;
   /** 统计时间范围，未选择时跳过查询 */
   rangeTime: [number, number] | null;
 };
 
 /**
- * 全局统计卡片：主请求与子请求的请求数量、Token 用量各一张卡片，统计范围由顶部操作行决定。
+ * 全局统计卡片：主请求与子请求的请求数量、Token 用量各一张卡片，筛选条件由仪表盘头部统一控制。
  */
-export function DashboardStatCards({ rangeTime }: DashboardStatCardsProps) {
-  const query = useMemo<DashboardQO>(
-    () => ({
-      endTime: rangeTime ? String(rangeTime[1]) : null,
-      startTime: rangeTime ? String(rangeTime[0]) : null,
-      withModel: false,
-      withProvider: false,
-    }),
-    [rangeTime],
-  );
+export function DashboardStatCards({ query, rangeTime }: DashboardStatCardsProps) {
   const enabled = rangeTime !== null;
 
   const { data: requestMain, isLoading: requestMainLoading } = useQuery({

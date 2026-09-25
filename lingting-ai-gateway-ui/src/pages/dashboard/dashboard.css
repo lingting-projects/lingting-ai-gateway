@@ -12,10 +12,6 @@
   @apply h-full;
 }
 
-.dashboard-token-chart-filter {
-  @apply w-full;
-}
-
-.dashboard-token-chart-select {
+.dashboard-filter-select {
   @apply min-w-48;
 }

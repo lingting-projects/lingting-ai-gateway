@@ -1,10 +1,12 @@
 import { ReloadOutlined } from "@ant-design/icons";
-import { Button } from "@lri";
-import { DatePicker, Flex, Radio } from "antd";
+import { Button, DictSelect } from "@lri";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { DashboardQO } from "@lingting/ai-gateway-sdk";
+import { Checkbox, DatePicker, Flex, Radio } from "antd";
 import type { Dayjs } from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 
+import { bizApi } from "@/api/BizApi";
 import {
   AutoRefreshControl,
   type AutoRefreshSetting,
@@ -35,15 +37,64 @@ const DEFAULT_AUTO_REFRESH: AutoRefreshSetting = {
 };
 
 /**
- * 仪表盘：顶部操作行控制时间范围与自动刷新，下方依次为全局统计卡片与 Token 统计折线图。
+ * 仪表盘：顶部操作行控制时间范围、供应商与模型筛选、自动刷新，下方依次为统计卡片与折线图。
  */
 export function DashboardMain() {
   const queryClient = useQueryClient();
   const [range, setRange] = useState<DashboardRangeKey>(DEFAULT_DASHBOARD_RANGE);
   const [customRange, setCustomRange] = useState<[Dayjs, Dayjs] | null>(null);
   const [autoRefresh, setAutoRefresh] = useState<AutoRefreshSetting>(DEFAULT_AUTO_REFRESH);
+  const [providerIds, setProviderIds] = useState<string[]>([]);
+  const [models, setModels] = useState<string[]>([]);
+  const [withProvider, setWithProvider] = useState(false);
+  const [withModel, setWithModel] = useState(false);
+
+  const { data: providers } = useQuery({
+    queryFn: () => bizApi.providerList(),
+    queryKey: [...DASHBOARD_QUERY_ROOT, "provider-options"],
+    retry: false,
+  });
+
+  const { data: providerModels } = useQuery({
+    queryFn: () => bizApi.providerModelDefault(),
+    queryKey: [...DASHBOARD_QUERY_ROOT, "model-options"],
+    retry: false,
+  });
+
+  const providerOptions = useMemo(
+    () =>
+      (providers ?? []).map((detail) => ({
+        label: detail.provider.displayName,
+        value: detail.provider.id,
+      })),
+    [providers],
+  );
+
+  const modelOptions = useMemo(
+    () =>
+      Array.from(new Set((providerModels ?? []).map((model) => model.model))).map((model) => ({
+        label: model,
+        value: model,
+      })),
+    [providerModels],
+  );
 
   const rangeTime = useMemo(() => resolveRangeTime(range, customRange), [customRange, range]);
+
+  /**
+   * 统计筛选条件：仪表盘所有统计接口共用。
+   *
+   * 分组开关只被折线图接口使用，由折线图自行追加，避免聚合接口出现无意义的缓存分片。
+   */
+  const query = useMemo<DashboardQO>(
+    () => ({
+      endTime: rangeTime ? String(rangeTime[1]) : null,
+      models: models.length > 0 ? models : null,
+      providerIds: providerIds.length > 0 ? providerIds : null,
+      startTime: rangeTime ? String(rangeTime[0]) : null,
+    }),
+    [models, providerIds, rangeTime],
+  );
 
   const handleRefresh = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: DASHBOARD_QUERY_ROOT });
@@ -77,6 +128,38 @@ export function DashboardMain() {
           tooltip="刷新仪表盘数据"
         />
         <AutoRefreshControl onChange={setAutoRefresh} setting={autoRefresh} />
+
+        <Checkbox
+          checked={withProvider}
+          onChange={(event) => setWithProvider(event.target.checked)}
+        >
+          供应商分组
+        </Checkbox>
+        <DictSelect
+          className="dashboard-filter-select"
+          dict={providerOptions}
+          mode="multiple"
+          onChange={(value) => {
+            setProviderIds(Array.isArray(value) ? value.map(String) : []);
+          }}
+          placeholder="供应商"
+          value={providerIds}
+        />
+
+        <Checkbox checked={withModel} onChange={(event) => setWithModel(event.target.checked)}>
+          模型分组
+        </Checkbox>
+        <DictSelect
+          className="dashboard-filter-select"
+          dict={modelOptions}
+          mode="multiple"
+          onChange={(value) => {
+            setModels(Array.isArray(value) ? value.map(String) : []);
+          }}
+          placeholder="模型"
+          value={models}
+        />
+
         <Radio.Group
           onChange={(event) => setRange(event.target.value)}
           optionType="button"
@@ -87,8 +170,13 @@ export function DashboardMain() {
           <RangePicker onChange={handleCustomRangeChange} value={customRange} />
         )}
       </Flex>
-      <DashboardStatCards rangeTime={rangeTime} />
-      <DashboardTokenChart rangeTime={rangeTime} />
+      <DashboardStatCards query={query} rangeTime={rangeTime}/>
+      <DashboardTokenChart
+        query={query}
+        rangeTime={rangeTime}
+        withModel={withModel}
+        withProvider={withProvider}
+      />
     </Flex>
   );
 }
