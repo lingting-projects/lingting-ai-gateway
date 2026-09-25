@@ -207,16 +207,17 @@ impl RequestSubRepository {
         conditions: &DashboardQO,
     ) -> Result<Vec<DashboardTokenGroup>> {
         let timezone_offset = timezone_offset_millis();
+        // 分组列必须排在聚合列之前：GROUP BY 按列序号引用，聚合列不能出现在其中。
         let mut query = QueryBuilder::<Postgres>::new(format!(
             "SELECT to_char(to_timestamp((start_time + {timezone_offset}) / 1000), 'YYYY-MM-DD') AS day"
         ));
-        query.push(", ").push(TOKEN_COLUMNS);
         if conditions.with_provider {
             query.push(", provider_id");
         }
         if conditions.with_model {
             query.push(", model");
         }
+        query.push(", ").push(TOKEN_COLUMNS);
         query.push(" FROM request_sub");
         push_dashboard_sub_conditions(&mut query, conditions);
 
