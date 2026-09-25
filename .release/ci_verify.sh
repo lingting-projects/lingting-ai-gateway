@@ -36,6 +36,10 @@ if [[ "$ACTUAL_PUBKEY_FINGERPRINT" != "$RELEASE_PUBKEY_FINGERPRINT" ]]; then
     fail "release public key fingerprint mismatch"
 fi
 
+if LC_ALL=C grep -q $'\r' "$INFO_FILE"; then
+    fail "release metadata contains CRLF line endings: $INFO_FILE"
+fi
+
 info "Verifying release metadata signature"
 
 bash "$SCRIPT_DIR/sign.sh" verify
