@@ -12,6 +12,8 @@ fi
 
 require_command git
 require_command ssh-keygen
+require_command cargo
+require_command readlink
 
 require_directory "$ROOT_DIR"
 require_directory "$FRAMEWORK_DIR"
@@ -72,9 +74,80 @@ echo "  $FRAMEWORK_BRANCH"
 echo "framework commit:"
 echo "  $FRAMEWORK_COMMIT"
 
-info "Checking Cargo.lock"
+echo
+info "Checking lingting-react-ui repository"
 
-require_command cargo
+LRI_DIR="$ROOT_DIR/lingting-ai-gateway-ui/lri"
+
+require_directory "$LRI_DIR"
+
+LRI_REAL_DIR="$(readlink -f "$LRI_DIR")"
+
+if [[ -z "$LRI_REAL_DIR" ]]; then
+    fail "failed to resolve real path of lri directory: $LRI_DIR"
+fi
+
+if [[ ! -d "$LRI_REAL_DIR" ]]; then
+    fail "resolved lri path is not a directory:
+
+lri:
+  $LRI_DIR
+
+resolved:
+  $LRI_REAL_DIR"
+fi
+
+REACT_UI_DIR="$(dirname "$LRI_REAL_DIR")"
+
+if [[ ! -d "$REACT_UI_DIR/.git" ]]; then
+    fail "lingting-react-ui repository was not found at the parent directory of lri:
+
+lri:
+  $LRI_DIR
+
+resolved lri:
+  $LRI_REAL_DIR
+
+expected repository:
+  $REACT_UI_DIR"
+fi
+
+REACT_UI_REPOSITORY="https://github.com/lingting/lingting-react-ui.git"
+
+REACT_UI_REMOTE="$(get_git_origin "$REACT_UI_DIR")"
+
+if [[ "$(normalize_git_url "$REACT_UI_REMOTE")" != \
+      "$(normalize_git_url "$REACT_UI_REPOSITORY")" ]]; then
+    fail "lingting-react-ui origin mismatch
+
+expected:
+  $REACT_UI_REPOSITORY
+
+actual:
+  $REACT_UI_REMOTE"
+fi
+
+require_clean_git_tree "$REACT_UI_DIR"
+
+REACT_UI_BRANCH="$(get_git_branch "$REACT_UI_DIR")"
+REACT_UI_COMMIT="$(get_git_commit "$REACT_UI_DIR")"
+
+require_sha1_commit "$REACT_UI_COMMIT"
+
+echo "lingting-react-ui repository:"
+echo "  $REACT_UI_REMOTE"
+
+echo "lingting-react-ui directory:"
+echo "  $REACT_UI_DIR"
+
+echo "lingting-react-ui branch:"
+echo "  $REACT_UI_BRANCH"
+
+echo "lingting-react-ui commit:"
+echo "  $REACT_UI_COMMIT"
+
+echo
+info "Checking Cargo.lock"
 
 cargo metadata \
     --locked \
@@ -191,9 +264,12 @@ TIMESTAMP_UNIX="$(date -u '+%s')"
 cat > "$INFO_FILE" <<EOF
 version=1
 tag=$TAG
-repository=$FRAMEWORK_REPOSITORY
-branch=$FRAMEWORK_BRANCH
-commit=$FRAMEWORK_COMMIT
+framework_repository=$FRAMEWORK_REPOSITORY
+framework_branch=$FRAMEWORK_BRANCH
+framework_commit=$FRAMEWORK_COMMIT
+react_ui_repository=$REACT_UI_REPOSITORY
+react_ui_branch=$REACT_UI_BRANCH
+react_ui_commit=$REACT_UI_COMMIT
 timestamp=$TIMESTAMP
 timestamp_unix=$TIMESTAMP_UNIX
 EOF
@@ -226,12 +302,28 @@ if [[ "$(read_info_value tag)" != "$TAG" ]]; then
     fail "info tag mismatch"
 fi
 
-if [[ "$(read_info_value repository)" != "$FRAMEWORK_REPOSITORY" ]]; then
-    fail "info repository mismatch"
+if [[ "$(read_info_value framework_repository)" != "$FRAMEWORK_REPOSITORY" ]]; then
+    fail "info framework repository mismatch"
 fi
 
-if [[ "$(read_info_value commit)" != "$FRAMEWORK_COMMIT" ]]; then
-    fail "info commit mismatch"
+if [[ "$(read_info_value framework_branch)" != "$FRAMEWORK_BRANCH" ]]; then
+    fail "info framework branch mismatch"
+fi
+
+if [[ "$(read_info_value framework_commit)" != "$FRAMEWORK_COMMIT" ]]; then
+    fail "info framework commit mismatch"
+fi
+
+if [[ "$(read_info_value react_ui_repository)" != "$REACT_UI_REPOSITORY" ]]; then
+    fail "info react-ui repository mismatch"
+fi
+
+if [[ "$(read_info_value react_ui_branch)" != "$REACT_UI_BRANCH" ]]; then
+    fail "info react-ui branch mismatch"
+fi
+
+if [[ "$(read_info_value react_ui_commit)" != "$REACT_UI_COMMIT" ]]; then
+    fail "info react-ui commit mismatch"
 fi
 
 echo
@@ -293,6 +385,14 @@ echo "  $FRAMEWORK_BRANCH"
 echo
 echo "framework commit:"
 echo "  $FRAMEWORK_COMMIT"
+
+echo
+echo "react-ui branch:"
+echo "  $REACT_UI_BRANCH"
+
+echo
+echo "react-ui commit:"
+echo "  $REACT_UI_COMMIT"
 
 echo
 echo "metadata:"

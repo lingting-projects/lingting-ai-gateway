@@ -42,10 +42,26 @@ jobs:
     needs: verify
 
     steps:
-      - name: Checkout
+      - name: Checkout gateway
         uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Checkout Rust framework
+        uses: actions/checkout@v7
+        with:
+          repository: lingting-projects/lingting-rust-framework
+          ref: master
+          path: ../lingting-rust-framework
+          fetch-depth: 0
+
+      - name: Checkout React UI
+        uses: actions/checkout@v7
+        with:
+          repository: lingting/lingting-react-ui
+          ref: master
+          path: ../lingting-react-ui
           fetch-depth: 0
 
       - name: Setup Rust
@@ -103,10 +119,26 @@ jobs:
           git config --global core.autocrlf false
           git config --global core.eol lf
 
-      - name: Checkout
+      - name: Checkout gateway
         uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Checkout Rust framework
+        uses: actions/checkout@v7
+        with:
+          repository: lingting-projects/lingting-rust-framework
+          ref: master
+          path: ../lingting-rust-framework
+          fetch-depth: 0
+
+      - name: Checkout React UI
+        uses: actions/checkout@v7
+        with:
+          repository: lingting/lingting-react-ui
+          ref: master
+          path: ../lingting-react-ui
           fetch-depth: 0
 
       - name: Setup Rust
@@ -158,10 +190,26 @@ jobs:
     needs: verify
 
     steps:
-      - name: Checkout
+      - name: Checkout gateway
         uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Checkout Rust framework
+        uses: actions/checkout@v7
+        with:
+          repository: lingting-projects/lingting-rust-framework
+          ref: master
+          path: ../lingting-rust-framework
+          fetch-depth: 0
+
+      - name: Checkout React UI
+        uses: actions/checkout@v7
+        with:
+          repository: lingting/lingting-react-ui
+          ref: master
+          path: ../lingting-react-ui
           fetch-depth: 0
 
       - name: Setup Rust
@@ -216,7 +264,7 @@ jobs:
       - build-macos
 
     steps:
-      - name: Checkout
+      - name: Checkout gateway
         uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
