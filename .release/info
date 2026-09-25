@@ -1,7 +1,7 @@
 version=1
-tag=v2026.9.15
+tag=v2026.9.150
 repository=https://github.com/lingting-projects/lingting-rust-framework.git
 branch=main
 commit=62e819a385f818d0f9e65e2fdfd0a734430421ef
-timestamp=2026-09-25T14:47:52Z
-timestamp_unix=1790347672
+timestamp=2026-09-25T14:52:21Z
+timestamp_unix=1790347941
