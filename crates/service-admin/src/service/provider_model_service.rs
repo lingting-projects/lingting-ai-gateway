@@ -39,6 +39,11 @@ impl ProviderModelService {
     }
 
     /// 查询全部启用且按名称去重的模型，同名取路由优先级最高的一条；用于可用模型列表。
+    pub async fn find_distinct(&self) -> Result<Vec<ProviderModel>> {
+        self.repository.find_distinct().await
+    }
+
+    /// 查询全部启用且按名称去重的模型，同名取路由优先级最高的一条；用于可用模型列表。
     pub async fn find_enabled_distinct(&self) -> Result<Vec<ProviderModel>> {
         self.repository.find_enabled_distinct().await
     }

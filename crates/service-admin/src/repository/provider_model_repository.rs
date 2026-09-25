@@ -76,6 +76,27 @@ impl ProviderModelRepository {
         rows.into_iter().map(provider_model_from_row).collect()
     }
 
+    /// 查询所有模型，按模型名去重；同名取路由优先级最高的一条。
+    /// 排序键与供应商路由规则一致：优先级升序、创建时间升序。
+    pub async fn find_distinct(&self) -> Result<Vec<ProviderModel>> {
+        let query = format!(
+            "SELECT DISTINCT ON (pm.model) {COLUMNS}
+             FROM provider_model pm
+             JOIN provider p ON p.id = pm.provider_id
+             WHERE pm.provider_id <> $1
+               AND p.deleted_at = 0
+             ORDER BY pm.model ASC, p.priority ASC, p.create_time ASC"
+        );
+
+        let rows = sqlx::query(&query)
+            .bind(DEFAULT_PROVIDER_ID)
+            .fetch_all(&self.pool)
+            .await
+            .context("查询启用供应商模型失败")?;
+
+        rows.into_iter().map(provider_model_from_row).collect()
+    }
+
     /// 查询所有启用模型，按模型名去重；同名取路由优先级最高的一条。
     /// 排序键与供应商路由规则一致：优先级升序、创建时间升序。
     pub async fn find_enabled_distinct(&self) -> Result<Vec<ProviderModel>> {

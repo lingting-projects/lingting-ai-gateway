@@ -7,6 +7,17 @@ use types_admin::dto::{
     ProviderModelRedirectVO, ProviderModelVO,
 };
 
+/// 模型列表：返回全部已有模型数据
+#[web_api_post(path = "/___/provider-model/list")]
+pub async fn provider_model_list() -> Result<Vec<ProviderModelVO>> {
+    let models = ProviderModelService::new()?.find_distinct().await?;
+
+    Ok(models
+        .into_iter()
+        .map(|model| ProviderModelVO::of(model, String::new()))
+        .collect())
+}
+
 /// 默认模型列表：返回全部默认模型数据，不含真实供应商。
 #[web_api_post(path = "/___/provider-model/default")]
 pub async fn provider_model_default() -> Result<Vec<ProviderModelVO>> {
