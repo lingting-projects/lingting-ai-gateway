@@ -2,20 +2,14 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-INFO_FILE="$ROOT_DIR/.release/info"
-SIG_FILE="$ROOT_DIR/.release/info.sig"
-PUBKEY_FILE="$ROOT_DIR/.release/pubkey"
-
-SIGN_KEY="${HOME}/.ssh/lingting_gateway_ed25519"
-SIGN_IDENTITY="lingting-release"
-SIGN_NAMESPACE="lingting-release"
+source "$SCRIPT_DIR/common.sh"
 
 usage() {
     echo "Usage:"
-    echo "  $0 sign"
-    echo "  $0 verify"
+    echo "  bash .release/sign.sh sign"
+    echo "  bash .release/sign.sh verify"
     exit 1
 }
 
@@ -25,30 +19,13 @@ fi
 
 ACTION="$1"
 
-if ! command -v ssh-keygen >/dev/null 2>&1; then
-    echo "error: ssh-keygen not found"
-    exit 1
-fi
+require_command ssh-keygen
 
 case "$ACTION" in
     sign)
-        if [[ ! -f "$SIGN_KEY" ]]; then
-            echo "error: private key not found:"
-            echo "  $SIGN_KEY"
-            exit 1
-        fi
-
-        if [[ ! -f "$INFO_FILE" ]]; then
-            echo "error: info file not found:"
-            echo "  $INFO_FILE"
-            exit 1
-        fi
-
-        if [[ ! -f "${SIGN_KEY}.pub" ]]; then
-            echo "error: public key not found:"
-            echo "  ${SIGN_KEY}.pub"
-            exit 1
-        fi
+        require_file "$SIGN_KEY"
+        require_file "${SIGN_KEY}.pub"
+        require_file "$INFO_FILE"
 
         rm -f "$SIG_FILE"
 
@@ -58,30 +35,18 @@ case "$ACTION" in
             -n "$SIGN_NAMESPACE" \
             "$INFO_FILE"
 
-        mv "${INFO_FILE}.sig" "$SIG_FILE"
+        mv \
+            "${INFO_FILE}.sig" \
+            "$SIG_FILE"
 
         echo "signature generated:"
         echo "  $SIG_FILE"
         ;;
 
     verify)
-        if [[ ! -f "$INFO_FILE" ]]; then
-            echo "error: info file not found:"
-            echo "  $INFO_FILE"
-            exit 1
-        fi
-
-        if [[ ! -f "$SIG_FILE" ]]; then
-            echo "error: signature file not found:"
-            echo "  $SIG_FILE"
-            exit 1
-        fi
-
-        if [[ ! -f "$PUBKEY_FILE" ]]; then
-            echo "error: public key file not found:"
-            echo "  $PUBKEY_FILE"
-            exit 1
-        fi
+        require_file "$INFO_FILE"
+        require_file "$SIG_FILE"
+        require_file "$PUBKEY_FILE"
 
         ssh-keygen \
             -Y verify \
