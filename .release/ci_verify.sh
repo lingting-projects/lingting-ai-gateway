@@ -45,19 +45,13 @@ info "Verifying release metadata signature"
 
 bash "$RELEASE_DIR/sign.sh" verify
 
-read_info() {
-    local key="$1"
-
-    read_info_value "$INFO_FILE" "$key"
-}
-
-INFO_VERSION="$(read_info version)"
-INFO_TAG="$(read_info tag)"
-INFO_REPOSITORY="$(read_info repository)"
-INFO_BRANCH="$(read_info branch)"
-INFO_COMMIT="$(read_info commit)"
-INFO_TIMESTAMP="$(read_info timestamp)"
-INFO_TIMESTAMP_UNIX="$(read_info timestamp_unix)"
+INFO_VERSION="$(read_info_value version)"
+INFO_TAG="$(read_info_value tag)"
+INFO_REPOSITORY="$(read_info_value repository)"
+INFO_BRANCH="$(read_info_value branch)"
+INFO_COMMIT="$(read_info_value commit)"
+INFO_TIMESTAMP="$(read_info_value timestamp)"
+INFO_TIMESTAMP_UNIX="$(read_info_value timestamp_unix)"
 
 if [[ "$INFO_VERSION" != "1" ]]; then
     fail "unsupported release metadata version: $INFO_VERSION"
