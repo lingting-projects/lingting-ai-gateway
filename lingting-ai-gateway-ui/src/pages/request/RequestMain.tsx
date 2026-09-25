@@ -8,8 +8,8 @@ import { ExTable, ExTableProps, type PaginationParams } from "@lri";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { bizApi } from "@/api/BizApi";
+import { AutoRefreshControl } from "@/components/auto-refresh";
 
-import { RequestAutoRefresh } from "./RequestAutoRefresh";
 import { RequestDetailModal } from "./RequestDetailModal";
 import { RequestSubTable } from "./RequestSubTable";
 import { readAutoRefreshSetting, saveAutoRefreshSetting } from "./requestAutoRefreshUtils";
@@ -88,7 +88,7 @@ export function RequestMain() {
         polling={polling}
         search={{ filterType: "light" }}
         toolBarRender={() => [
-          <RequestAutoRefresh key="auto-refresh" onChange={setAutoRefresh} setting={autoRefresh}/>,
+          <AutoRefreshControl key="auto-refresh" onChange={setAutoRefresh} setting={autoRefresh}/>,
         ]}
       />
       <RequestDetailModal<RequestMainVO>

@@ -53,6 +53,15 @@ const TOKEN_DETAIL_FIELDS: { key: keyof RequestTokenFields; title: string }[] = 
   { key: "totalTokens", title: "总 Token" },
 ];
 
+/** Token 明细列：数值按 K / M 缩写展示，避免过长数字。 */
+function createTokenDetailColumns<T extends RequestTokenFields>(): ProDescriptionsColumn<T>[] {
+  return TOKEN_DETAIL_FIELDS.map((field) => ({
+    dataIndex: field.key,
+    render: (_dom, record) => formatTokenCount(record[field.key]),
+    title: field.title,
+  }));
+}
+
 /** 时间展示：毫秒时间戳。 */
 export function formatRequestTime(value?: string | null) {
   if (value === null || value === undefined || value === "") {
@@ -145,6 +154,7 @@ function createOptionColumn<T extends Record<string, unknown>>(
   return {
     dataIndex: "option",
     search: false,
+    fixed: "right",
     render: (_dom, record) => <LinkButton onClick={() => onDetail(record)} text="详情" />,
     title: "操作",
     valueType: "option",
@@ -292,7 +302,7 @@ export function createRequestMainDetailColumns(): ProDescriptionsColumn<RequestM
     { dataIndex: "errorCode", title: "错误码" },
     { dataIndex: "errorMessage", title: "错误信息" },
     { dataIndex: "returnModel", title: "返回模型" },
-    ...TOKEN_DETAIL_FIELDS.map((field) => ({ dataIndex: field.key, title: field.title })),
+    ...createTokenDetailColumns<RequestMainVO>(),
     {
       dataIndex: "httpStatus",
       render: (_dom, record) => record.httpStatus ?? "-",
@@ -350,7 +360,7 @@ export function createRequestSubDetailColumns(): ProDescriptionsColumn<RequestSu
     { dataIndex: "errorCode", title: "错误码" },
     { dataIndex: "errorMessage", title: "错误信息" },
     { dataIndex: "returnModel", title: "返回模型" },
-    ...TOKEN_DETAIL_FIELDS.map((field) => ({ dataIndex: field.key, title: field.title })),
+    ...createTokenDetailColumns<RequestSubVO>(),
     {
       dataIndex: "httpStatus",
       render: (_dom, record) => record.httpStatus ?? "-",

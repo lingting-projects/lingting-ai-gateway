@@ -31,7 +31,7 @@ export function RequestDetailModal<T extends Record<string, unknown>>({
       open={open}
       styles={{ body: { maxHeight: "60vh", overflowY: "auto" } }}
       title={title}
-      width={800}
+      width={1200}
     >
       <Flex gap="middle" vertical>
         <ProDescriptions<T> column={2} columns={columns} dataSource={data}/>
