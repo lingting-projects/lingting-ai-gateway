@@ -72,6 +72,15 @@ echo "  $FRAMEWORK_BRANCH"
 echo "framework commit:"
 echo "  $FRAMEWORK_COMMIT"
 
+info "Checking Cargo.lock"
+
+require_command cargo
+
+cargo metadata \
+    --locked \
+    --format-version 1 \
+    >/dev/null
+
 echo
 info "Checking gateway repository"
 
