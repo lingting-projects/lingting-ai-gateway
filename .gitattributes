@@ -1,10 +1,9 @@
-```gitattributes
-# Release metadata is cryptographically signed.
-# Preserve the exact bytes across platforms.
+# .gitattributes
+
+# Cryptographically signed release metadata must preserve exact bytes.
 .release/info binary
 .release/info.sig binary
 .release/pubkey binary
 
-# Release scripts must always use LF.
+# Release scripts always use LF.
 .release/*.sh text eol=lf
-```

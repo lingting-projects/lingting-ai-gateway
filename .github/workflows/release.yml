@@ -10,6 +10,8 @@ permissions:
 
 env:
   RUST_VERSION: "1.98.0"
+  NODE_VERSION: "22.22.3"
+  PNPM_VERSION: "11.24.0"
   RELEASE_PUBKEY_FINGERPRINT: "SHA256:+7HthGNGniZd5oo+s4+eDB7PzTATkKgofDRuWRtbgS4"
 
 jobs:
@@ -27,22 +29,23 @@ jobs:
       - name: Checkout gateway
         uses: actions/checkout@v7
         with:
-          ref: refs/tags/${{ github.ref_name }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
-      - name: Verify release
+      - name: Verify release metadata
+        shell: bash
         run: bash .release/ci_verify.sh
 
-  linux:
+  build-linux:
     name: Build Linux
-    needs: verify
     runs-on: ubuntu-latest
+    needs: verify
 
     steps:
-      - name: Checkout gateway
+      - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: refs/tags/${{ github.ref_name }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Setup Rust
@@ -51,37 +54,59 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           targets: x86_64-unknown-linux-musl,x86_64-unknown-linux-gnu
 
-      - name: Verify release
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: lingting-ai-gateway-ui/pnpm-lock.yaml
+
+      - name: Verify release metadata
+        shell: bash
         run: bash .release/ci_verify.sh
 
       - name: Build Linux static
+        shell: bash
         run: bash .release/ci_build.sh -l
 
       - name: Build Linux slim
+        shell: bash
         run: bash .release/ci_build.sh -sl
 
-      - name: Verify artifacts
+      - name: Prepare release artifacts
+        shell: bash
         run: bash .release/ci_release.sh
 
       - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: linux
+          name: release-linux
           path: |
             dist/lingting-ai-gateway-linux
             dist/lingting-ai-gateway-linux-slim
           if-no-files-found: error
 
-  windows:
+  build-windows:
     name: Build Windows
-    needs: verify
     runs-on: windows-latest
+    needs: verify
 
     steps:
-      - name: Checkout gateway
+      - name: Configure Git line endings
+        shell: bash
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: refs/tags/${{ github.ref_name }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Setup Rust
@@ -90,7 +115,19 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           targets: x86_64-pc-windows-msvc
 
-      - name: Verify release
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: lingting-ai-gateway-ui/pnpm-lock.yaml
+
+      - name: Verify release metadata
         shell: bash
         run: bash .release/ci_verify.sh
 
@@ -102,29 +139,29 @@ jobs:
         shell: bash
         run: bash .release/ci_build.sh -sw
 
-      - name: Verify artifacts
+      - name: Prepare release artifacts
         shell: bash
         run: bash .release/ci_release.sh
 
       - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: windows
+          name: release-windows
           path: |
             dist/lingting-ai-gateway-windows.exe
             dist/lingting-ai-gateway-windows-slim.exe
           if-no-files-found: error
 
-  macos:
+  build-macos:
     name: Build macOS
-    needs: verify
     runs-on: macos-latest
+    needs: verify
 
     steps:
-      - name: Checkout gateway
+      - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: refs/tags/${{ github.ref_name }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Setup Rust
@@ -133,62 +170,78 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           targets: x86_64-apple-darwin
 
-      - name: Verify release
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: lingting-ai-gateway-ui/pnpm-lock.yaml
+
+      - name: Verify release metadata
+        shell: bash
         run: bash .release/ci_verify.sh
 
-      - name: Build macOS
+      - name: Build macOS static
+        shell: bash
         run: bash .release/ci_build.sh -m
 
       - name: Build macOS slim
+        shell: bash
         run: bash .release/ci_build.sh -sm
 
-      - name: Verify artifacts
+      - name: Prepare release artifacts
+        shell: bash
         run: bash .release/ci_release.sh
 
       - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: macos
+          name: release-macos
           path: |
             dist/lingting-ai-gateway-macos
             dist/lingting-ai-gateway-macos-slim
           if-no-files-found: error
 
   release:
-    name: Publish GitHub release
-    needs:
-      - linux
-      - windows
-      - macos
-
+    name: Publish release
     runs-on: ubuntu-latest
+    needs:
+      - build-linux
+      - build-windows
+      - build-macos
 
     steps:
-      - name: Checkout gateway
+      - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: refs/tags/${{ github.ref_name }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Download Linux artifacts
         uses: actions/download-artifact@v8
         with:
-          name: linux
+          name: release-linux
           path: dist
 
       - name: Download Windows artifacts
         uses: actions/download-artifact@v8
         with:
-          name: windows
+          name: release-windows
           path: dist
 
       - name: Download macOS artifacts
         uses: actions/download-artifact@v8
         with:
-          name: macos
+          name: release-macos
           path: dist
 
-      - name: Prepare release
+      - name: Prepare release artifacts
+        shell: bash
         run: bash .release/ci_release.sh
 
       - name: Publish GitHub release
@@ -203,4 +256,3 @@ jobs:
             dist/lingting-ai-gateway-windows-slim.exe
             dist/lingting-ai-gateway-macos
             dist/lingting-ai-gateway-macos-slim
-            dist/SHA256SUMS

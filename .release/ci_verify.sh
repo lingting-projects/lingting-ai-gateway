@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RELEASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$RELEASE_DIR/.." && pwd)"
 
-source "$SCRIPT_DIR/common.sh"
+# shellcheck source=/dev/null
+source "$RELEASE_DIR/common.sh"
 
 require_command git
 require_command ssh-keygen
 require_command awk
 require_command sed
+require_command grep
 
 require_file "$PUBKEY_FILE"
 require_file "$INFO_FILE"
@@ -21,18 +23,17 @@ fi
 
 info "Checking release public key"
 
-ACTUAL_PUBKEY_FINGERPRINT="$(
+EXPECTED_FINGERPRINT="$RELEASE_PUBKEY_FINGERPRINT"
+
+ACTUAL_FINGERPRINT="$(
     ssh-keygen -lf "$PUBKEY_FILE" -E sha256 |
-        awk '{ print $2 }'
+        awk '{print $2}'
 )"
 
-echo "expected fingerprint:"
-echo "  $RELEASE_PUBKEY_FINGERPRINT"
+printf 'expected fingerprint:\n  %s\n' "$EXPECTED_FINGERPRINT"
+printf 'actual fingerprint:\n  %s\n' "$ACTUAL_FINGERPRINT"
 
-echo "actual fingerprint:"
-echo "  $ACTUAL_PUBKEY_FINGERPRINT"
-
-if [[ "$ACTUAL_PUBKEY_FINGERPRINT" != "$RELEASE_PUBKEY_FINGERPRINT" ]]; then
+if [[ "$ACTUAL_FINGERPRINT" != "$EXPECTED_FINGERPRINT" ]]; then
     fail "release public key fingerprint mismatch"
 fi
 
@@ -42,75 +43,51 @@ fi
 
 info "Verifying release metadata signature"
 
-bash "$SCRIPT_DIR/sign.sh" verify
+bash "$RELEASE_DIR/sign.sh" verify
 
-info "Reading release metadata"
+read_info() {
+    local key="$1"
 
-INFO_VERSION="$(read_info_value version)"
-INFO_TAG="$(read_info_value tag)"
-INFO_REPOSITORY="$(read_info_value repository)"
-INFO_BRANCH="$(read_info_value branch)"
-INFO_COMMIT="$(read_info_value commit)"
-INFO_TIMESTAMP="$(read_info_value timestamp)"
-INFO_TIMESTAMP_UNIX="$(read_info_value timestamp_unix)"
+    read_info_value "$INFO_FILE" "$key"
+}
+
+INFO_VERSION="$(read_info version)"
+INFO_TAG="$(read_info tag)"
+INFO_REPOSITORY="$(read_info repository)"
+INFO_BRANCH="$(read_info branch)"
+INFO_COMMIT="$(read_info commit)"
+INFO_TIMESTAMP="$(read_info timestamp)"
+INFO_TIMESTAMP_UNIX="$(read_info timestamp_unix)"
 
 if [[ "$INFO_VERSION" != "1" ]]; then
     fail "unsupported release metadata version: $INFO_VERSION"
 fi
 
-if [[ -z "$INFO_TAG" ]]; then
-    fail "release metadata tag is empty"
-fi
-
-if [[ -z "${GITHUB_REF_NAME:-}" ]]; then
-    fail "GITHUB_REF_NAME is not set"
-fi
-
-if [[ "$INFO_TAG" != "$GITHUB_REF_NAME" ]]; then
-    fail "release metadata tag does not match GitHub tag
-
-metadata:
-  $INFO_TAG
-
-github:
-  $GITHUB_REF_NAME"
+if [[ "$INFO_TAG" != "${GITHUB_REF_NAME:-}" ]]; then
+    fail "metadata tag mismatch: metadata=$INFO_TAG github=${GITHUB_REF_NAME:-}"
 fi
 
 if [[ "$INFO_REPOSITORY" != "$FRAMEWORK_REPOSITORY" ]]; then
-    fail "framework repository mismatch
-
-expected:
-  $FRAMEWORK_REPOSITORY
-
-metadata:
-  $INFO_REPOSITORY"
+    fail "framework repository mismatch: $INFO_REPOSITORY"
 fi
 
 if [[ -z "$INFO_BRANCH" ]]; then
-    fail "framework branch is empty"
+    fail "metadata branch is empty"
 fi
 
-require_sha1_commit "$INFO_COMMIT"
+if [[ ! "$INFO_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+    fail "metadata commit is not a SHA-1 commit: $INFO_COMMIT"
+fi
 
 if [[ -z "$INFO_TIMESTAMP" ]]; then
-    fail "release timestamp is empty"
+    fail "metadata timestamp is empty"
 fi
 
 if [[ ! "$INFO_TIMESTAMP_UNIX" =~ ^[0-9]+$ ]]; then
-    fail "invalid release timestamp_unix: $INFO_TIMESTAMP_UNIX"
+    fail "metadata timestamp_unix is invalid: $INFO_TIMESTAMP_UNIX"
 fi
 
-echo
-echo "release metadata:"
-echo "  version:        $INFO_VERSION"
-echo "  tag:            $INFO_TAG"
-echo "  repository:     $INFO_REPOSITORY"
-echo "  branch:         $INFO_BRANCH"
-echo "  commit:         $INFO_COMMIT"
-echo "  timestamp:      $INFO_TIMESTAMP"
-echo "  timestamp_unix: $INFO_TIMESTAMP_UNIX"
-
-info "Checking framework branch on origin"
+info "Checking framework remote branch"
 
 REMOTE_FRAMEWORK_COMMIT=""
 
@@ -121,44 +98,27 @@ REMOTE_FRAMEWORK_COMMIT="$(
 )"
 
 if [[ -z "$REMOTE_FRAMEWORK_COMMIT" ]]; then
-    fail "framework branch was not found on origin
-
-branch:
-  $INFO_BRANCH"
+    fail "framework branch not found remotely: $INFO_BRANCH"
 fi
 
 if [[ "$REMOTE_FRAMEWORK_COMMIT" != "$INFO_COMMIT" ]]; then
-    fail "framework branch does not point to release commit
-
-branch:
-  $INFO_BRANCH
-
-expected:
-  $INFO_COMMIT
-
-actual:
-  $REMOTE_FRAMEWORK_COMMIT"
+    fail "framework commit mismatch: metadata=$INFO_COMMIT remote=$REMOTE_FRAMEWORK_COMMIT"
 fi
-
-echo "framework branch confirmed:"
-echo "  branch: $INFO_BRANCH"
-echo "  commit: $REMOTE_FRAMEWORK_COMMIT"
 
 info "Checking framework commit"
 
+CHECKOUT_DIR="$ROOT_DIR/../lingting-rust-framework"
+
 checkout_framework \
     "$INFO_COMMIT" \
-    "$FRAMEWORK_DIR"
+    "$CHECKOUT_DIR"
 
-echo
-echo "========================================"
-echo "Release verification succeeded"
-echo "========================================"
-echo
+ACTUAL_FRAMEWORK_COMMIT="$(
+    git -C "$CHECKOUT_DIR" rev-parse HEAD
+)"
 
-echo "framework:"
-echo "  $FRAMEWORK_DIR"
+if [[ "$ACTUAL_FRAMEWORK_COMMIT" != "$INFO_COMMIT" ]]; then
+    fail "framework checkout commit mismatch: expected=$INFO_COMMIT actual=$ACTUAL_FRAMEWORK_COMMIT"
+fi
 
-echo
-echo "commit:"
-echo "  $INFO_COMMIT"
+info "Release verification completed successfully"
