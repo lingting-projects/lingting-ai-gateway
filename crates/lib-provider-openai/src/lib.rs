@@ -4,6 +4,7 @@ pub mod chat;
 pub mod chat_response;
 pub mod chat_stream;
 pub mod error_response;
+pub mod models;
 pub mod responses;
 pub mod responses_response;
 pub mod responses_stream;

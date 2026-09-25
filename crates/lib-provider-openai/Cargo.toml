@@ -14,6 +14,7 @@ types-admin.workspace = true
 anyhow.workspace = true
 async-trait.workspace = true
 bytes.workspace = true
+chrono.workspace = true
 futures-util.workspace = true
 reqwest = { workspace = true, features = ["json", "stream"] }
 serde.workspace = true

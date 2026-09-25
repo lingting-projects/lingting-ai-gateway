@@ -4,18 +4,13 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock};
 
 use anyhow::{Result, anyhow};
-use chrono::NaiveDate;
 use dashmap::DashMap;
 use lib_db::{DbContext, PgPoolExt, scope_db, use_db, use_pool};
-use lib_provider::build_client;
-use serde::{Deserialize, Deserializer};
+use lib_provider::models::RemoteModel;
 use service_admin::service::{ProviderModelRedirectService, ProviderModelService, ProviderService};
 use tokio::sync::{Mutex, OwnedMutexGuard};
 use types_admin::dto::ProviderModelCreatePO;
 use types_admin::entity::{Provider, ProviderModel};
-
-/// 模型列表接口的路径后缀。
-const MODELS_SUFFIX: &str = "/models";
 
 /// 同步中的供应商锁，保证同一供应商同一时刻只有一个同步任务。
 static SYNCHRONIZING: LazyLock<DashMap<i64, Arc<Mutex<()>>>> = LazyLock::new(DashMap::new);
@@ -165,47 +160,14 @@ async fn missing_models(
         .collect())
 }
 
-/// 拉取供应商模型列表；请求失败或解析失败只记录日志并返回 `None`。
+/// 拉取供应商模型列表，按协议分派到具体实现；目前只有 `[OI]` 协议。
+///
+/// 请求或解析失败只记录日志并返回 `None`，避免单个供应商影响整批同步。
 async fn fetch_remote(provider: &Provider) -> Result<Option<Vec<RemoteModel>>> {
-    let url = format!("{}{MODELS_SUFFIX}", provider.base_url.trim_end_matches('/'));
-    let response = match build_client(provider)
-        .get(url)
-        .bearer_auth(&provider.api_key)
-        .send()
-        .await
-    {
-        Ok(response) => response,
+    match lib_provider_openai::models::fetch_models(provider).await {
+        Ok(models) => Ok(Some(models)),
         Err(error) => {
             tracing::warn!("请求供应商 {} 模型列表失败：{error:#}", provider.name);
-            return Ok(None);
-        }
-    };
-
-    if !response.status().is_success() {
-        let status = response.status();
-        let body = response.text().await.unwrap_or_default();
-        tracing::warn!(
-            "请求供应商 {} 模型列表失败：状态码 {status}，响应体 {body}",
-            provider.name
-        );
-        return Ok(None);
-    }
-
-    let body = match response.text().await {
-        Ok(body) => body,
-        Err(error) => {
-            tracing::warn!("读取供应商 {} 模型列表响应失败：{error:#}", provider.name);
-            return Ok(None);
-        }
-    };
-
-    match serde_json::from_str::<RemoteModelList>(&body) {
-        Ok(list) => Ok(Some(list.data)),
-        Err(error) => {
-            tracing::warn!(
-                "解析供应商 {} 模型列表失败：{error:#}，响应体 {body}",
-                provider.name
-            );
             Ok(None)
         }
     }
@@ -268,58 +230,4 @@ where
     F: FnOnce(&ProviderModel) -> T,
 {
     remote.or_else(|| default.map(pick)).unwrap_or_default()
-}
-
-/// 供应商模型列表返回的单个模型，未返回的字段为 `None`。
-#[derive(Debug, Clone, Deserialize)]
-struct RemoteModel {
-    id: String,
-    display_name: Option<String>,
-    reasoning: Option<bool>,
-    levels: Option<Vec<String>>,
-    level_default: Option<String>,
-    context_window: Option<i64>,
-    max_tokens: Option<i64>,
-    support_tools: Option<bool>,
-    support_vision: Option<bool>,
-    support_stream: Option<bool>,
-    support_json: Option<bool>,
-    support_cache: Option<bool>,
-    #[serde(default, deserialize_with = "date_millis")]
-    knowledge_cutoff: Option<i64>,
-    #[serde(default, deserialize_with = "date_millis")]
-    release_date: Option<i64>,
-}
-
-/// 日期字段反序列化：接受毫秒时间戳数字，或 `YYYY-MM-DD` / `YYYY-MM` 字符串。
-///
-/// 字符串按 UTC 零点解析，`YYYY-MM` 取当月 1 日；无法识别时视为未返回。
-fn date_millis<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value = Option::<serde_json::Value>::deserialize(deserializer)?;
-    Ok(value.and_then(|value| match value {
-        serde_json::Value::Number(number) => number.as_i64(),
-        serde_json::Value::String(text) => parse_date(&text),
-        _ => None,
-    }))
-}
-
-/// 解析 `YYYY-MM-DD` / `YYYY-MM` 为 UTC 零点毫秒时间戳。
-fn parse_date(text: &str) -> Option<i64> {
-    let text = text.trim();
-    ["%Y-%m-%d", "%Y-%m"].iter().find_map(|format| {
-        NaiveDate::parse_from_str(text, format)
-            .ok()
-            .and_then(|date| date.and_hms_opt(0, 0, 0))
-            .map(|time| time.and_utc().timestamp_millis())
-    })
-}
-
-/// 供应商模型列表响应。
-#[derive(Debug, Clone, Deserialize)]
-struct RemoteModelList {
-    #[serde(default)]
-    data: Vec<RemoteModel>,
 }

@@ -7,6 +7,7 @@
 pub mod chunk;
 pub mod client;
 pub mod forward;
+pub mod models;
 pub mod request;
 
 pub use chunk::ChunkSink;

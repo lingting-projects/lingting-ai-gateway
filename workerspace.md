@@ -15,9 +15,9 @@
 - `lib-system-service`: 系统服务注册与卸载。对外提供统一配置与调用入口，按操作系统选择实现：Windows 计划程序、
   Linux systemd、macOS launchd。
 - `lib-provider`: 供应商基础类型和trait以及公用方法定义。只放与协议无关的通用能力：`RouteRequest`(网关路由与日志所需字段)、
-  `ForwardRequest`、`ForwardCallback` / `ForwardOutcome`、`ChunkSink`。具体协议的请求/响应模型不放在这里。
+  `ForwardRequest`、`ForwardCallback` / `ForwardOutcome`、`ChunkSink`、模型同步用的远程模型 `RemoteModel`。具体协议的请求/响应模型不放在这里。
 - `lib-provider-openai`: `[OI]` 协议的转发实现。按协议分文件: `chat.rs` / `chat_response.rs` / `chat_stream.rs`、
-  `responses.rs` / `responses_response.rs` / `responses_stream.rs`, 另有共用的流式驱动 `stream.rs` 与工具 `utils.rs`。
+  `responses.rs` / `responses_response.rs` / `responses_stream.rs`, 另有共用的流式驱动 `stream.rs`、工具 `utils.rs` 与模型列表获取 `models.rs`。
   协议响应模型跟随协议放在本 crate, 不放 `lib-provider`。
 - `lib-web`: 定义 API 路由、请求映射、参数解析和响应转换. 其中管理接口路由固定前缀 `___`  而 ai 路由则为正常接口, 用于区分两种方式
 - `lib-web-core`: 基于 `framework-web` 提供项目 Web 适配；维护请求级用户授权上下文。

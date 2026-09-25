@@ -16,7 +16,6 @@ service-admin.workspace = true
 types-admin.workspace = true
 
 anyhow.workspace = true
-chrono.workspace = true
 async-trait.workspace = true
 bytes.workspace = true
 dashmap.workspace = true
