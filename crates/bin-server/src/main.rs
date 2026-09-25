@@ -1,5 +1,6 @@
 mod arguments;
 mod service;
+mod ui;
 
 use std::process::ExitCode;
 use std::sync::Arc;

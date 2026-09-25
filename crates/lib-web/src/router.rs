@@ -18,8 +18,18 @@ use tokio::sync::oneshot;
 /// 管理接口的路径前缀；这类接口耗时短，直接在请求线程执行。
 const ADMIN_PREFIX: &str = "___/";
 
+/// 判断是否为内嵌前端资源请求。
+///
+/// 按路径判定，让静态资源在建立数据库上下文与解析身份之前就短路：管理接口前缀以外的
+/// 根路径、入口页面与带扩展名的资源文件都属于前端资源；AI 接口路径既无扩展名也不在这两
+/// 个特例中，不会被误判。
+fn is_ui_request(path: &str) -> bool {
+    !path.starts_with(ADMIN_PREFIX)
+        && (path.is_empty() || path == "index.html" || path.contains('.'))
+}
+
 /// 构造 Web 路由包装器：framework-web-axum 命中路由后，由本包装器建立请求级数据库上下文，
-/// 完成授权解析与授权注入，再执行路由。
+/// 完成授权解析与授权注入，再执行路由；前端资源请求无需鉴权，直接执行。
 pub fn web_route_wrapper(db: Arc<DbContext>) -> WebRouteWrapper {
     Arc::new(move |route| {
         let db = Arc::clone(&db);
@@ -32,7 +42,7 @@ pub fn web_routes() -> Vec<WebRoute> {
     web_api_iter().collect()
 }
 
-/// 请求入口：先鉴权，再按链路类型分派。
+/// 请求入口：前端资源请求直接返回，其余请求先鉴权，再按链路类型分派。
 ///
 /// 鉴权放在请求线程，鉴权失败不必付出线程切换的代价；AI 接口转入工作线程，
 /// 使客户端断开时请求线程的 future 被 drop，从而能通知工作线程取消。
@@ -43,6 +53,11 @@ async fn invoke(db: Arc<DbContext>, route: Arc<WebRoute>) -> Result<WebResponse>
 
     #[cfg(debug_assertions)]
     tracing::debug!("[MOCKTEST]  request-in path={path}");
+
+    // 前端资源：无鉴权与数据库访问需求，直接返回，避免无谓的授权解析开销。
+    if is_ui_request(&path) {
+        return catch_panic(async move { route.invoke().await }).await;
+    }
 
     let (authorization, app) = scope_db(Arc::clone(&db), authorize(&route)).await?;
 

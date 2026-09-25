@@ -5,6 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+[features]
+# 内嵌控制台前端：release 打包时自动嵌入，其他构建需显式启用 cargo build -p bin-server --features ui
+ui = []
+
 [dependencies]
 lib-web.workspace = true
 lib-web-core.workspace = true
@@ -16,6 +20,10 @@ service-admin.workspace = true
 types-admin.workspace = true
 framework-web.workspace = true
 framework-web-axum.workspace = true
+# web_api_get 展开后的代码引用 framework-proc-ts / framework-proc-core，与 lib-web 保持一致
+framework-proc-ts.workspace = true
+framework-proc-core.workspace = true
+framework-core.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-appender.workspace = true
@@ -25,3 +33,6 @@ serde.workspace = true
 serde_json.workspace = true
 sha1.workspace = true
 async-trait.workspace = true
+
+[build-dependencies]
+flate2.workspace = true
