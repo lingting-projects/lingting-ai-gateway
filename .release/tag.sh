@@ -250,13 +250,22 @@ echo "==> Pushing framework branch"
 git -C "$FRAMEWORK_DIR" push origin "$FRAMEWORK_BRANCH"
 
 echo
-echo "==> Verifying framework branch on origin"
+echo "==> Verifying framework commit exists on origin"
+
+REMOTE_FRAMEWORK_COMMIT=""
 
 REMOTE_FRAMEWORK_COMMIT="$(
     git ls-remote "$FRAMEWORK_REPOSITORY" \
         "refs/heads/$FRAMEWORK_BRANCH" |
         awk 'NR == 1 { print $1 }'
-)
+)"
+
+if [[ -z "$REMOTE_FRAMEWORK_COMMIT" ]]; then
+    fail "framework branch was not found on origin
+
+branch:
+  $FRAMEWORK_BRANCH"
+fi
 
 if [[ "$REMOTE_FRAMEWORK_COMMIT" != "$FRAMEWORK_COMMIT" ]]; then
     fail "framework branch does not point to expected commit
@@ -268,7 +277,7 @@ expected:
   $FRAMEWORK_COMMIT
 
 actual:
-  ${REMOTE_FRAMEWORK_COMMIT:-<none>}"
+  $REMOTE_FRAMEWORK_COMMIT"
 fi
 
 echo "framework commit confirmed on origin:"
