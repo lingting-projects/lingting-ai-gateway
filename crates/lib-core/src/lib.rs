@@ -15,7 +15,7 @@ pub const APP_ID: &str = "lingting-ai-gateway";
 
 /// 当前应用的用户级程序文件夹。
 pub fn application_directory() -> anyhow::Result<ApplicationDirectory> {
-    ApplicationDirectory::normal(APP_ID, "")
+    ApplicationDirectory::user(APP_ID)
 }
 
 /// 计算字符串的 SHA1 十六进制摘要；API Key 与管理令牌的摘要统一走本函数。

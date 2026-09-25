@@ -3,7 +3,7 @@
 //! pi 的模型配置格式与网关的 [OI] 接口不同，相关逻辑全部集中在本文件。
 
 use anyhow::{Context, Result};
-use framework_core::MultiStringValue;
+use framework_core::{MultiStringValue, home_directory};
 use framework_proc_auto::auto_type;
 use framework_web::{Json, WebBody, WebError, WebResponse, web_api_post};
 use framework_web_axum::use_axum;
@@ -193,14 +193,6 @@ fn json_response(content: String) -> WebResponse {
         headers,
         body: WebBody::from(content.into_bytes()),
     }
-}
-
-/// 当前用户目录：Windows 取 USERPROFILE，其余平台取 HOME。
-fn home_directory() -> Result<PathBuf> {
-    let variable = if cfg!(windows) { "USERPROFILE" } else { "HOME" };
-    std::env::var_os(variable)
-        .map(PathBuf::from)
-        .with_context(|| format!("未设置 {variable} 环境变量"))
 }
 
 /// 是否已带 http/https 协议前缀。
