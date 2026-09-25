@@ -1,15 +1,14 @@
 import { ProCard, Statistic } from "@ant-design/pro-components";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import type { DashboardQO, DashboardRequestVO, DashboardTokenVO } from "@lingting/ai-gateway-sdk";
 import { Col, Row } from "antd";
 
 import { bizApi } from "@/api/BizApi";
 import { formatCachePercent, formatTokenCount } from "@/utils/tokenUtils";
 
+import { DASHBOARD_QUERY_ROOT } from "./dashboardQueryKeys";
 import "./dashboard.css";
-
-/** 全局统计不附加筛选条件，也不做分组。 */
-const GLOBAL_QUERY: DashboardQO = { withModel: false, withProvider: false };
 
 /** 卡片内的统计项两列排布。 */
 const STAT_COL_SPAN = 12;
@@ -88,28 +87,48 @@ function TokenStatCard({ data, loading, title }: TokenStatCardProps) {
   );
 }
 
+type DashboardStatCardsProps = {
+  /** 统计时间范围，未选择时跳过查询 */
+  rangeTime: [number, number] | null;
+};
+
 /**
- * 全局统计卡片：主请求与子请求的请求数量、Token 用量各一张卡片。
+ * 全局统计卡片：主请求与子请求的请求数量、Token 用量各一张卡片，统计范围由顶部操作行决定。
  */
-export function DashboardStatCards() {
+export function DashboardStatCards({ rangeTime }: DashboardStatCardsProps) {
+  const query = useMemo<DashboardQO>(
+    () => ({
+      endTime: rangeTime ? String(rangeTime[1]) : null,
+      startTime: rangeTime ? String(rangeTime[0]) : null,
+      withModel: false,
+      withProvider: false,
+    }),
+    [rangeTime],
+  );
+  const enabled = rangeTime !== null;
+
   const { data: requestMain, isLoading: requestMainLoading } = useQuery({
-    queryFn: () => bizApi.dashboardRequestMain(GLOBAL_QUERY),
-    queryKey: ["dashboard-request-main"],
+    enabled,
+    queryFn: () => bizApi.dashboardRequestMain(query),
+    queryKey: [...DASHBOARD_QUERY_ROOT, "request-main", query],
     retry: false,
   });
   const { data: requestSub, isLoading: requestSubLoading } = useQuery({
-    queryFn: () => bizApi.dashboardRequestSub(GLOBAL_QUERY),
-    queryKey: ["dashboard-request-sub"],
+    enabled,
+    queryFn: () => bizApi.dashboardRequestSub(query),
+    queryKey: [...DASHBOARD_QUERY_ROOT, "request-sub", query],
     retry: false,
   });
   const { data: tokenMain, isLoading: tokenMainLoading } = useQuery({
-    queryFn: () => bizApi.dashboardTokenMain(GLOBAL_QUERY),
-    queryKey: ["dashboard-token-main"],
+    enabled,
+    queryFn: () => bizApi.dashboardTokenMain(query),
+    queryKey: [...DASHBOARD_QUERY_ROOT, "token-main", query],
     retry: false,
   });
   const { data: tokenSub, isLoading: tokenSubLoading } = useQuery({
-    queryFn: () => bizApi.dashboardTokenSub(GLOBAL_QUERY),
-    queryKey: ["dashboard-token-sub"],
+    enabled,
+    queryFn: () => bizApi.dashboardTokenSub(query),
+    queryKey: [...DASHBOARD_QUERY_ROOT, "token-sub", query],
     retry: false,
   });
 

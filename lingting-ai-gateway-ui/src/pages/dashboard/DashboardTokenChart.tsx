@@ -3,37 +3,29 @@ import { ProCard } from "@ant-design/pro-components";
 import { useQuery } from "@tanstack/react-query";
 import type { DashboardQO } from "@lingting/ai-gateway-sdk";
 import { AppHolder, DictSelect } from "@lri";
-import { Checkbox, DatePicker, Flex, Radio, Spin } from "antd";
-import type { Dayjs } from "dayjs";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Checkbox, Flex, Spin } from "antd";
+import { useEffect, useMemo, useState } from "react";
 
 import { bizApi } from "@/api/BizApi";
 import { formatTokenCount } from "@/utils/tokenUtils";
 
-import {
-  buildTokenPoints,
-  DASHBOARD_RANGE_OPTIONS,
-  type DashboardRangeKey,
-  DEFAULT_DASHBOARD_RANGE,
-  resolveRangeTime,
-} from "./dashboardTokenChartUtils";
+import { DASHBOARD_QUERY_ROOT } from "./dashboardQueryKeys";
+import { buildTokenPoints } from "./dashboardTokenChartUtils";
 
 import "./dashboard.css";
-
-const { RangePicker } = DatePicker;
 
 /** 折线图高度。 */
 const CHART_HEIGHT = 400;
 
-/** 自定义时间范围取值。 */
-type CustomRange = [Dayjs | null, Dayjs | null] | null;
+type DashboardTokenChartProps = {
+  /** 统计时间范围，未选择时跳过查询 */
+  rangeTime: [number, number] | null;
+};
 
 /**
- * Token 统计折线图：头部筛选栏控制时间范围、供应商与模型筛选及分组，主体按天展示总、缓存、读、写。
+ * Token 统计折线图：头部筛选栏控制供应商与模型筛选及分组，主体按天展示总、缓存、读、写。
  */
-export function DashboardTokenChart() {
-  const [range, setRange] = useState<DashboardRangeKey>(DEFAULT_DASHBOARD_RANGE);
-  const [customRange, setCustomRange] = useState<[Dayjs, Dayjs] | null>(null);
+export function DashboardTokenChart({ rangeTime }: DashboardTokenChartProps) {
   const [withProvider, setWithProvider] = useState(false);
   const [withModel, setWithModel] = useState(false);
   const [providerIds, setProviderIds] = useState<string[]>([]);
@@ -41,13 +33,13 @@ export function DashboardTokenChart() {
 
   const { data: providers } = useQuery({
     queryFn: () => bizApi.providerList(),
-    queryKey: ["dashboard-provider-options"],
+    queryKey: [...DASHBOARD_QUERY_ROOT, "provider-options"],
     retry: false,
   });
 
   const { data: providerModels } = useQuery({
     queryFn: () => bizApi.providerModelDefault(),
-    queryKey: ["dashboard-model-options"],
+    queryKey: [...DASHBOARD_QUERY_ROOT, "model-options"],
     retry: false,
   });
 
@@ -69,8 +61,6 @@ export function DashboardTokenChart() {
     [providerModels],
   );
 
-  const rangeTime = useMemo(() => resolveRangeTime(range, customRange), [customRange, range]);
-
   const query = useMemo<DashboardQO>(
     () => ({
       endTime: rangeTime ? String(rangeTime[1]) : null,
@@ -84,10 +74,9 @@ export function DashboardTokenChart() {
   );
 
   const { data, error, isFetching } = useQuery({
-    // 自定义范围未选择时不查询，避免拉取全量数据
-    enabled: range !== "custom" || rangeTime !== null,
+    enabled: rangeTime !== null,
     queryFn: () => bizApi.dashboardTokenSubFilter(query),
-    queryKey: ["dashboard-token-chart", query],
+    queryKey: [...DASHBOARD_QUERY_ROOT, "token-chart", query],
     retry: false,
   });
 
@@ -101,15 +90,6 @@ export function DashboardTokenChart() {
     () => buildTokenPoints(data ?? [], withProvider, withModel, rangeTime),
     [data, rangeTime, withModel, withProvider],
   );
-
-  const handleCustomRangeChange = useCallback((value: CustomRange) => {
-    if (value?.[0] && value[1]) {
-      setCustomRange([value[0], value[1]]);
-      return;
-    }
-
-    setCustomRange(null);
-  }, []);
 
   return (
     <ProCard className="dashboard-token-chart">
@@ -147,17 +127,6 @@ export function DashboardTokenChart() {
             placeholder="模型"
             value={models}
           />
-
-          <Radio.Group
-            onChange={(event) => setRange(event.target.value)}
-            optionType="button"
-            options={DASHBOARD_RANGE_OPTIONS}
-            value={range}
-          />
-
-          {range === "custom" && (
-            <RangePicker onChange={handleCustomRangeChange} value={customRange}/>
-          )}
         </Flex>
 
         <Spin spinning={isFetching}>
@@ -178,6 +147,9 @@ export function DashboardTokenChart() {
               color: {
                 position: "top",
               },
+            }}
+            tooltip={{
+              items: [{ channel: "y", valueFormatter: (value: number) => formatTokenCount(value) }],
             }}
             xField="day"
             yField="value"
