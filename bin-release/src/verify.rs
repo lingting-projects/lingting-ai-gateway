@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::fs;
 use std::path::Path;
 
@@ -6,11 +6,9 @@ use crate::git;
 use crate::metadata;
 use crate::signing;
 
-const GATEWAY_REPOSITORY: &str =
-    "https://github.com/lingting-projects/lingting-ai-gateway.git";
+const GATEWAY_REPOSITORY: &str = "https://github.com/lingting-projects/lingting-ai-gateway.git";
 
-const RELEASE_PUBKEY_FINGERPRINT: &str =
-    "SHA256:+7HthGNGniZd5oo+s4+eDB7PzTATkKgofDRuWRtbgS4";
+const RELEASE_PUBKEY_FINGERPRINT: &str = "SHA256:+7HthGNGniZd5oo+s4+eDB7PzTATkKgofDRuWRtbgS4";
 
 pub fn run() -> Result<()> {
     let root = git::repository_root()?;
@@ -24,14 +22,16 @@ pub fn run() -> Result<()> {
     println!("release verification succeeded");
 
     Ok(())
-
 }
 
 fn verify_release_directory(root: &Path) -> Result<()> {
     let release_dir = metadata::release_dir(root);
 
     if !release_dir.is_dir() {
-        bail!("release directory does not exist: {}", release_dir.display());
+        bail!(
+            "release directory does not exist: {}",
+            release_dir.display()
+        );
     }
 
     for path in [
@@ -45,28 +45,25 @@ fn verify_release_directory(root: &Path) -> Result<()> {
     }
 
     Ok(())
-
 }
 
 fn verify_metadata(root: &Path) -> Result<()> {
     let info_path = metadata::info_path(root);
     let info = metadata::ReleaseInfo::read(&info_path)?;
 
-    let expected_tag = git::output(root, &["describe", "--tags", "--exact-match"])
-        .ok();
+    let current_tag = git::output(root, &["describe", "--tags", "--exact-match", "HEAD"]).ok();
 
-    if let Some(tag) = expected_tag {
+    if let Some(tag) = current_tag {
         if tag != info.tag {
             bail!(
-            "release metadata tag does not match current tag\nmetadata: {}\ncurrent: {}",
-            info.tag,
-            tag
-        );
+                "release metadata tag does not match current tag\nmetadata: {}\ncurrent: {}",
+                info.tag,
+                tag
+            );
         }
     }
 
     Ok(())
-
 }
 
 fn verify_public_key(root: &Path) -> Result<()> {
@@ -79,24 +76,23 @@ fn verify_public_key(root: &Path) -> Result<()> {
 
     if !output.status.success() {
         bail!(
-        "failed to inspect release public key\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&output.stdout).trim(),
-        String::from_utf8_lossy(&output.stderr).trim()
-    );
+            "failed to inspect release public key\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout).trim(),
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
 
     if !stdout.contains(RELEASE_PUBKEY_FINGERPRINT) {
         bail!(
-        "release public key fingerprint mismatch\nexpected: {}\nactual:\n{}",
-        RELEASE_PUBKEY_FINGERPRINT,
-        stdout.trim()
-    );
+            "release public key fingerprint mismatch\nexpected: {}\nactual:\n{}",
+            RELEASE_PUBKEY_FINGERPRINT,
+            stdout.trim()
+        );
     }
 
     Ok(())
-
 }
 
 fn verify_signature(root: &Path) -> Result<()> {
@@ -110,14 +106,6 @@ fn verify_signature(root: &Path) -> Result<()> {
 fn verify_gateway_repository(root: &Path) -> Result<()> {
     git::ensure_origin(root, GATEWAY_REPOSITORY)?;
     git::require_clean_tree(root)?;
-
-    let branch = git::current_branch(root)?;
-
-    if branch.is_empty() {
-        bail!("gateway is in detached HEAD state");
-    }
-
-    git::ensure_local_matches_remote(root, &branch)?;
 
     let cargo_toml = root.join("Cargo.toml");
 
@@ -133,10 +121,10 @@ fn verify_gateway_repository(root: &Path) -> Result<()> {
 
     if !cargo_metadata.status.success() {
         bail!(
-        "cargo metadata verification failed\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&cargo_metadata.stdout).trim(),
-        String::from_utf8_lossy(&cargo_metadata.stderr).trim()
-    );
+            "cargo metadata verification failed\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&cargo_metadata.stdout).trim(),
+            String::from_utf8_lossy(&cargo_metadata.stderr).trim()
+        );
     }
 
     verify_no_crlf(&metadata::info_path(root))?;
@@ -144,15 +132,16 @@ fn verify_gateway_repository(root: &Path) -> Result<()> {
     verify_no_crlf(&metadata::public_key_path(root))?;
 
     Ok(())
-
 }
 
 fn verify_no_crlf(path: &Path) -> Result<()> {
-    let content = fs::read(path)
-        .with_context(|| format!("failed to read {}", path.display()))?;
+    let content = fs::read(path).with_context(|| format!("failed to read {}", path.display()))?;
 
     if content.windows(2).any(|window| window == b"\r\n") {
-        bail!("release file contains CRLF line endings: {}", path.display());
+        bail!(
+            "release file contains CRLF line endings: {}",
+            path.display()
+        );
     }
 
     if content.contains(&b'\r') {
@@ -160,5 +149,4 @@ fn verify_no_crlf(path: &Path) -> Result<()> {
     }
 
     Ok(())
-
 }

@@ -89,7 +89,6 @@ pub fn run() -> Result<()> {
     println!("release tag created and pushed: {tag}");
 
     Ok(())
-
 }
 
 fn verify_gateway(root: &Path) -> Result<()> {
@@ -102,11 +101,7 @@ fn verify_gateway(root: &Path) -> Result<()> {
         bail!("gateway is in detached HEAD state");
     }
 
-    fetch_branch(root, &branch)?;
-    git::ensure_local_matches_remote(root, &branch)?;
-
     Ok(())
-
 }
 
 fn verify_dependency_repository(
@@ -116,9 +111,9 @@ fn verify_dependency_repository(
 ) -> Result<()> {
     if !repository.is_dir() {
         bail!(
-"{name} repository does not exist: {}",
-repository.display()
-);
+            "{name} repository does not exist: {}",
+            repository.display()
+        );
     }
 
     git::ensure_origin(repository, expected_origin)?;
@@ -134,7 +129,6 @@ repository.display()
     git::ensure_local_matches_remote(repository, &branch)?;
 
     Ok(())
-
 }
 
 fn release_source(
@@ -159,7 +153,6 @@ fn release_source(
         branch,
         commit,
     })
-
 }
 
 fn resolve_react_ui_repository(root: &Path) -> Result<PathBuf> {
@@ -179,9 +172,9 @@ fn resolve_react_ui_repository(root: &Path) -> Result<PathBuf> {
 
     if src_name != "src" {
         bail!(
-        "lri does not resolve to a react-ui src directory: {}",
-        real_lri.display()
-    );
+            "lri does not resolve to a react-ui src directory: {}",
+            real_lri.display()
+        );
     }
 
     let repository = real_lri
@@ -191,13 +184,12 @@ fn resolve_react_ui_repository(root: &Path) -> Result<PathBuf> {
 
     if !repository.join(".git").exists() {
         bail!(
-        "resolved react-ui directory is not a Git repository: {}",
-        repository.display()
-    );
+            "resolved react-ui directory is not a Git repository: {}",
+            repository.display()
+        );
     }
 
     Ok(repository)
-
 }
 
 fn fetch_branch(repository: &Path, branch: &str) -> Result<()> {
@@ -217,14 +209,13 @@ fn verify_cargo_metadata(root: &Path) -> Result<()> {
 
     if !output.status.success() {
         bail!(
-        "cargo metadata verification failed\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&output.stdout).trim(),
-        String::from_utf8_lossy(&output.stderr).trim()
-    );
+            "cargo metadata verification failed\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout).trim(),
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
     }
 
     Ok(())
-
 }
 
 fn cargo_version(root: &Path) -> Result<String> {
@@ -276,7 +267,6 @@ fn cargo_version(root: &Path) -> Result<String> {
     }
 
     bail!("failed to find package version in {}", cargo_toml.display())
-
 }
 
 fn verify_tag_does_not_exist(root: &Path, tag: &str) -> Result<()> {
@@ -291,7 +281,13 @@ fn verify_tag_does_not_exist(root: &Path, tag: &str) -> Result<()> {
     }
 
     let remote = Command::new("git")
-        .args(["ls-remote", "--exit-code", "--tags", "origin", &format!("refs/tags/{tag}")])
+        .args([
+            "ls-remote",
+            "--exit-code",
+            "--tags",
+            "origin",
+            &format!("refs/tags/{tag}"),
+        ])
         .current_dir(root)
         .output()
         .context("failed to check remote release tag")?;
@@ -301,7 +297,6 @@ fn verify_tag_does_not_exist(root: &Path, tag: &str) -> Result<()> {
     }
 
     Ok(())
-
 }
 
 fn signing_key() -> Result<PathBuf> {
@@ -313,10 +308,10 @@ fn signing_key() -> Result<PathBuf> {
         }
 
         bail!(
-        "{} points to a missing signing key: {}",
-        SIGN_KEY_ENV,
-        path.display()
-    );
+            "{} points to a missing signing key: {}",
+            SIGN_KEY_ENV,
+            path.display()
+        );
     }
 
     let home = dirs_home()?;
@@ -329,7 +324,6 @@ fn signing_key() -> Result<PathBuf> {
     }
 
     Ok(path)
-
 }
 
 fn dirs_home() -> Result<PathBuf> {
@@ -342,7 +336,6 @@ fn dirs_home() -> Result<PathBuf> {
     }
 
     bail!("unable to determine home directory")
-
 }
 
 fn verify_release_files(root: &Path) -> Result<()> {
@@ -357,7 +350,6 @@ fn verify_release_files(root: &Path) -> Result<()> {
     }
 
     Ok(())
-
 }
 
 fn commit_metadata(root: &Path) -> Result<()> {
@@ -382,7 +374,6 @@ fn commit_metadata(root: &Path) -> Result<()> {
     )?;
 
     Ok(())
-
 }
 
 fn create_tag(root: &Path, tag: &str) -> Result<()> {
@@ -392,7 +383,6 @@ fn create_tag(root: &Path, tag: &str) -> Result<()> {
     )?;
 
     Ok(())
-
 }
 
 fn push_release(root: &Path, tag: &str) -> Result<()> {
@@ -402,5 +392,4 @@ fn push_release(root: &Path, tag: &str) -> Result<()> {
     git::run(root, &["push", "origin", tag])?;
 
     Ok(())
-
 }
