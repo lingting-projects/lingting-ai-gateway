@@ -2,7 +2,7 @@ import { ReloadOutlined } from "@ant-design/icons";
 import { Button, DictSelect } from "@lri";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { DashboardQO } from "@lingting/ai-gateway-sdk";
-import { Checkbox, DatePicker, Flex, Radio } from "antd";
+import { DatePicker, Flex, Radio } from "antd";
 import type { Dayjs } from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -46,8 +46,6 @@ export function DashboardMain() {
   const [autoRefresh, setAutoRefresh] = useState<AutoRefreshSetting>(DEFAULT_AUTO_REFRESH);
   const [providerIds, setProviderIds] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
-  const [withProvider, setWithProvider] = useState(false);
-  const [withModel, setWithModel] = useState(false);
 
   const { data: providers } = useQuery({
     queryFn: () => bizApi.providerList(),
@@ -56,7 +54,7 @@ export function DashboardMain() {
   });
 
   const { data: providerModels } = useQuery({
-    queryFn: () => bizApi.providerModelDefault(),
+    queryFn: () => bizApi.providerModelList(),
     queryKey: [...DASHBOARD_QUERY_ROOT, "model-options"],
     retry: false,
   });
@@ -81,11 +79,7 @@ export function DashboardMain() {
 
   const rangeTime = useMemo(() => resolveRangeTime(range, customRange), [customRange, range]);
 
-  /**
-   * 统计筛选条件：仪表盘所有统计接口共用。
-   *
-   * 分组开关只被折线图接口使用，由折线图自行追加，避免聚合接口出现无意义的缓存分片。
-   */
+  /** 统计筛选条件：仪表盘所有统计接口共用；分组开关只在折线图内部，由折线图自行追加。 */
   const query = useMemo<DashboardQO>(
     () => ({
       endTime: rangeTime ? String(rangeTime[1]) : null,
@@ -129,12 +123,6 @@ export function DashboardMain() {
         />
         <AutoRefreshControl onChange={setAutoRefresh} setting={autoRefresh} />
 
-        <Checkbox
-          checked={withProvider}
-          onChange={(event) => setWithProvider(event.target.checked)}
-        >
-          供应商分组
-        </Checkbox>
         <DictSelect
           className="dashboard-filter-select"
           dict={providerOptions}
@@ -146,9 +134,6 @@ export function DashboardMain() {
           value={providerIds}
         />
 
-        <Checkbox checked={withModel} onChange={(event) => setWithModel(event.target.checked)}>
-          模型分组
-        </Checkbox>
         <DictSelect
           className="dashboard-filter-select"
           dict={modelOptions}
@@ -171,12 +156,7 @@ export function DashboardMain() {
         )}
       </Flex>
       <DashboardStatCards query={query} rangeTime={rangeTime}/>
-      <DashboardTokenChart
-        query={query}
-        rangeTime={rangeTime}
-        withModel={withModel}
-        withProvider={withProvider}
-      />
+      <DashboardTokenChart query={query} rangeTime={rangeTime}/>
     </Flex>
   );
 }

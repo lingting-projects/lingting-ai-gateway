@@ -21,6 +21,10 @@
   @apply min-w-0 overflow-hidden text-ellipsis whitespace-nowrap;
 }
 
+.dashboard-token-chart-filter {
+  @apply w-full;
+}
+
 .dashboard-filter-select {
   @apply min-w-48;
 }

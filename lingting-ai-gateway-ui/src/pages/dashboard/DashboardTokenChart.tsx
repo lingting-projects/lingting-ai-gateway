@@ -3,8 +3,8 @@ import { ProCard } from "@ant-design/pro-components";
 import { useQuery } from "@tanstack/react-query";
 import type { DashboardQO } from "@lingting/ai-gateway-sdk";
 import { AppHolder } from "@lri";
-import { Flex, Spin } from "antd";
-import { useEffect, useMemo } from "react";
+import { Checkbox, Flex, Spin } from "antd";
+import { useEffect, useMemo, useState } from "react";
 
 import { bizApi } from "@/api/BizApi";
 import { formatPercent, formatTokenCount } from "@/utils/tokenUtils";
@@ -48,23 +48,18 @@ type DashboardTokenChartProps = {
   query: DashboardQO;
   /** 统计时间范围，未选择时跳过查询 */
   rangeTime: [number, number] | null;
-  /** 是否按模型继续分组 */
-  withModel: boolean;
-  /** 是否按供应商继续分组 */
-  withProvider: boolean;
 };
 
 /**
  * Token 折线图：主体按天展示总、缓存、读、写，下方再展示缓存读占比与缓存写占比。
  *
- * 筛选条件由仪表盘头部统一控制，两张图共用同一份查询数据。
+ * 供应商与模型筛选由仪表盘头部统一控制，两张图共用同一份查询数据；
+ * 是否按供应商、模型继续分组只影响本图，因此分组开关留在图内。
  */
-export function DashboardTokenChart({
-                                      query,
-                                      rangeTime,
-                                      withModel,
-                                      withProvider,
-                                    }: DashboardTokenChartProps) {
+export function DashboardTokenChart({ query, rangeTime }: DashboardTokenChartProps) {
+  const [withProvider, setWithProvider] = useState(false);
+  const [withModel, setWithModel] = useState(false);
+
   /** 折线图按天分组，并可按供应商、模型继续分组，因此需要额外带上分组开关。 */
   const chartQuery = useMemo<DashboardQO>(
     () => ({ ...query, withModel, withProvider }),
@@ -96,12 +91,26 @@ export function DashboardTokenChart({
 
   return (
     <ProCard className="dashboard-token-chart">
-      <Spin spinning={isFetching}>
-        <Flex gap="middle" vertical>
-          <TokenLineChart data={points} formatValue={formatTokenCount}/>
-          <TokenLineChart data={ratioPoints} formatValue={formatPercent}/>
+      <Flex gap="middle" vertical>
+        <Flex align="center" className="dashboard-token-chart-filter" gap="middle" wrap>
+          <Checkbox
+            checked={withProvider}
+            onChange={(event) => setWithProvider(event.target.checked)}
+          >
+            供应商分组
+          </Checkbox>
+          <Checkbox checked={withModel} onChange={(event) => setWithModel(event.target.checked)}>
+            模型分组
+          </Checkbox>
         </Flex>
-      </Spin>
+
+        <Spin spinning={isFetching}>
+          <Flex gap="middle" vertical>
+            <TokenLineChart data={points} formatValue={formatTokenCount}/>
+            <TokenLineChart data={ratioPoints} formatValue={formatPercent}/>
+          </Flex>
+        </Spin>
+      </Flex>
     </ProCard>
   );
 }
