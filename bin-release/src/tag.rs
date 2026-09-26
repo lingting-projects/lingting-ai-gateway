@@ -321,7 +321,7 @@ fn generate_framework_commands(
 
             block.push_str(lines[end]);
 
-            if lines[end].contains('}') {
+            if dependency_block_is_complete(&block) {
                 break;
             }
 
@@ -335,12 +335,18 @@ fn generate_framework_commands(
             );
         }
 
-        let path_value = extract_path_value(&block)?;
+        let Some(path_value) = extract_path_value(&block) else {
+            index = end + 1;
+            continue;
+        };
 
         let resolved_path = if Path::new(&path_value).is_absolute() {
             PathBuf::from(&path_value)
         } else {
-            root.join(&path_value)
+            cargo_toml
+                .parent()
+                .unwrap_or(root)
+                .join(&path_value)
         };
 
         let resolved_path = fs::canonicalize(&resolved_path)
@@ -357,12 +363,11 @@ fn generate_framework_commands(
             continue;
         }
 
-        let toml_command = generate_toml_replace_command(
+        commands.push(generate_toml_replace_command(
             &path_value,
             framework,
-        );
+        ));
 
-        commands.push(toml_command);
         packages.push(dependency_name);
 
         index = end + 1;
@@ -398,24 +403,60 @@ fn dependency_assignment(
         return None;
     }
 
-    if !value.contains('{') {
+    if !value.contains('{') || !value.contains("path") {
         return None;
     }
 
     Some((name.to_owned(), index))
 }
 
-fn extract_path_value(block: &str) -> Result<String> {
-    for line in block.lines() {
-        let line = line.trim();
+fn dependency_block_is_complete(block: &str) -> bool {
+    let mut depth = 0usize;
+    let mut in_string = false;
+    let mut escaped = false;
 
-        if !line.starts_with("path") {
+    for byte in block.bytes() {
+        if in_string {
+            if escaped {
+                escaped = false;
+                continue;
+            }
+
+            match byte {
+                b'\\' => escaped = true,
+                b'"' => in_string = false,
+                _ => {}
+            }
+
             continue;
         }
 
-        let Some((_, value)) = line.split_once('=') else {
+        match byte {
+            b'"' => in_string = true,
+            b'{' => depth += 1,
+            b'}' => {
+                if depth > 0 {
+                    depth -= 1;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    depth == 0
+}
+
+fn extract_path_value(block: &str) -> Option<String> {
+    for line in block.lines() {
+        let line = line.trim();
+
+        let Some((key, value)) = line.split_once('=') else {
             continue;
         };
+
+        if key.trim() != "path" {
+            continue;
+        }
 
         let value = value
             .trim()
@@ -424,38 +465,34 @@ fn extract_path_value(block: &str) -> Result<String> {
             .trim_matches('"');
 
         if !value.is_empty() {
-            return Ok(value.to_owned());
+            return Some(value.to_owned());
         }
     }
 
-    bail!("framework dependency declaration does not contain a path")
+    None
 }
 
 fn generate_toml_replace_command(
     path: &str,
     framework: &ReleaseSource,
 ) -> String {
-    let escaped_path = shell_single_quote(path);
-    let replacement = format!(
-        "git = \\\"{}\\\", branch = \\\"{}\\\", rev = \\\"{}\\\",",
-        framework.repository, framework.branch, framework.commit
-    );
-    let escaped_replacement = shell_single_quote(&replacement);
-
     format!(
-        "python3 - \"$ROOT_DIR/Cargo.toml\" <<'PY'\n\
+        "python3 - \"$ROOT_DIR/Cargo.toml\" \"{}\" \"{}\" \"{}\" \"{}\" <<'PY'\n\
 import pathlib\n\
 import sys\n\
 \n\
-pathlib.Path(sys.argv[1]).write_text(\n\
-    pathlib.Path(sys.argv[1]).read_text().replace(\n\
-        'path = \"{path}\"',\n\
-        {replacement},\n\
-    ),\n\
-)\n\
+cargo_toml = pathlib.Path(sys.argv[1])\n\
+old_path = 'path = \"' + sys.argv[2] + '\"'\n\
+new_dependency = 'git = \"' + sys.argv[3] + '\", branch = \"' + sys.argv[4] + '\", rev = \"' + sys.argv[5] + '\",'\n\
+content = cargo_toml.read_text()\n\
+if old_path not in content:\n\
+    raise SystemExit('framework dependency path not found: ' + old_path)\n\
+cargo_toml.write_text(content.replace(old_path, new_dependency))\n\
 PY",
-        path = escaped_path,
-        replacement = escaped_replacement,
+        shell_single_quote(path),
+        shell_single_quote(framework.repository.as_str()),
+        shell_single_quote(framework.branch.as_str()),
+        shell_single_quote(framework.commit.as_str()),
     )
 }
 
@@ -471,13 +508,10 @@ fn generate_cargo_update_command(packages: &[String]) -> String {
 }
 
 fn shell_word(value: &str) -> String {
-    if value
-        .bytes()
-        .all(|byte| {
-            byte.is_ascii_alphanumeric()
-                || matches!(byte, b'_' | b'-' | b'.' | b'/')
-        })
-    {
+    if value.bytes().all(|byte| {
+        byte.is_ascii_alphanumeric()
+            || matches!(byte, b'_' | b'-' | b'.' | b'/')
+    }) {
         value.to_owned()
     } else {
         shell_single_quote(value)
@@ -519,8 +553,9 @@ fn update_release_script(
         .map(|offset| function_start + offset + 1)
         .context("release.sh has an invalid rsync_framework function")?;
 
-    let function_body_end = find_function_end(&original, function_body_start)
-        .context("failed to locate rsync_framework function end")?;
+    let function_body_end =
+        find_function_end(&original, function_body_start)
+            .context("failed to locate rsync_framework function end")?;
 
     let mut function = String::from("rsync_framework() {\n");
 
@@ -534,9 +569,8 @@ fn update_release_script(
 
     function.push('}');
 
-    let mut updated = String::with_capacity(
-        original.len() + function.len(),
-    );
+    let mut updated =
+        String::with_capacity(original.len() + function.len());
 
     updated.push_str(&original[..function_start]);
     updated.push_str(&function);
