@@ -13,7 +13,6 @@ pub use logger::init_logging;
 /// 应用标识，用于程序文件夹与日志目录命名。
 pub const APP_ID: &str = "lingting-ai-gateway";
 
-
 /// 计算字符串的 SHA1 十六进制摘要；API Key 与管理令牌的摘要统一走本函数。
 pub fn hash(value: &str) -> String {
     format!("{:x}", sha1::Sha1::new().chain_update(value).finalize())

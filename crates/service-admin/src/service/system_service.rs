@@ -433,7 +433,7 @@ mod platform {
     /// 将 Windows Registry 中的 UTF-16 buffer 转成 Rust String。
     fn utf16_buffer_to_string(buffer: &[u8]) -> String {
         let utf16 = buffer
-            .chunks_exact(2)
+            .as_chunks::<2>().0.iter()
             .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
             .take_while(|&value| value != 0)
             .collect::<Vec<_>>();

@@ -28,7 +28,7 @@ fn main() -> ExitCode {
 fn run() -> Result<()> {
     #[cfg(not(debug_assertions))]
     {
-        let elevated = lib_system_service::is_elevated::is_elevated()?;
+        let elevated = lib_system_service::is_elevated()?;
         #[cfg(target_os = "windows")]
         let message = "必须使用管理员权限启动!";
         #[cfg(not(target_os = "windows"))]
