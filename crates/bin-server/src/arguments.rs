@@ -22,20 +22,22 @@ const REINSTALL_COMMAND: &str = "reinstall";
 /// 重启服务子命令。
 const RESTART_COMMAND: &str = "restart";
 
-/// 卸载时先停止服务的参数。
-const STOP_ARGUMENT: &str = "-r";
+/// 停止服务子命令。
+const STOP_COMMAND: &str = "stop";
 
 /// 子命令。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Command {
     /// 注册系统服务并启动。
     Install,
-    /// 卸载系统服务；`stop` 为真时先停止再卸载。
-    Uninstall { stop: bool },
+    /// 卸载系统服务；已注册时先停止再卸载。
+    Uninstall,
     /// 重新注册：先停止并卸载，再注册并启动。
     Reinstall,
     /// 重启：已注册时由服务管理器重启，未注册时终止原进程后前台启动。
     Restart,
+    /// 停止系统服务。
+    Stop,
 }
 
 /// 解析阶段的子命令名，用于识别与互斥校验。
@@ -45,6 +47,7 @@ enum CommandName {
     Uninstall,
     Reinstall,
     Restart,
+    Stop,
 }
 
 impl CommandName {
@@ -55,6 +58,7 @@ impl CommandName {
             UNINSTALL_COMMAND => Some(Self::Uninstall),
             REINSTALL_COMMAND => Some(Self::Reinstall),
             RESTART_COMMAND => Some(Self::Restart),
+            STOP_COMMAND => Some(Self::Stop),
             _ => None,
         }
     }
@@ -66,6 +70,7 @@ impl CommandName {
             Self::Uninstall => UNINSTALL_COMMAND,
             Self::Reinstall => REINSTALL_COMMAND,
             Self::Restart => RESTART_COMMAND,
+            Self::Stop => STOP_COMMAND,
         }
     }
 }
@@ -86,28 +91,23 @@ impl Arguments {
     pub fn parse(args: impl IntoIterator<Item = String>) -> Result<Self> {
         let mut arguments = Self::default();
         let mut name = None;
-        let mut stop = false;
         let mut args = args.into_iter();
 
         while let Some(arg) = args.next() {
             match arg.as_str() {
                 PGLITE_ARGUMENT => arguments.pglite = Some(directory(&mut args, PGLITE_ARGUMENT)?),
                 LOGS_ARGUMENT => arguments.logs = Some(directory(&mut args, LOGS_ARGUMENT)?),
-                STOP_ARGUMENT => stop = true,
                 _ => name = select(name, &arg)?,
             }
-        }
-
-        if stop && name != Some(CommandName::Uninstall) {
-            bail!("{STOP_ARGUMENT} 只能与 {UNINSTALL_COMMAND} 一起使用");
         }
 
         arguments.command = match name {
             None => None,
             Some(CommandName::Install) => Some(Command::Install),
-            Some(CommandName::Uninstall) => Some(Command::Uninstall { stop }),
+            Some(CommandName::Uninstall) => Some(Command::Uninstall),
             Some(CommandName::Reinstall) => Some(Command::Reinstall),
             Some(CommandName::Restart) => Some(Command::Restart),
+            Some(CommandName::Stop) => Some(Command::Stop),
         };
 
         Ok(arguments)

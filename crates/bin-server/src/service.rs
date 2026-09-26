@@ -27,8 +27,8 @@ pub(crate) fn install(directorys: &Directorys) -> Result<()> {
     Ok(())
 }
 
-/// 卸载系统服务；未注册时视为成功，`stop` 为真时先停止再卸载。
-pub(crate) fn uninstall(directorys: &Directorys, stop: bool) -> Result<()> {
+/// 卸载系统服务；未注册时视为成功，已注册时先停止再卸载。
+pub(crate) fn uninstall(directorys: &Directorys) -> Result<()> {
     let config = config(directorys)?;
     let manager = ServiceManager::new()?;
 
@@ -37,18 +37,32 @@ pub(crate) fn uninstall(directorys: &Directorys, stop: bool) -> Result<()> {
         return Ok(());
     }
 
-    if stop {
-        manager.stop(&config)?;
-    }
+    manager.stop(&config)?;
     manager.uninstall(&config)?;
 
     println!("服务 {} 已卸载", config.name);
     Ok(())
 }
 
+/// 停止系统服务；未注册时视为成功。
+pub(crate) fn stop(directorys: &Directorys) -> Result<()> {
+    let config = config(directorys)?;
+    let manager = ServiceManager::new()?;
+
+    if manager.status(&config)? == ServiceStatus::NotInstalled {
+        println!("服务 {} 未注册", config.name);
+        return Ok(());
+    }
+
+    manager.stop(&config)?;
+
+    println!("服务 {} 已停止", config.name);
+    Ok(())
+}
+
 /// 重新注册：先停止并卸载，再注册并启动。
 pub(crate) fn reinstall(directorys: &Directorys) -> Result<()> {
-    uninstall(directorys, true)?;
+    uninstall(directorys)?;
 
     install(directorys)
 }

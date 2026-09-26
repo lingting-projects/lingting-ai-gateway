@@ -49,7 +49,8 @@ fn run() -> Result<()> {
 
     match command {
         Some(Command::Install) => service::install(&directorys),
-        Some(Command::Uninstall { stop }) => service::uninstall(&directorys, stop),
+        Some(Command::Uninstall) => service::uninstall(&directorys),
+        Some(Command::Stop) => service::stop(&directorys),
         Some(Command::Reinstall) => service::reinstall(&directorys),
         Some(Command::Restart) => match service::restart(&directorys)? {
             service::Restart::Service => Ok(()),
