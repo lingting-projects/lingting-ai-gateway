@@ -224,6 +224,18 @@ pub struct ApiKeyCreatePO {
     pub remark: Option<String>,
 }
 
+/// API Key 同步：把其他实例已存在的 key 摘要直接写入当前库。
+///
+/// 字段为 [`ApiKeyCreatePO`] 加 `key_hash`；摘要已存在时启用原记录并刷新更新时间。
+#[auto_type(default = false)]
+pub struct ApiKeySyncPO {
+    pub name: String,
+    /// 备注；不传表示无备注。
+    pub remark: Option<String>,
+    /// 原始 key 的 sha1 摘要，由来源实例导出。
+    pub key_hash: String,
+}
+
 #[auto_type(default = false)]
 pub struct ApiKeyUpdatePO {
     pub id: i64,
@@ -237,6 +249,8 @@ pub struct ApiKeyUpdatePO {
 pub struct ApiKeyVO {
     pub id: i64,
     pub name: String,
+    /// 数据库存储的 key 摘要（sha1），用于在实例之间同步。
+    pub key_hash: String,
     pub enabled: bool,
     pub remark: String,
     pub create_time: i64,
@@ -250,6 +264,7 @@ impl From<ApiKey> for ApiKeyVO {
         Self {
             id: api_key.id,
             name: api_key.name,
+            key_hash: api_key.key_hash,
             enabled: api_key.enabled,
             remark: api_key.remark,
             create_time: api_key.create_time,

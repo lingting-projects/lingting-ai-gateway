@@ -2,7 +2,7 @@ use anyhow::Result;
 use framework_core::types::{IdPO, PaginationParams, PaginationResult};
 use framework_web::{Json, web_api_post};
 use service_admin::service::ApiKeyService;
-use types_admin::dto::{ApiKeyCreatePO, ApiKeyQO, ApiKeyUpdatePO, ApiKeyVO};
+use types_admin::dto::{ApiKeyCreatePO, ApiKeyQO, ApiKeySyncPO, ApiKeyUpdatePO, ApiKeyVO};
 
 /// API Key 分页
 #[web_api_post(path = "/___/api-key/page")]
@@ -24,6 +24,12 @@ pub async fn api_key_create(Json(params): Json<ApiKeyCreatePO>) -> Result<String
     let service = ApiKeyService::new()?;
     let (_, key) = service.create(&params).await?;
     Ok(key)
+}
+
+/// API Key 同步：把其他实例的 key 摘要写入当前库，返回记录主键；摘要已存在时启用原记录。
+#[web_api_post(path = "/___/api-key/sync")]
+pub async fn api_key_sync(Json(params): Json<ApiKeySyncPO>) -> Result<i64> {
+    ApiKeyService::new()?.sync(&params).await
 }
 
 /// API Key 更新，仅允许修改名称、启用状态与备注。

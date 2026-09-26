@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use framework_core::types::{PaginationParams, PaginationResult};
 use lib_db::{PgPool, QueryBuilderExt};
 use sqlx::{Postgres, QueryBuilder, Row};
-use types_admin::dto::{ApiKeyCreatePO, ApiKeyQO, ApiKeyUpdatePO};
+use types_admin::dto::{ApiKeyCreatePO, ApiKeyQO, ApiKeySyncPO, ApiKeyUpdatePO};
 use types_admin::entity::ApiKey;
 
 /// API Key 数据访问；库中只保存原始 key 的 sha1 值。
@@ -60,6 +60,27 @@ impl ApiKeyRepository {
             .fetch_one(&self.pool)
             .await
             .context("创建 API Key 失败")?;
+
+        Ok(row.get("id"))
+    }
+
+    /// 按摘要写入 API Key：摘要已存在时启用原记录并刷新更新时间，不新增行。
+    pub async fn sync(&self, params: &ApiKeySyncPO) -> Result<i64> {
+        let now = lib_core::current_millis()?;
+
+        let row = sqlx::query(
+            "INSERT INTO api_key (name, key_hash, enabled, deleted, remark, create_time, update_time)
+             VALUES ($1, $2, true, false, $3, $4, $4)
+             ON CONFLICT (key_hash) DO UPDATE SET enabled = true, deleted = false, update_time = $4
+             RETURNING id",
+        )
+            .bind(&params.name)
+            .bind(&params.key_hash)
+            .bind(params.remark.as_deref().unwrap_or_default())
+            .bind(now)
+            .fetch_one(&self.pool)
+            .await
+            .context("同步 API Key 失败")?;
 
         Ok(row.get("id"))
     }

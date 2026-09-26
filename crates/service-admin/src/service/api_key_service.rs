@@ -1,7 +1,7 @@
 use anyhow::Result;
 use framework_core::types::{PaginationParams, PaginationResult};
 use lib_core::{current_millis, hash, next_id};
-use types_admin::dto::{ApiKeyCreatePO, ApiKeyQO, ApiKeyUpdatePO};
+use types_admin::dto::{ApiKeyCreatePO, ApiKeyQO, ApiKeySyncPO, ApiKeyUpdatePO};
 use types_admin::entity::ApiKey;
 
 use crate::repository::ApiKeyRepository;
@@ -34,6 +34,13 @@ impl ApiKeyService {
         let key = generate_key()?;
         let id = self.repository.create(params, &hash(&key)).await?;
         Ok((id, key))
+    }
+
+    /// 同步 API Key：直接写入调用方给出的 sha1 摘要，返回记录主键。
+    ///
+    /// 摘要已存在时启用原记录并刷新更新时间，不新增行。
+    pub async fn sync(&self, params: &ApiKeySyncPO) -> Result<i64> {
+        self.repository.sync(params).await
     }
 
     /// 按主键查询 API Key。

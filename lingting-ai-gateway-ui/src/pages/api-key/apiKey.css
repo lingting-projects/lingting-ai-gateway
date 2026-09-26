@@ -4,3 +4,8 @@
 .api-key-secret-value {
     @apply block rounded-md bg-(--ant-color-fill-tertiary) px-3 py-2 font-mono break-all;
 }
+
+/* key 摘要：超宽省略，完整值可悬浮查看或用右侧图标复制 */
+.api-key-hash {
+    @apply max-w-64;
+}
