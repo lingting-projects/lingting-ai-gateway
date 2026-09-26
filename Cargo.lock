@@ -2549,6 +2549,7 @@ dependencies = [
  "framework-web",
  "lib-core",
  "lib-db",
+ "lib-system-service",
  "serde",
  "serde_json",
  "tokio",
@@ -4242,12 +4243,14 @@ dependencies = [
  "lib-core",
  "lib-db",
  "lib-web-core",
+ "libc",
  "serde",
  "serde_json",
  "sqlx",
  "tokio",
  "tracing",
  "types-admin",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

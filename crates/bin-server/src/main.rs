@@ -10,7 +10,6 @@ use anyhow::{Context, Result, anyhow};
 use framework_web_axum::axum_builder;
 use lib_core::{Directorys, init_logging};
 use lib_db::{DbConfig, DbContext};
-use lib_system_service::is_elevated;
 use service_admin::service::KvConfigService;
 use tracing::log;
 
@@ -29,7 +28,7 @@ fn main() -> ExitCode {
 fn run() -> Result<()> {
     #[cfg(not(debug_assertions))]
     {
-        let elevated = is_elevated()?;
+        let elevated = lib_system_service::is_elevated::is_elevated()?;
         #[cfg(target_os = "windows")]
         let message = "必须使用管理员权限启动!";
         #[cfg(not(target_os = "windows"))]

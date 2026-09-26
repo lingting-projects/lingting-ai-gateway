@@ -658,6 +658,19 @@ pub struct DashboardTokenGroup {
     pub output: i64,
 }
 
+// ---------------------------------------------------------------------------
+// 系统
+// ---------------------------------------------------------------------------
+
+/// 系统账户：仅包含在本机存在家目录的账户。
+#[auto_type(default = false)]
+pub struct SystemUserVO {
+    /// 账户名称。
+    pub name: String,
+    /// 账户在本机的家目录。
+    pub home: String,
+}
+
 fn mask_secret(value: &str) -> String {
     let length = value.chars().count();
     if length <= 8 {

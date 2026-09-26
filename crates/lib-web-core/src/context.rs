@@ -1,7 +1,7 @@
-//! 应用级全局上下文：从 kv_config 装载的调试模式与匿名访问开关。
+//! 应用级全局上下文：从 kv_config 装载的调试模式与匿名访问开关，附加进程级提权状态。
 
 use std::future::Future;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use anyhow::{Result, anyhow};
 use types_admin::{KvConfig, KvConfigKey};
@@ -11,6 +11,8 @@ use types_admin::{KvConfig, KvConfigKey};
 pub struct AppContext {
     debug_mode: bool,
     allow_anonymous: bool,
+    /// 进程是否以管理员 / root 身份运行。
+    is_elevated: bool,
 }
 
 impl AppContext {
@@ -27,12 +29,20 @@ impl AppContext {
     pub fn allow_anonymous(&self) -> bool {
         self.allow_anonymous
     }
+
+    /// 是否以管理员 / root 身份运行。
+    pub fn is_elevated(&self) -> bool {
+        self.is_elevated
+    }
 }
 
 impl From<Vec<KvConfig>> for AppContext {
     /// 从全局配置装载；未识别或非真值的配置一律保持关闭。
     fn from(configs: Vec<KvConfig>) -> Self {
-        let mut context = Self::default();
+        let mut context = Self {
+            is_elevated: is_elevated(),
+            ..Self::default()
+        };
         for config in configs {
             match config.config_key.parse::<KvConfigKey>() {
                 Ok(KvConfigKey::DebugMode) => {
@@ -46,6 +56,19 @@ impl From<Vec<KvConfig>> for AppContext {
         }
         context
     }
+}
+
+/// 进程是否以管理员 / root 身份运行。
+///
+/// 该状态在进程运行期间不会变化，且每次请求都会重建应用上下文，因此查询一次后就缓存。
+fn is_elevated() -> bool {
+    static ELEVATED: OnceLock<bool> = OnceLock::new();
+
+    *ELEVATED.get_or_init(|| {
+        lib_system_service::is_elevated()
+            .inspect_err(|error| tracing::warn!("读取提权状态失败：{error:#}"))
+            .unwrap_or_default()
+    })
 }
 
 tokio::task_local! {

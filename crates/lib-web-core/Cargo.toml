@@ -10,6 +10,7 @@ framework-core.workspace = true
 framework-web.workspace = true
 lib-core.workspace = true
 lib-db.workspace = true
+lib-system-service.workspace = true
 types-admin.workspace = true
 
 anyhow.workspace = true

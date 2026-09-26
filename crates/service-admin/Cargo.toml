@@ -19,3 +19,10 @@ sqlx.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 chrono.workspace = true
+
+# 系统信息服务读取本机账户，需要各平台的账户 API
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { workspace = true, features = ["Win32_NetworkManagement_NetManagement"] }
