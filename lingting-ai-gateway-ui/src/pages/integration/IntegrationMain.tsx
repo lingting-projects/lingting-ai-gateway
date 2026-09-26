@@ -1,6 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { AppHolder } from "@lri";
 import { Flex } from "antd";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { IntegrationAgentList } from "./IntegrationAgentList";
 import { IntegrationConfigPanel } from "./IntegrationConfigPanel";
@@ -15,12 +16,25 @@ export function IntegrationMain() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [config, setConfig] = useState("");
   const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
 
   const selected = useMemo(
     () => INTEGRATION_AGENTS.find((agent) => agent.key === selectedKey) ?? null,
     [selectedKey],
   );
+
+  /** 同步目标：选中 agent 后加载服务端账户，未选中时为空列表。 */
+  const { data: serverTargets, error } = useQuery({
+    enabled: selected !== null,
+    queryFn: () => selected?.loadSyncTargets() ?? Promise.resolve([]),
+    queryKey: ["integration-sync-targets", selectedKey],
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (error) {
+      AppHolder.message.error(error.message);
+    }
+  }, [error]);
 
   const handleSelect = useCallback(async (agent: IntegrationAgent) => {
     setSelectedKey(agent.key);
@@ -35,22 +49,6 @@ export function IntegrationMain() {
     }
   }, []);
 
-  const handleSync = useCallback(async () => {
-    if (!selected) {
-      return;
-    }
-
-    setSyncing(true);
-    try {
-      const backup = await selected.sync();
-      void AppHolder.message.success(backup ? `同步成功，原配置已备份至 ${backup}` : "同步成功");
-    } catch (error) {
-      void AppHolder.message.error(error instanceof Error ? error.message : "同步失败");
-    } finally {
-      setSyncing(false);
-    }
-  }, [selected]);
-
   return (
     <Flex className="integration-main" gap="middle">
       <IntegrationAgentList
@@ -62,8 +60,7 @@ export function IntegrationMain() {
         agent={selected}
         config={config}
         loading={loading}
-        onSync={handleSync}
-        syncing={syncing}
+        serverTargets={serverTargets ?? []}
       />
     </Flex>
   );

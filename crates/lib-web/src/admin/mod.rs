@@ -12,3 +12,5 @@ pub mod provider;
 pub mod provider_model;
 /// 请求日志管理
 pub mod request;
+/// 系统信息
+pub mod system;

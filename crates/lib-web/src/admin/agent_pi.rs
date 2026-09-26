@@ -8,10 +8,12 @@ use framework_proc_auto::auto_type;
 use framework_web::{Json, WebBody, WebError, WebResponse, web_api_post};
 use framework_web_axum::use_axum;
 use lib_core::APP_ID;
+use lib_web_core::use_app;
 use serde_json::{Map, Value, json};
-use service_admin::service::ProviderModelService;
+use service_admin::service::{ProviderModelService, SystemService};
 use std::fs;
 use std::path::{Path, PathBuf};
+use types_admin::SystemUserVO;
 use types_admin::entity::ProviderModel;
 
 /// pi 模型配置文件名。
@@ -33,13 +35,19 @@ pub struct PiAgentPO {
 
 impl PiAgentPO {
     /// pi 目录：默认 `~/.pi/agent`；传入目录不存在时创建，并自动识别其中的 agent 目录。
+    ///
+    /// 以管理员 / root 身份运行时 `~` 指向的是管理员的家目录，不代表目标用户，因此必须显式传入 `dir`。
     pub fn dir(&self) -> Result<String> {
-        let dir = match self
+        let dir = self
             .dir
             .as_deref()
             .map(str::trim)
-            .filter(|dir| !dir.is_empty())
-        {
+            .filter(|dir| !dir.is_empty());
+        if dir.is_none() && use_app()?.is_elevated() {
+            return Err(WebError::parameter("以管理员身份运行时必须传入 dir 参数", "dir").into());
+        }
+
+        let dir = match dir {
             Some(dir) => PathBuf::from(dir),
             None => home_directory()?.join(".pi").join("agent"),
         };
@@ -85,6 +93,19 @@ impl PiAgentPO {
             .filter(|name| !name.is_empty())
             .unwrap_or(DEFAULT_KEY_NAME)
     }
+}
+
+#[web_api_post(path = "/___/agent/pi/users")]
+pub async fn agent_pi_users() -> Result<Vec<SystemUserVO>> {
+    let mut users = SystemService::users()?;
+    users.iter_mut().for_each(|v| {
+        v.home = PathBuf::from(&v.home)
+            .join(".pi")
+            .join("agent")
+            .to_string_lossy()
+            .into_owned();
+    });
+    Ok(users)
 }
 
 /// 导出 pi 模型配置：按当前可用模型生成 models.json 内容。
