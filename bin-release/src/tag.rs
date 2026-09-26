@@ -62,12 +62,6 @@ pub fn run() -> Result<()> {
         &public_key_path,
     )?;
 
-    let written = ReleaseInfo::read(&info_path)?;
-
-    if written.render() != info.render() {
-        bail!("release metadata changed unexpectedly after writing");
-    }
-
     verify_release_files(&root)?;
 
     commit_metadata(&root)?;
@@ -168,12 +162,7 @@ fn resolve_react_ui_repository(root: &Path) -> Result<PathBuf> {
     let real_lri = fs::canonicalize(&lri)
         .with_context(|| format!("failed to resolve {}", lri.display()))?;
 
-    let src_name = real_lri
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or_default();
-
-    if src_name != "src" {
+    if real_lri.file_name().and_then(|name| name.to_str()) != Some("src") {
         bail!(
             "lri does not resolve to a react-ui src directory: {}",
             real_lri.display()
@@ -224,243 +213,49 @@ fn cargo_version(root: &Path) -> Result<String> {
     let content = fs::read_to_string(&cargo_toml)
         .with_context(|| format!("failed to read {}", cargo_toml.display()))?;
 
-    let mut section = "";
-
-    for line in content.lines() {
-        let line = line.trim();
-
-        if line.starts_with('[') && line.ends_with(']') {
-            section = line;
-            continue;
-        }
-
-        if section == "[workspace.package]" && line.starts_with("version") {
-            if let Some((_, value)) = line.split_once('=') {
-                let version = value.trim().trim_matches('"');
-
-                if !version.is_empty() {
-                    return Ok(version.to_owned());
-                }
-            }
-        }
-    }
-
-    section = "";
-
-    for line in content.lines() {
-        let line = line.trim();
-
-        if line.starts_with('[') && line.ends_with(']') {
-            section = line;
-            continue;
-        }
-
-        if section == "[package]" && line.starts_with("version") {
-            if let Some((_, value)) = line.split_once('=') {
-                let version = value.trim().trim_matches('"');
-
-                if !version.is_empty() {
-                    return Ok(version.to_owned());
-                }
-            }
-        }
-    }
-
-    bail!("failed to find package version in {}", cargo_toml.display())
-}
-
-fn generate_framework_commands(
-    root: &Path,
-    framework: &ReleaseSource,
-) -> Result<Vec<String>> {
-    let cargo_toml = root.join("Cargo.toml");
-
-    let content = fs::read_to_string(&cargo_toml)
-        .with_context(|| format!("failed to read {}", cargo_toml.display()))?;
-
-    let framework_dir = root
-        .parent()
-        .context("gateway repository has no parent directory")?
-        .join("lingting-rust-framework");
-
-    let framework_dir = fs::canonicalize(&framework_dir)
-        .with_context(|| {
-            format!(
-                "failed to resolve framework repository: {}",
-                framework_dir.display()
-            )
-        })?;
-
-    let lines = content.lines().collect::<Vec<_>>();
-    let mut commands = Vec::new();
-    let mut packages = Vec::new();
-    let mut index = 0;
-
-    while index < lines.len() {
-        let line = lines[index];
-
-        if !line.contains("path") || !line.contains("framework") {
-            index += 1;
-            continue;
-        }
-
-        let Some((dependency_name, start)) =
-            dependency_assignment(&lines, index)
-        else {
-            index += 1;
-            continue;
-        };
-
-        let mut end = start;
-        let mut block = String::new();
-
-        while end < lines.len() {
-            if !block.is_empty() {
-                block.push('\n');
-            }
-
-            block.push_str(lines[end]);
-
-            if dependency_block_is_complete(&block) {
-                break;
-            }
-
-            end += 1;
-        }
-
-        if end >= lines.len() {
-            bail!(
-                "unterminated dependency declaration for {}",
-                dependency_name
-            );
-        }
-
-        let Some(path_value) = extract_path_value(&block) else {
-            index = end + 1;
-            continue;
-        };
-
-        let resolved_path = if Path::new(&path_value).is_absolute() {
-            PathBuf::from(&path_value)
-        } else {
-            cargo_toml
-                .parent()
-                .unwrap_or(root)
-                .join(&path_value)
-        };
-
-        let resolved_path = fs::canonicalize(&resolved_path)
-            .with_context(|| {
-                format!(
-                    "failed to resolve dependency path for {}: {}",
-                    dependency_name,
-                    resolved_path.display()
-                )
-            })?;
-
-        if !resolved_path.starts_with(&framework_dir) {
-            index = end + 1;
-            continue;
-        }
-
-        commands.push(generate_toml_replace_command(
-            &path_value,
-            framework,
-        ));
-
-        packages.push(dependency_name);
-
-        index = end + 1;
-    }
-
-    packages.sort();
-    packages.dedup();
-
-    if packages.is_empty() {
-        bail!("no framework path dependencies were found in Cargo.toml");
-    }
-
-    commands.push(generate_cargo_update_command(&packages));
-
-    Ok(commands)
-}
-
-fn dependency_assignment(
-    lines: &[&str],
-    index: usize,
-) -> Option<(String, usize)> {
-    let line = lines[index].trim();
-
-    let (name, value) = line.split_once('=')?;
-
-    let name = name.trim();
-
-    if name.is_empty()
-        || name.contains(' ')
-        || name.contains('{')
-        || name.contains('[')
+    if let Some(version) =
+        find_section_version(&content, "[workspace.package]")
     {
-        return None;
+        return Ok(version);
     }
 
-    if !value.contains('{') || !value.contains("path") {
-        return None;
+    if let Some(version) = find_section_version(&content, "[package]") {
+        return Ok(version);
     }
 
-    Some((name.to_owned(), index))
+    bail!(
+        "failed to find version in {}",
+        cargo_toml.display()
+    )
 }
 
-fn dependency_block_is_complete(block: &str) -> bool {
-    let mut depth = 0usize;
-    let mut in_string = false;
-    let mut escaped = false;
+fn find_section_version(content: &str, section_name: &str) -> Option<String> {
+    let mut in_section = false;
 
-    for byte in block.bytes() {
-        if in_string {
-            if escaped {
-                escaped = false;
-                continue;
-            }
+    for line in content.lines() {
+        let line = line.trim();
 
-            match byte {
-                b'\\' => escaped = true,
-                b'"' => in_string = false,
-                _ => {}
-            }
-
+        if line.starts_with('[') && line.ends_with(']') {
+            in_section = line == section_name;
             continue;
         }
 
-        match byte {
-            b'"' => in_string = true,
-            b'{' => depth += 1,
-            b'}' => {
-                if depth > 0 {
-                    depth -= 1;
-                }
-            }
-            _ => {}
+        if !in_section || line.starts_with('#') {
+            continue;
         }
-    }
-
-    depth == 0
-}
-
-fn extract_path_value(block: &str) -> Option<String> {
-    for line in block.lines() {
-        let line = line.trim();
 
         let Some((key, value)) = line.split_once('=') else {
             continue;
         };
 
-        if key.trim() != "path" {
+        if key.trim() != "version" {
             continue;
         }
 
         let value = value
-            .trim()
-            .trim_end_matches(',')
+            .split('#')
+            .next()
+            .unwrap_or(value)
             .trim()
             .trim_matches('"');
 
@@ -472,28 +267,230 @@ fn extract_path_value(block: &str) -> Option<String> {
     None
 }
 
+fn generate_framework_commands(
+    root: &Path,
+    framework: &ReleaseSource,
+) -> Result<Vec<String>> {
+    let cargo_toml = root.join("Cargo.toml");
+
+    let content = fs::read_to_string(&cargo_toml)
+        .with_context(|| format!("failed to read {}", cargo_toml.display()))?;
+
+    let lines = content.lines().collect::<Vec<_>>();
+
+    let mut in_workspace_dependencies = false;
+    let mut framework_lines = Vec::new();
+    let mut framework_packages = Vec::new();
+
+    for line in lines {
+        let trimmed = line.trim();
+
+        if trimmed.starts_with('[') && trimmed.ends_with(']') {
+            in_workspace_dependencies =
+                trimmed == "[workspace.dependencies]";
+            continue;
+        }
+
+        if !in_workspace_dependencies {
+            continue;
+        }
+
+        if !trimmed.starts_with("framework-") {
+            continue;
+        }
+
+        let Some((name, _)) = trimmed.split_once('=') else {
+            continue;
+        };
+
+        let name = name.trim();
+
+        if !name.starts_with("framework-") {
+            continue;
+        }
+
+        framework_lines.push(line.to_owned());
+        framework_packages.push(name.to_owned());
+    }
+
+    if framework_lines.is_empty() {
+        bail!(
+            "no framework-* dependencies found in [workspace.dependencies] of {}",
+            cargo_toml.display()
+        );
+    }
+
+    let mut commands = Vec::with_capacity(framework_lines.len() + 1);
+
+    for line in framework_lines {
+        commands.push(generate_toml_replace_command(
+            &line,
+            framework,
+        ));
+    }
+
+    framework_packages.sort();
+    framework_packages.dedup();
+
+    commands.push(generate_cargo_update_command(
+        &framework_packages,
+    ));
+
+    Ok(commands)
+}
+
 fn generate_toml_replace_command(
-    path: &str,
+    original_line: &str,
     framework: &ReleaseSource,
 ) -> String {
+    let replacement = build_git_dependency_line(
+        original_line,
+        framework,
+    );
+
     format!(
-        "python3 - \"$ROOT_DIR/Cargo.toml\" \"{}\" \"{}\" \"{}\" \"{}\" <<'PY'\n\
+        "python3 - \"$ROOT_DIR/Cargo.toml\" \"{}\" \"{}\" <<'PY'\n\
 import pathlib\n\
 import sys\n\
 \n\
 cargo_toml = pathlib.Path(sys.argv[1])\n\
-old_path = 'path = \"' + sys.argv[2] + '\"'\n\
-new_dependency = 'git = \"' + sys.argv[3] + '\", branch = \"' + sys.argv[4] + '\", rev = \"' + sys.argv[5] + '\",'\n\
+old_line = sys.argv[2]\n\
+new_line = sys.argv[3]\n\
 content = cargo_toml.read_text()\n\
-if old_path not in content:\n\
-    raise SystemExit('framework dependency path not found: ' + old_path)\n\
-cargo_toml.write_text(content.replace(old_path, new_dependency))\n\
+lines = content.splitlines(keepends=True)\n\
+replaced = False\n\
+for index, line in enumerate(lines):\n\
+    if line.rstrip(\"\\r\\n\") == old_line:\n\
+        newline = \"\\r\\n\" if line.endswith(\"\\r\\n\") else \"\\n\" if line.endswith(\"\\n\") else \"\"\n\
+        lines[index] = new_line + newline\n\
+        replaced = True\n\
+        break\n\
+if not replaced:\n\
+    raise SystemExit(\"framework dependency line not found: \" + old_line)\n\
+cargo_toml.write_text(\"\".join(lines))\n\
 PY",
-        shell_single_quote(path),
-        shell_single_quote(framework.repository.as_str()),
-        shell_single_quote(framework.branch.as_str()),
-        shell_single_quote(framework.commit.as_str()),
+        shell_single_quote(original_line),
+        shell_single_quote(&replacement),
     )
+}
+
+fn build_git_dependency_line(
+    original_line: &str,
+    framework: &ReleaseSource,
+) -> String {
+    let leading_len = original_line
+        .len()
+        - original_line.trim_start_matches(char::is_whitespace).len();
+
+    let leading = &original_line[..leading_len];
+    let trimmed = original_line.trim();
+
+    let Some((name, value)) = trimmed.split_once('=') else {
+        return original_line.to_owned();
+    };
+
+    let name = name.trim();
+    let value = value.trim();
+
+    let features = extract_inline_attribute(value, "features");
+    let default_features =
+        extract_inline_attribute(value, "default-features");
+
+    let mut dependency = format!(
+        "{} = {{ git = \"{}\", branch = \"{}\", rev = \"{}\"",
+        name,
+        framework.repository,
+        framework.branch,
+        framework.commit,
+    );
+
+    if let Some(value) = default_features {
+        dependency.push_str(", default-features = ");
+        dependency.push_str(&value);
+    }
+
+    if let Some(value) = features {
+        dependency.push_str(", features = ");
+        dependency.push_str(&value);
+    }
+
+    dependency.push_str(" }");
+
+    format!("{leading}{dependency}")
+}
+
+fn extract_inline_attribute(value: &str, attribute: &str) -> Option<String> {
+    let marker = format!("{attribute}");
+
+    let mut search_start = 0usize;
+
+    while let Some(relative_start) =
+        value[search_start..].find(&marker)
+    {
+        let start = search_start + relative_start;
+        let after_name = &value[start + marker.len()..];
+
+        if !after_name
+            .chars()
+            .next()
+            .is_some_and(|character| {
+                character.is_whitespace() || character == '='
+            })
+        {
+            search_start = start + marker.len();
+            continue;
+        }
+
+        let after_equals = after_name.trim_start();
+
+        let Some(after_equals) = after_equals.strip_prefix('=') else {
+            search_start = start + marker.len();
+            continue;
+        };
+
+        let after_equals = after_equals.trim_start();
+
+        let mut depth = 0usize;
+        let mut in_string = false;
+        let mut escaped = false;
+
+        for (offset, character) in after_equals.char_indices() {
+            if in_string {
+                if escaped {
+                    escaped = false;
+                    continue;
+                }
+
+                match character {
+                    '\\' => escaped = true,
+                    '"' => in_string = false,
+                    _ => {}
+                }
+
+                continue;
+            }
+
+            match character {
+                '"' => in_string = true,
+                '[' | '{' | '(' => depth += 1,
+                ']' | '}' | ')' => {
+                    if depth > 0 {
+                        depth -= 1;
+                    }
+                }
+                ',' if depth == 0 => {
+                    return Some(
+                        after_equals[..offset].trim().to_owned()
+                    );
+                }
+                _ => {}
+            }
+        }
+
+        return Some(after_equals.trim().trim_end_matches('}').trim().to_owned());
+    }
+
+    None
 }
 
 fn generate_cargo_update_command(packages: &[String]) -> String {
@@ -536,26 +533,17 @@ fn update_release_script(
             )
         })?;
 
-    let start_marker =
-        "# === start\n# 这里用于 release 的 Rust 代码进行替换\n# === end";
-
-    let start = original
-        .find(start_marker)
-        .context("release.sh is missing rsync_framework replacement markers")?;
-
-    let function_start = original[start..]
+    let function_start = original
         .find("rsync_framework()")
-        .map(|offset| start + offset)
         .context("release.sh is missing rsync_framework function")?;
 
-    let function_body_start = original[function_start..]
+    let body_start = original[function_start..]
         .find('{')
         .map(|offset| function_start + offset + 1)
         .context("release.sh has an invalid rsync_framework function")?;
 
-    let function_body_end =
-        find_function_end(&original, function_body_start)
-            .context("failed to locate rsync_framework function end")?;
+    let body_end = find_function_end(&original, body_start)
+        .context("failed to locate rsync_framework function end")?;
 
     let mut function = String::from("rsync_framework() {\n");
 
@@ -574,7 +562,7 @@ fn update_release_script(
 
     updated.push_str(&original[..function_start]);
     updated.push_str(&function);
-    updated.push_str(&original[function_body_end..]);
+    updated.push_str(&original[body_end..]);
 
     fs::write(&release_script, updated)
         .with_context(|| {
@@ -591,9 +579,27 @@ fn find_function_end(content: &str, body_start: usize) -> Option<usize> {
     let bytes = content.as_bytes();
     let mut depth = 1usize;
     let mut index = body_start;
+    let mut in_string = false;
+    let mut escaped = false;
 
     while index < bytes.len() {
-        match bytes[index] {
+        let byte = bytes[index];
+
+        if in_string {
+            if escaped {
+                escaped = false;
+            } else if byte == b'\\' {
+                escaped = true;
+            } else if byte == b'"' {
+                in_string = false;
+            }
+
+            index += 1;
+            continue;
+        }
+
+        match byte {
+            b'"' => in_string = true,
             b'{' => depth += 1,
             b'}' => {
                 depth -= 1;
@@ -662,7 +668,6 @@ fn signing_key() -> Result<PathBuf> {
     }
 
     let home = dirs_home()?;
-
     let path = home
         .join(".ssh")
         .join("lingting_gateway_ed25519");
@@ -719,10 +724,8 @@ fn commit_metadata(root: &Path) -> Result<()> {
 
     git::run(root, &["diff", "--cached", "--check"])?;
 
-    let staged = git::output(
-        root,
-        &["diff", "--cached", "--name-only"],
-    )?;
+    let staged =
+        git::output(root, &["diff", "--cached", "--name-only"])?;
 
     if staged.trim().is_empty() {
         bail!("release produced no Git changes");
