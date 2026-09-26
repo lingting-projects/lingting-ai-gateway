@@ -11,6 +11,15 @@ if ! command -v cargo >/dev/null 2>&1; then
     exit 1
 fi
 
+# === start
+# 这里用于 release 的 Rust 代码进行替换
+# === end
+rsync_framework() {
+    return 0
+}
+
+rsync_framework
+
 cargo build \
     --locked \
     --release \

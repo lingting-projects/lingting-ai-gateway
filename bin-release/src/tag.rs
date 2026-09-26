@@ -30,17 +30,8 @@ pub fn run() -> Result<()> {
 
     let react_ui_dir = resolve_react_ui_repository(&root)?;
 
-    verify_dependency_repository(
-        &framework_dir,
-        FRAMEWORK_REPOSITORY,
-        "framework",
-    )?;
-
-    verify_dependency_repository(
-        &react_ui_dir,
-        REACT_UI_REPOSITORY,
-        "react-ui",
-    )?;
+    let framework = verify_framework_repository(&framework_dir)?;
+    let react_ui = verify_react_ui_repository(&react_ui_dir)?;
 
     verify_cargo_metadata(&root)?;
 
@@ -49,17 +40,10 @@ pub fn run() -> Result<()> {
 
     verify_tag_does_not_exist(&root, &tag)?;
 
-    let framework = release_source(
-        &framework_dir,
-        FRAMEWORK_REPOSITORY,
-        "framework",
-    )?;
+    let framework_commands =
+        generate_framework_commands(&root, &framework)?;
 
-    let react_ui = release_source(
-        &react_ui_dir,
-        REACT_UI_REPOSITORY,
-        "react-ui",
-    )?;
+    update_release_script(&root, &framework_commands)?;
 
     let info = ReleaseInfo::new(tag.clone(), framework, react_ui);
 
@@ -72,7 +56,11 @@ pub fn run() -> Result<()> {
     let sign_key = signing_key()?;
 
     signing::sign(&info_path, &signature_path, &sign_key)?;
-    signing::verify(&info_path, &signature_path, &public_key_path)?;
+    signing::verify(
+        &info_path,
+        &signature_path,
+        &public_key_path,
+    )?;
 
     let written = ReleaseInfo::read(&info_path)?;
 
@@ -104,55 +92,70 @@ fn verify_gateway(root: &Path) -> Result<()> {
     Ok(())
 }
 
-fn verify_dependency_repository(
+fn verify_framework_repository(
     repository: &Path,
-    expected_origin: &str,
-    name: &str,
-) -> Result<()> {
+) -> Result<ReleaseSource> {
     if !repository.is_dir() {
         bail!(
-            "{name} repository does not exist: {}",
+            "framework repository does not exist: {}",
             repository.display()
         );
     }
 
-    git::ensure_origin(repository, expected_origin)?;
+    git::ensure_origin(repository, FRAMEWORK_REPOSITORY)?;
     git::require_clean_tree(repository)?;
 
     let branch = git::current_branch(repository)?;
 
     if branch.is_empty() {
-        bail!("{name} repository is in detached HEAD state");
-    }
-
-    fetch_branch(repository, &branch)?;
-    git::ensure_local_matches_remote(repository, &branch)?;
-
-    Ok(())
-}
-
-fn release_source(
-    repository: &Path,
-    expected_origin: &str,
-    name: &str,
-) -> Result<ReleaseSource> {
-    let branch = git::current_branch(repository)?;
-
-    if branch.is_empty() {
-        bail!("{name} repository is in detached HEAD state");
+        bail!("framework repository is in detached HEAD state");
     }
 
     let commit = git::head_commit(repository)?;
 
-    if commit.len() != 40 || !commit.bytes().all(|b| b.is_ascii_hexdigit()) {
-        bail!("invalid {name} commit: {commit}");
-    }
+    validate_commit(&commit, "framework commit")?;
 
     Ok(ReleaseSource {
-        repository: expected_origin.to_owned(),
+        repository: FRAMEWORK_REPOSITORY.to_owned(),
         branch,
         commit,
     })
+}
+
+fn verify_react_ui_repository(repository: &Path) -> Result<ReleaseSource> {
+    if !repository.is_dir() {
+        bail!(
+            "react-ui repository does not exist: {}",
+            repository.display()
+        );
+    }
+
+    git::ensure_origin(repository, REACT_UI_REPOSITORY)?;
+    git::require_clean_tree(repository)?;
+
+    let branch = git::current_branch(repository)?;
+
+    if branch.is_empty() {
+        bail!("react-ui repository is in detached HEAD state");
+    }
+
+    let commit = git::head_commit(repository)?;
+
+    validate_commit(&commit, "react-ui commit")?;
+
+    Ok(ReleaseSource {
+        repository: REACT_UI_REPOSITORY.to_owned(),
+        branch,
+        commit,
+    })
+}
+
+fn validate_commit(commit: &str, name: &str) -> Result<()> {
+    if commit.len() != 40 || !commit.bytes().all(|b| b.is_ascii_hexdigit()) {
+        bail!("invalid {name}: {commit}");
+    }
+
+    Ok(())
 }
 
 fn resolve_react_ui_repository(root: &Path) -> Result<PathBuf> {
@@ -192,17 +195,14 @@ fn resolve_react_ui_repository(root: &Path) -> Result<PathBuf> {
     Ok(repository)
 }
 
-fn fetch_branch(repository: &Path, branch: &str) -> Result<()> {
-    git::run(
-        repository,
-        &["fetch", "--no-tags", "origin", branch],
-    )?;
-    Ok(())
-}
-
 fn verify_cargo_metadata(root: &Path) -> Result<()> {
     let output = Command::new("cargo")
-        .args(["metadata", "--locked", "--format-version", "1"])
+        .args([
+            "metadata",
+            "--locked",
+            "--format-version",
+            "1",
+        ])
         .current_dir(root)
         .output()
         .context("failed to execute cargo metadata")?;
@@ -224,17 +224,17 @@ fn cargo_version(root: &Path) -> Result<String> {
     let content = fs::read_to_string(&cargo_toml)
         .with_context(|| format!("failed to read {}", cargo_toml.display()))?;
 
-    let mut in_workspace_package = false;
+    let mut section = "";
 
     for line in content.lines() {
         let line = line.trim();
 
-        if line.starts_with('[') {
-            in_workspace_package = line == "[workspace.package]";
+        if line.starts_with('[') && line.ends_with(']') {
+            section = line;
             continue;
         }
 
-        if in_workspace_package && line.starts_with("version") {
+        if section == "[workspace.package]" && line.starts_with("version") {
             if let Some((_, value)) = line.split_once('=') {
                 let version = value.trim().trim_matches('"');
 
@@ -245,17 +245,17 @@ fn cargo_version(root: &Path) -> Result<String> {
         }
     }
 
-    let mut in_package = false;
+    section = "";
 
     for line in content.lines() {
         let line = line.trim();
 
-        if line.starts_with('[') {
-            in_package = line == "[package]";
+        if line.starts_with('[') && line.ends_with(']') {
+            section = line;
             continue;
         }
 
-        if in_package && line.starts_with("version") {
+        if section == "[package]" && line.starts_with("version") {
             if let Some((_, value)) = line.split_once('=') {
                 let version = value.trim().trim_matches('"');
 
@@ -267,6 +267,314 @@ fn cargo_version(root: &Path) -> Result<String> {
     }
 
     bail!("failed to find package version in {}", cargo_toml.display())
+}
+
+fn generate_framework_commands(
+    root: &Path,
+    framework: &ReleaseSource,
+) -> Result<Vec<String>> {
+    let cargo_toml = root.join("Cargo.toml");
+
+    let content = fs::read_to_string(&cargo_toml)
+        .with_context(|| format!("failed to read {}", cargo_toml.display()))?;
+
+    let framework_dir = root
+        .parent()
+        .context("gateway repository has no parent directory")?
+        .join("lingting-rust-framework");
+
+    let framework_dir = fs::canonicalize(&framework_dir)
+        .with_context(|| {
+            format!(
+                "failed to resolve framework repository: {}",
+                framework_dir.display()
+            )
+        })?;
+
+    let lines = content.lines().collect::<Vec<_>>();
+    let mut commands = Vec::new();
+    let mut packages = Vec::new();
+    let mut index = 0;
+
+    while index < lines.len() {
+        let line = lines[index];
+
+        if !line.contains("path") || !line.contains("framework") {
+            index += 1;
+            continue;
+        }
+
+        let Some((dependency_name, start)) =
+            dependency_assignment(&lines, index)
+        else {
+            index += 1;
+            continue;
+        };
+
+        let mut end = start;
+        let mut block = String::new();
+
+        while end < lines.len() {
+            if !block.is_empty() {
+                block.push('\n');
+            }
+
+            block.push_str(lines[end]);
+
+            if lines[end].contains('}') {
+                break;
+            }
+
+            end += 1;
+        }
+
+        if end >= lines.len() {
+            bail!(
+                "unterminated dependency declaration for {}",
+                dependency_name
+            );
+        }
+
+        let path_value = extract_path_value(&block)?;
+
+        let resolved_path = if Path::new(&path_value).is_absolute() {
+            PathBuf::from(&path_value)
+        } else {
+            root.join(&path_value)
+        };
+
+        let resolved_path = fs::canonicalize(&resolved_path)
+            .with_context(|| {
+                format!(
+                    "failed to resolve dependency path for {}: {}",
+                    dependency_name,
+                    resolved_path.display()
+                )
+            })?;
+
+        if !resolved_path.starts_with(&framework_dir) {
+            index = end + 1;
+            continue;
+        }
+
+        let toml_command = generate_toml_replace_command(
+            &path_value,
+            framework,
+        );
+
+        commands.push(toml_command);
+        packages.push(dependency_name);
+
+        index = end + 1;
+    }
+
+    packages.sort();
+    packages.dedup();
+
+    if packages.is_empty() {
+        bail!("no framework path dependencies were found in Cargo.toml");
+    }
+
+    commands.push(generate_cargo_update_command(&packages));
+
+    Ok(commands)
+}
+
+fn dependency_assignment(
+    lines: &[&str],
+    index: usize,
+) -> Option<(String, usize)> {
+    let line = lines[index].trim();
+
+    let (name, value) = line.split_once('=')?;
+
+    let name = name.trim();
+
+    if name.is_empty()
+        || name.contains(' ')
+        || name.contains('{')
+        || name.contains('[')
+    {
+        return None;
+    }
+
+    if !value.contains('{') {
+        return None;
+    }
+
+    Some((name.to_owned(), index))
+}
+
+fn extract_path_value(block: &str) -> Result<String> {
+    for line in block.lines() {
+        let line = line.trim();
+
+        if !line.starts_with("path") {
+            continue;
+        }
+
+        let Some((_, value)) = line.split_once('=') else {
+            continue;
+        };
+
+        let value = value
+            .trim()
+            .trim_end_matches(',')
+            .trim()
+            .trim_matches('"');
+
+        if !value.is_empty() {
+            return Ok(value.to_owned());
+        }
+    }
+
+    bail!("framework dependency declaration does not contain a path")
+}
+
+fn generate_toml_replace_command(
+    path: &str,
+    framework: &ReleaseSource,
+) -> String {
+    let escaped_path = shell_single_quote(path);
+    let replacement = format!(
+        "git = \\\"{}\\\", branch = \\\"{}\\\", rev = \\\"{}\\\",",
+        framework.repository, framework.branch, framework.commit
+    );
+    let escaped_replacement = shell_single_quote(&replacement);
+
+    format!(
+        "python3 - \"$ROOT_DIR/Cargo.toml\" <<'PY'\n\
+import pathlib\n\
+import sys\n\
+\n\
+pathlib.Path(sys.argv[1]).write_text(\n\
+    pathlib.Path(sys.argv[1]).read_text().replace(\n\
+        'path = \"{path}\"',\n\
+        {replacement},\n\
+    ),\n\
+)\n\
+PY",
+        path = escaped_path,
+        replacement = escaped_replacement,
+    )
+}
+
+fn generate_cargo_update_command(packages: &[String]) -> String {
+    let mut command = String::from("cargo update");
+
+    for package in packages {
+        command.push_str(" -p ");
+        command.push_str(&shell_word(package));
+    }
+
+    command
+}
+
+fn shell_word(value: &str) -> String {
+    if value
+        .bytes()
+        .all(|byte| {
+            byte.is_ascii_alphanumeric()
+                || matches!(byte, b'_' | b'-' | b'.' | b'/')
+        })
+    {
+        value.to_owned()
+    } else {
+        shell_single_quote(value)
+    }
+}
+
+fn shell_single_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
+}
+
+fn update_release_script(
+    root: &Path,
+    framework_commands: &[String],
+) -> Result<()> {
+    let release_script = metadata::release_dir(root).join("release.sh");
+
+    let original = fs::read_to_string(&release_script)
+        .with_context(|| {
+            format!(
+                "failed to read {}",
+                release_script.display()
+            )
+        })?;
+
+    let start_marker =
+        "# === start\n# 这里用于 release 的 Rust 代码进行替换\n# === end";
+
+    let start = original
+        .find(start_marker)
+        .context("release.sh is missing rsync_framework replacement markers")?;
+
+    let function_start = original[start..]
+        .find("rsync_framework()")
+        .map(|offset| start + offset)
+        .context("release.sh is missing rsync_framework function")?;
+
+    let function_body_start = original[function_start..]
+        .find('{')
+        .map(|offset| function_start + offset + 1)
+        .context("release.sh has an invalid rsync_framework function")?;
+
+    let function_body_end = find_function_end(&original, function_body_start)
+        .context("failed to locate rsync_framework function end")?;
+
+    let mut function = String::from("rsync_framework() {\n");
+
+    for command in framework_commands {
+        for line in command.lines() {
+            function.push_str("    ");
+            function.push_str(line);
+            function.push('\n');
+        }
+    }
+
+    function.push('}');
+
+    let mut updated = String::with_capacity(
+        original.len() + function.len(),
+    );
+
+    updated.push_str(&original[..function_start]);
+    updated.push_str(&function);
+    updated.push_str(&original[function_body_end..]);
+
+    fs::write(&release_script, updated)
+        .with_context(|| {
+            format!(
+                "failed to write {}",
+                release_script.display()
+            )
+        })?;
+
+    Ok(())
+}
+
+fn find_function_end(content: &str, body_start: usize) -> Option<usize> {
+    let bytes = content.as_bytes();
+    let mut depth = 1usize;
+    let mut index = body_start;
+
+    while index < bytes.len() {
+        match bytes[index] {
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+
+                if depth == 0 {
+                    return Some(index + 1);
+                }
+            }
+            _ => {}
+        }
+
+        index += 1;
+    }
+
+    None
 }
 
 fn verify_tag_does_not_exist(root: &Path, tag: &str) -> Result<()> {
@@ -320,12 +628,16 @@ fn signing_key() -> Result<PathBuf> {
     }
 
     let home = dirs_home()?;
+
     let path = home
         .join(".ssh")
         .join("lingting_gateway_ed25519");
 
     if !path.is_file() {
-        bail!("release signing key does not exist: {}", path.display());
+        bail!(
+            "release signing key does not exist: {}",
+            path.display()
+        );
     }
 
     Ok(path)
@@ -350,7 +662,10 @@ fn verify_release_files(root: &Path) -> Result<()> {
         metadata::public_key_path(root),
     ] {
         if !path.is_file() {
-            bail!("required release file does not exist: {}", path.display());
+            bail!(
+                "required release file does not exist: {}",
+                path.display()
+            );
         }
     }
 
@@ -360,13 +675,23 @@ fn verify_release_files(root: &Path) -> Result<()> {
 fn commit_metadata(root: &Path) -> Result<()> {
     git::run(
         root,
-        &["add", ".release/info", ".release/info.sig"],
+        &[
+            "add",
+            ".release/release.sh",
+            ".release/info",
+            ".release/info.sig",
+        ],
     )?;
 
-    let staged = git::output(root, &["diff", "--cached", "--name-only"])?;
+    git::run(root, &["diff", "--cached", "--check"])?;
+
+    let staged = git::output(
+        root,
+        &["diff", "--cached", "--name-only"],
+    )?;
 
     if staged.trim().is_empty() {
-        bail!("release metadata produced no Git changes");
+        bail!("release produced no Git changes");
     }
 
     git::run(
@@ -384,7 +709,13 @@ fn commit_metadata(root: &Path) -> Result<()> {
 fn create_tag(root: &Path, tag: &str) -> Result<()> {
     git::run(
         root,
-        &["tag", "-a", tag, "-m", &format!("Release {tag}")],
+        &[
+            "tag",
+            "-a",
+            tag,
+            "-m",
+            &format!("Release {tag}"),
+        ],
     )?;
 
     Ok(())
