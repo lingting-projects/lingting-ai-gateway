@@ -4,42 +4,18 @@
 
 桌面 UI 使用 React、TypeScript、Vite、Ant Design、Ant Design Pro Components 和 Tailwind CSS。
 
-## 技术职责
+## 开发说明
 
-- `Ant Design` / `Ant Design Pro Components`：业务组件、表单、表格、文本展示、反馈和主题
-- `Tailwind CSS`：窗口结构、布局、间距和局部样式
+1. `lri` 文件夹挂载：`lri` 是组件库源码目录的挂载（默认 `D:\code\lingting\lingting-react-ui\src`），
+   由本目录下的 `mout-ui.ps1` 创建；`@lri` 别名在 `vite.config.ts` 与 `tsconfig.json` 中声明，挂载缺失时无法启动。
+2. 版本要求：node 由 Volta 固定为 `22.22.3`，pnpm 使用 v11（当前 11.24.0）。
+3. 依赖导出的 ts sdk：`@lingting/ai-gateway-sdk` 由 `pnpm-workspace.yaml` 的 `packages: ['../packages/*']`
+   从 `packages/sdk` 引入，需先导出 ts sdk（见根目录 README 的「本地编译说明」），未导出时启动与构建都会失败。
 
-## 目录说明
-
-| 目录                   | 说明                                                               |
-|:-----------------------|:-------------------------------------------------------------------|
-| `public`               | 使用路径引用的静态资源                                             |
-| `src/assets`           | 内嵌静态资源                                                       |
-| `src/components`       | 无业务逻辑的布局和公共组件                                         |
-| `src/components/Theme` | Ant Design 全局主题与明暗模式                                      |
-| `src/pages`            | 业务页面                                                           |
-| `src/pages/components` | 包含业务逻辑的页面复合组件                                         |
-| `src/api`              | `BizApi` 业务命令、`NativeApi` 原生窗口能力、远程请求、IPC 或 mock |
-
-## 当前约束
-
-- 交互控件优先使用 Ant Design / Pro Components，不直接使用原生 `button`、`input`、`select`、`textarea` 和 `dialog`
-- 数据表格必须使用 `ExtTable`
-- 业务表单优先使用 `ProForm`
-- 弹窗表单优先使用 `ModalForm`
-- 图标统一使用 `@ant-design/icons`
-- 无业务逻辑的公共组件必须放在 `src/components/<独立子目录>`
-- 页面业务组件必须放在 `src/pages/components/<独立子目录>`
-- 每个 `.tsx` 文件只允许包含一个主组件
-- 后端契约对象不在函数参数中解构字段
-
-## 构建
-
-当前 `package.json` 使用 Volta 固定 `node@22.22.3`。
+## 本地启动说明
 
 ```bash
-pnpm install
-pnpm build
+pnpm dev
 ```
 
-Debug 开发模式对应 `pnpm dev`。
+开发服务器监听 `127.0.0.1:26381`，并把 `^/api/` 代理到后端 `http://localhost:26384`（见 `vite.config.ts`）。
