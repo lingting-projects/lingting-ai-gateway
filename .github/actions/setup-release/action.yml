@@ -1,5 +1,5 @@
 name: Setup release environment
-description: Install Rust, Node.js and pnpm, and restore the Rust build cache.
+description: Install Rust, Node.js and pnpm, and restore the Rust and pnpm caches.
 
 inputs:
   rust-version:
@@ -39,8 +39,25 @@ runs:
       uses: actions/setup-node@v7
       with:
         node-version: ${{ inputs.node-version }}
-        cache: pnpm
-        cache-dependency-path: lingting-ai-gateway-ui/pnpm-lock.yaml
+
+    - name: Resolve pnpm store
+      id: pnpm-store
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        STORE_PATH="$(pnpm store path)"
+        mkdir -p "$STORE_PATH"
+
+        echo "path=$STORE_PATH" >> "$GITHUB_OUTPUT"
+
+    - name: Cache pnpm
+      uses: actions/cache@v5
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: ${{ runner.os }}-pnpm-${{ inputs.pnpm-version }}-${{ hashFiles('lingting-ai-gateway-ui/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-${{ inputs.pnpm-version }}-
 
     - name: Cache Rust
       uses: actions/cache@v5
