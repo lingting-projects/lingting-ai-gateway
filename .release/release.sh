@@ -15,8 +15,15 @@ fi
 # 这里用于 release 的 Rust 代码进行替换
 # === end
 rsync_framework() {
-    sed -i '31c\framework-core = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "FRAMEWORK_COMMIT" }' "$ROOT_DIR/Cargo.toml"
-    cargo update -p framework-core
+    sed -i '25c\framework-core = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2" }' "$ROOT_DIR/Cargo.toml"
+    sed -i '26c\framework-datetime = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2" }' "$ROOT_DIR/Cargo.toml"
+    sed -i '27c\framework-proc-auto = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2" }' "$ROOT_DIR/Cargo.toml"
+    sed -i '28c\framework-proc-core = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2" }' "$ROOT_DIR/Cargo.toml"
+    sed -i '29c\framework-proc-ts = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2" }' "$ROOT_DIR/Cargo.toml"
+    sed -i '30c\framework-web = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2", features = ["collect"] }' "$ROOT_DIR/Cargo.toml"
+    sed -i '31c\framework-web-axum = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2", features = ["collect"] }' "$ROOT_DIR/Cargo.toml"
+    sed -i '32c\framework-region = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2" }' "$ROOT_DIR/Cargo.toml"
+    cargo update -p framework-core -p framework-datetime -p framework-proc-auto -p framework-proc-core -p framework-proc-ts -p framework-region -p framework-web -p framework-web-axum
 }
 
 if [[ "${LINGTING_GATEWAY_CI:-}" == "1" ]]; then
