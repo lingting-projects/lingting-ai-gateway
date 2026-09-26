@@ -2509,7 +2509,9 @@ name = "lib-system-service"
 version = "2026.9.159"
 dependencies = [
  "anyhow",
+ "libc",
  "sysinfo",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

@@ -5,14 +5,14 @@ mod ui;
 use std::process::ExitCode;
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
+use crate::arguments::{Arguments, Command};
+use anyhow::{Context, Result, anyhow};
 use framework_web_axum::axum_builder;
 use lib_core::{Directorys, init_logging};
 use lib_db::{DbConfig, DbContext};
+use lib_system_service::is_elevated;
 use service_admin::service::KvConfigService;
 use tracing::log;
-
-use crate::arguments::{Arguments, Command};
 
 fn main() -> ExitCode {
     match run() {
@@ -27,6 +27,19 @@ fn main() -> ExitCode {
 
 /// 入口：有子命令时执行子命令，没有子命令时按常规方式启动服务。
 fn run() -> Result<()> {
+    #[cfg(not(debug_assertions))]
+    {
+        let elevated = is_elevated()?;
+        #[cfg(target_os = "windows")]
+        let message = "必须使用管理员权限启动!";
+        #[cfg(not(target_os = "windows"))]
+        let message = "必须使用ROOT权限启动!";
+
+        if !elevated {
+            return Err(anyhow!(message));
+        }
+    }
+
     let Arguments {
         command,
         pglite,

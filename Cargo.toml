@@ -79,7 +79,7 @@ arc-swap = { version = "1.8" }
 dashmap = { version = "6.1" }
 cef = { version = "149.3.0" }
 tao = { version = "0.35" }
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_Security", "Win32_System_Threading"] }
 sqlx = { version = "0.8", default-features = false, features = ["json", "macros", "migrate", "postgres", "runtime-tokio-rustls"] }
 axum = { version = "0.8", features = ["macros"] }
 proc-macro2 = { version = "1.0" }
@@ -104,3 +104,4 @@ pglite-oxide = "=0.5.1"
 # pglite-oxide 依赖的 wasmer-wasix 与 virtual-net 0.702.1 不兼容，必须锁定版本
 virtual-net = "=0.702.0-alpha.3"
 clap = { version = "4", features = ["derive"] }
+libc = { version = "0.2.189" }

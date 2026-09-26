@@ -26,6 +26,8 @@ mod macos;
 
 #[cfg(target_os = "windows")]
 mod windows;
+mod is_elevated;
 
 pub use config::ServiceConfig;
 pub use manager::{ServiceManager, ServiceStatus};
+pub use is_elevated::is_elevated;
