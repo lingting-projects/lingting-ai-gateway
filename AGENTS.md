@@ -11,3 +11,10 @@
   `WHERE provider_id <> {DEFAULT_PROVIDER_ID}` 漏写 `format!`，导致同步时报 `syntax error at or near "{"`。
 - SQL 标识符（表名、列名）无法绑定，允许拼接，但只能是代码内的常量（如各 repository 的 `COLUMNS`），不得来自外部输入。
 - 数组参数同理：调用 SQL 前必须判空熔断，不得把空数组交给 `= ANY($n)`、`<> ALL($n)` 之类的表达式。
+
+### bin-release
+
+- 该crate 为我用来实现发布的代码
+
+*禁止读取和修改*: 禁止读取和修改该crate下代码. 即便是搜索命令找到了位于该crate下的代码或文件, 也要忽略
+*被该crate阻止进行操作*: 在进行操作时由于该crate失败, 输出操作指令和错误信息, 停止当前工作, 让我来修复后在继续

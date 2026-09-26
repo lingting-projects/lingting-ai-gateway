@@ -70,12 +70,19 @@ pub fn run() -> Result<()> {
     Ok(())
 }
 
+fn is_ci() -> Result<bool> {
+    let x = option_env!("LINGTING_GATEWAY_CI");
+    Ok(x.is_some())
+}
+
 fn verify_gateway_repository(root: &Path) -> Result<()> {
     println!("[verify] checking gateway origin");
     git::ensure_origin(root, GATEWAY_REPOSITORY)?;
 
-    println!("[verify] checking gateway working tree");
-    git::require_clean_tree(root)?;
+    if !is_ci()? {
+        println!("[verify] checking gateway working tree");
+        git::require_clean_tree(root)?;
+    }
 
     /*
      * A GitHub Actions tag workflow checks out the tag itself. In that case
