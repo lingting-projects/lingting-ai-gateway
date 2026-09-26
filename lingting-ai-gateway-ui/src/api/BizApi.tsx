@@ -24,7 +24,7 @@ function buildQueryString(query: unknown): string {
 }
 
 function buildRequestUrl(path: string, query?: unknown): string {
-  const prefix = import.meta.env.VITE_API_PREFIX?.trim();
+  const prefix = import.meta.env.VITE_API_BASE_URL?.trim();
   const target = DocumentUtils.buildTarget(prefix, "/api");
   const url = `${target}/${path}`;
   const search = buildQueryString(query);
