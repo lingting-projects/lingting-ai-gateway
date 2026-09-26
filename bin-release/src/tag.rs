@@ -341,8 +341,8 @@ fn build_git_dependency_line(original_line: &str, framework: &ReleaseSource) -> 
     let default_features = extract_inline_attribute(value, "default-features");
 
     let mut dependency = format!(
-        "{} = {{ git = \"{}\", branch = \"{}\", rev = \"{}\"",
-        name, framework.repository, framework.branch, framework.commit,
+        "{} = {{ git = \"{}\", rev = \"{}\"",
+        name, framework.repository, framework.commit,
     );
 
     if let Some(value) = default_features {
