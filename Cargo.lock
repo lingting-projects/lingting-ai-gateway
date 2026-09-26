@@ -278,7 +278,7 @@ checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 
 [[package]]
 name = "bin-mock-ai"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "axum",
@@ -294,7 +294,7 @@ dependencies = [
 
 [[package]]
 name = "bin-release"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "chrono",
@@ -303,7 +303,7 @@ dependencies = [
 
 [[package]]
 name = "bin-server"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2449,7 +2449,7 @@ dependencies = [
 
 [[package]]
 name = "lib-core"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "framework-core",
@@ -2461,7 +2461,7 @@ dependencies = [
 
 [[package]]
 name = "lib-db"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "framework-core",
@@ -2475,7 +2475,7 @@ dependencies = [
 
 [[package]]
 name = "lib-provider"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2495,7 +2495,7 @@ dependencies = [
 
 [[package]]
 name = "lib-provider-openai"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2515,7 +2515,7 @@ dependencies = [
 
 [[package]]
 name = "lib-system-service"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "sysinfo",
@@ -2523,7 +2523,7 @@ dependencies = [
 
 [[package]]
 name = "lib-web"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2549,7 +2549,7 @@ dependencies = [
 
 [[package]]
 name = "lib-web-core"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "framework-core",
@@ -4241,7 +4241,7 @@ dependencies = [
 
 [[package]]
 name = "service-admin"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "chrono",
@@ -4259,7 +4259,7 @@ dependencies = [
 
 [[package]]
 name = "service-provider"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5273,7 +5273,7 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 
 [[package]]
 name = "types-admin"
-version = "2026.9.155"
+version = "2026.9.156"
 dependencies = [
  "framework-core",
  "framework-proc-auto",
