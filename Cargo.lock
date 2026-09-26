@@ -293,15 +293,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bin-release"
-version = "2026.9.159"
-dependencies = [
- "anyhow",
- "chrono",
- "clap",
-]
-
-[[package]]
 name = "bin-server"
 version = "2026.9.159"
 dependencies = [

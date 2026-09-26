@@ -11,7 +11,7 @@ members = [
     "crates/lib-web-core",
     "crates/service-admin",
     "crates/service-provider",
-    "crates/types-admin", "bin-release",
+    "crates/types-admin",
 ]
 resolver = "2"
 
