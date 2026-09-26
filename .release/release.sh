@@ -22,8 +22,9 @@ rsync_framework() {
     sed -i '29c\framework-proc-ts = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2" }' "$ROOT_DIR/Cargo.toml"
     sed -i '30c\framework-web = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2", features = ["collect"] }' "$ROOT_DIR/Cargo.toml"
     sed -i '31c\framework-web-axum = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2", features = ["collect"] }' "$ROOT_DIR/Cargo.toml"
-    sed -i '32c\framework-region = { git = "https://github.com/lingting-projects/lingting-rust-framework.git", rev = "accfc05b1767cacdeadc0218fa9f69f8f108a3f2" }' "$ROOT_DIR/Cargo.toml"
-    cargo update -p framework-core -p framework-datetime -p framework-proc-auto -p framework-proc-core -p framework-proc-ts -p framework-region -p framework-web -p framework-web-axum
+    echo 'Update .lock file'
+    cargo check -p framework-core -p framework-datetime -p framework-proc-auto -p framework-proc-core -p framework-proc-ts -p framework-web -p framework-web-axum
+    cargo update -p framework-core -p framework-datetime -p framework-proc-auto -p framework-proc-core -p framework-proc-ts -p framework-web -p framework-web-axum
 }
 
 if [[ "${LINGTING_GATEWAY_CI:-}" == "1" ]]; then
