@@ -465,6 +465,8 @@ fn generate_framework_commands(root: &Path, framework: &ReleaseSource) -> Result
         packages.join(", ")
     );
 
+    commands.push("echo 'Update .lock file'".to_string());
+    commands.push(generate_cargo_check_command(&packages));
     commands.push(generate_cargo_update_command(&packages));
 
     Ok(commands)
@@ -587,23 +589,26 @@ fn extract_inline_attribute(value: &str, attribute: &str) -> Option<String> {
     None
 }
 
-fn generate_cargo_update_command(packages: &[String]) -> String {
-    /*
-     * Do not use `cargo update -p framework-core ...` here.
-     *
-     * `cargo update -p` operates on an existing package ID in Cargo.lock.
-     * After replacing a path dependency with a git dependency, the package
-     * identity/source can change and Cargo may report:
-     *
-     *   package ID specification `framework-core` did not match any packages
-     *
-     * Let Cargo resolve the changed framework git dependencies from the
-     * updated Cargo.toml instead. The generated command still appears once
-     * after all framework dependency replacements.
-     */
-    let _ = packages;
+fn generate_cargo_check_command(packages: &[String]) -> String {
+    let mut command = String::from("cargo check");
 
-    "cargo update".to_owned()
+    for package in packages {
+        command.push_str(" -p ");
+        command.push_str(&shell_word(package));
+    }
+
+    command
+}
+
+fn generate_cargo_update_command(packages: &[String]) -> String {
+    let mut command = String::from("cargo update");
+
+    for package in packages {
+        command.push_str(" -p ");
+        command.push_str(&shell_word(package));
+    }
+
+    command
 }
 
 fn shell_word(value: &str) -> String {
