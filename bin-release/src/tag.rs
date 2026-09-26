@@ -255,10 +255,9 @@ fn generate_framework_commands(root: &Path, framework: &ReleaseSource) -> Result
         .with_context(|| format!("failed to read {}", cargo_toml.display()))?;
 
     let mut in_workspace_dependencies = false;
-    let mut framework_lines = Vec::new();
-    let mut framework_packages = Vec::new();
+    let mut framework_dependencies = Vec::new();
 
-    for line in content.lines() {
+    for (line_number, line) in content.lines().enumerate() {
         let trimmed = line.trim();
 
         if trimmed.starts_with('[') && trimmed.ends_with(']') {
@@ -280,57 +279,48 @@ fn generate_framework_commands(root: &Path, framework: &ReleaseSource) -> Result
             continue;
         }
 
-        framework_lines.push(line.to_owned());
-        framework_packages.push(name.to_owned());
+        framework_dependencies.push((line_number + 1, line.to_owned(), name.to_owned()));
     }
 
-    if framework_lines.is_empty() {
+    if framework_dependencies.is_empty() {
         bail!(
             "no framework-* dependencies found in [workspace.dependencies] of {}",
             cargo_toml.display()
         );
     }
 
-    let mut commands = Vec::with_capacity(framework_lines.len() + 1);
+    let mut commands = Vec::with_capacity(framework_dependencies.len() + 1);
 
-    for line in framework_lines {
-        commands.push(generate_toml_replace_command(&line, framework));
+    for (line_number, original_line, _) in &framework_dependencies {
+        let replacement = build_git_dependency_line(original_line, framework);
+
+        commands.push(generate_sed_replace_command(*line_number, &replacement));
     }
 
-    framework_packages.sort();
-    framework_packages.dedup();
+    let mut packages = framework_dependencies
+        .into_iter()
+        .map(|(_, _, name)| name)
+        .collect::<Vec<_>>();
 
-    commands.push(generate_cargo_update_command(&framework_packages));
+    packages.sort();
+    packages.dedup();
+
+    commands.push(generate_cargo_update_command(&packages));
 
     Ok(commands)
 }
 
-fn generate_toml_replace_command(original_line: &str, framework: &ReleaseSource) -> String {
-    let replacement = build_git_dependency_line(original_line, framework);
+fn generate_sed_replace_command(line_number: usize, replacement: &str) -> String {
+    let replacement = sed_escape_replacement(replacement);
 
     format!(
-        "python3 - \"$ROOT_DIR/Cargo.toml\" \"{}\" \"{}\" <<'PY'\n\
-import pathlib\n\
-import sys\n\
-cargo_toml = pathlib.Path(sys.argv[1])\n\
-old_line = sys.argv[2]\n\
-new_line = sys.argv[3]\n\
-content = cargo_toml.read_text()\n\
-lines = content.splitlines(keepends=True)\n\
-replaced = False\n\
-for index, line in enumerate(lines):\n\
-    if line.rstrip(\"\\r\\n\") == old_line:\n\
-        newline = \"\\r\\n\" if line.endswith(\"\\r\\n\") else \"\\n\" if line.endswith(\"\\n\") else \"\"\n\
-        lines[index] = new_line + newline\n\
-        replaced = True\n\
-        break\n\
-if not replaced:\n\
-    raise SystemExit(\"framework dependency line not found: \" + old_line)\n\
-cargo_toml.write_text(\"\".join(lines))\n\
-PY",
-        shell_single_quote(original_line),
-        shell_single_quote(&replacement),
+        "sed -i '{}c\\{}' \"$ROOT_DIR/Cargo.toml\"",
+        line_number, replacement
     )
+}
+
+fn sed_escape_replacement(value: &str) -> String {
+    value.replace('\\', r"\\").replace('&', r"\&")
 }
 
 fn build_git_dependency_line(original_line: &str, framework: &ReleaseSource) -> String {
@@ -371,10 +361,10 @@ fn build_git_dependency_line(original_line: &str, framework: &ReleaseSource) -> 
 }
 
 fn extract_inline_attribute(value: &str, attribute: &str) -> Option<String> {
-    let marker = format!("{attribute}");
+    let marker = attribute;
     let mut search_start = 0usize;
 
-    while let Some(relative_start) = value[search_start..].find(&marker) {
+    while let Some(relative_start) = value[search_start..].find(marker) {
         let start = search_start + relative_start;
         let after_name = &value[start + marker.len()..];
 
