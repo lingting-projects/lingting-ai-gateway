@@ -33,7 +33,6 @@ enum Command {
         #[arg(short, long)]
         slim: bool,
     },
-
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -51,5 +50,4 @@ fn main() -> Result<()> {
         Command::Tag => tag::run(),
         Command::Build { platform, slim } => build::run(platform, slim),
     }
-
 }

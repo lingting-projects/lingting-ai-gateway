@@ -7,14 +7,12 @@ use crate::git;
 use crate::metadata::{self, ReleaseInfo, ReleaseSource};
 use crate::signing;
 
-const GATEWAY_REPOSITORY: &str =
-    "https://github.com/lingting-projects/lingting-ai-gateway.git";
+const GATEWAY_REPOSITORY: &str = "https://github.com/lingting-projects/lingting-ai-gateway.git";
 
 const FRAMEWORK_REPOSITORY: &str =
     "https://github.com/lingting-projects/lingting-rust-framework.git";
 
-const REACT_UI_REPOSITORY: &str =
-    "https://github.com/lingting/lingting-react-ui.git";
+const REACT_UI_REPOSITORY: &str = "https://github.com/lingting/lingting-react-ui.git";
 
 const SIGN_KEY_ENV: &str = "LINGTING_RELEASE_SIGN_KEY";
 
@@ -40,8 +38,7 @@ pub fn run() -> Result<()> {
 
     verify_tag_does_not_exist(&root, &tag)?;
 
-    let framework_commands =
-        generate_framework_commands(&root, &framework)?;
+    let framework_commands = generate_framework_commands(&root, &framework)?;
 
     update_release_script(&root, &framework_commands)?;
 
@@ -56,11 +53,7 @@ pub fn run() -> Result<()> {
     let sign_key = signing_key()?;
 
     signing::sign(&info_path, &signature_path, &sign_key)?;
-    signing::verify(
-        &info_path,
-        &signature_path,
-        &public_key_path,
-    )?;
+    signing::verify(&info_path, &signature_path, &public_key_path)?;
 
     verify_release_files(&root)?;
 
@@ -86,9 +79,7 @@ fn verify_gateway(root: &Path) -> Result<()> {
     Ok(())
 }
 
-fn verify_framework_repository(
-    repository: &Path,
-) -> Result<ReleaseSource> {
+fn verify_framework_repository(repository: &Path) -> Result<ReleaseSource> {
     if !repository.is_dir() {
         bail!(
             "framework repository does not exist: {}",
@@ -159,8 +150,8 @@ fn resolve_react_ui_repository(root: &Path) -> Result<PathBuf> {
         bail!("lri does not exist: {}", lri.display());
     }
 
-    let real_lri = fs::canonicalize(&lri)
-        .with_context(|| format!("failed to resolve {}", lri.display()))?;
+    let real_lri =
+        fs::canonicalize(&lri).with_context(|| format!("failed to resolve {}", lri.display()))?;
 
     if real_lri.file_name().and_then(|name| name.to_str()) != Some("src") {
         bail!(
@@ -186,12 +177,7 @@ fn resolve_react_ui_repository(root: &Path) -> Result<PathBuf> {
 
 fn verify_cargo_metadata(root: &Path) -> Result<()> {
     let output = Command::new("cargo")
-        .args([
-            "metadata",
-            "--locked",
-            "--format-version",
-            "1",
-        ])
+        .args(["metadata", "--locked", "--format-version", "1"])
         .current_dir(root)
         .output()
         .context("failed to execute cargo metadata")?;
@@ -213,9 +199,7 @@ fn cargo_version(root: &Path) -> Result<String> {
     let content = fs::read_to_string(&cargo_toml)
         .with_context(|| format!("failed to read {}", cargo_toml.display()))?;
 
-    if let Some(version) =
-        find_section_version(&content, "[workspace.package]")
-    {
+    if let Some(version) = find_section_version(&content, "[workspace.package]") {
         return Ok(version);
     }
 
@@ -223,10 +207,7 @@ fn cargo_version(root: &Path) -> Result<String> {
         return Ok(version);
     }
 
-    bail!(
-        "failed to find version in {}",
-        cargo_toml.display()
-    )
+    bail!("failed to find version in {}", cargo_toml.display())
 }
 
 fn find_section_version(content: &str, section_name: &str) -> Option<String> {
@@ -267,10 +248,7 @@ fn find_section_version(content: &str, section_name: &str) -> Option<String> {
     None
 }
 
-fn generate_framework_commands(
-    root: &Path,
-    framework: &ReleaseSource,
-) -> Result<Vec<String>> {
+fn generate_framework_commands(root: &Path, framework: &ReleaseSource) -> Result<Vec<String>> {
     let cargo_toml = root.join("Cargo.toml");
 
     let content = fs::read_to_string(&cargo_toml)
@@ -284,14 +262,11 @@ fn generate_framework_commands(
         let trimmed = line.trim();
 
         if trimmed.starts_with('[') && trimmed.ends_with(']') {
-            in_workspace_dependencies =
-                trimmed == "[workspace.dependencies]";
+            in_workspace_dependencies = trimmed == "[workspace.dependencies]";
             continue;
         }
 
-        if !in_workspace_dependencies
-            || !trimmed.starts_with("framework-")
-        {
+        if !in_workspace_dependencies || !trimmed.starts_with("framework-") {
             continue;
         }
 
@@ -319,36 +294,24 @@ fn generate_framework_commands(
     let mut commands = Vec::with_capacity(framework_lines.len() + 1);
 
     for line in framework_lines {
-        commands.push(generate_toml_replace_command(
-            &line,
-            framework,
-        ));
+        commands.push(generate_toml_replace_command(&line, framework));
     }
 
     framework_packages.sort();
     framework_packages.dedup();
 
-    commands.push(generate_cargo_update_command(
-        &framework_packages,
-    ));
+    commands.push(generate_cargo_update_command(&framework_packages));
 
     Ok(commands)
 }
 
-fn generate_toml_replace_command(
-    original_line: &str,
-    framework: &ReleaseSource,
-) -> String {
-    let replacement = build_git_dependency_line(
-        original_line,
-        framework,
-    );
+fn generate_toml_replace_command(original_line: &str, framework: &ReleaseSource) -> String {
+    let replacement = build_git_dependency_line(original_line, framework);
 
     format!(
         "python3 - \"$ROOT_DIR/Cargo.toml\" \"{}\" \"{}\" <<'PY'\n\
 import pathlib\n\
 import sys\n\
-\n\
 cargo_toml = pathlib.Path(sys.argv[1])\n\
 old_line = sys.argv[2]\n\
 new_line = sys.argv[3]\n\
@@ -370,15 +333,9 @@ PY",
     )
 }
 
-fn build_git_dependency_line(
-    original_line: &str,
-    framework: &ReleaseSource,
-) -> String {
-    let leading_len = original_line
-        .len()
-        - original_line
-        .trim_start_matches(char::is_whitespace)
-        .len();
+fn build_git_dependency_line(original_line: &str, framework: &ReleaseSource) -> String {
+    let leading_len =
+        original_line.len() - original_line.trim_start_matches(char::is_whitespace).len();
 
     let leading = &original_line[..leading_len];
     let trimmed = original_line.trim();
@@ -391,15 +348,11 @@ fn build_git_dependency_line(
     let value = value.trim();
 
     let features = extract_inline_attribute(value, "features");
-    let default_features =
-        extract_inline_attribute(value, "default-features");
+    let default_features = extract_inline_attribute(value, "default-features");
 
     let mut dependency = format!(
         "{} = {{ git = \"{}\", branch = \"{}\", rev = \"{}\"",
-        name,
-        framework.repository,
-        framework.branch,
-        framework.commit,
+        name, framework.repository, framework.branch, framework.commit,
     );
 
     if let Some(value) = default_features {
@@ -417,26 +370,18 @@ fn build_git_dependency_line(
     format!("{leading}{dependency}")
 }
 
-fn extract_inline_attribute(
-    value: &str,
-    attribute: &str,
-) -> Option<String> {
+fn extract_inline_attribute(value: &str, attribute: &str) -> Option<String> {
     let marker = format!("{attribute}");
-
     let mut search_start = 0usize;
 
-    while let Some(relative_start) =
-        value[search_start..].find(&marker)
-    {
+    while let Some(relative_start) = value[search_start..].find(&marker) {
         let start = search_start + relative_start;
         let after_name = &value[start + marker.len()..];
 
         if !after_name
             .chars()
             .next()
-            .is_some_and(|character| {
-                character.is_whitespace() || character == '='
-            })
+            .is_some_and(|character| character.is_whitespace() || character == '=')
         {
             search_start = start + marker.len();
             continue;
@@ -480,23 +425,13 @@ fn extract_inline_attribute(
                     }
                 }
                 ',' if depth == 0 => {
-                    return Some(
-                        after_equals[..offset]
-                            .trim()
-                            .to_owned(),
-                    );
+                    return Some(after_equals[..offset].trim().to_owned());
                 }
                 _ => {}
             }
         }
 
-        return Some(
-            after_equals
-                .trim()
-                .trim_end_matches('}')
-                .trim()
-                .to_owned(),
-        );
+        return Some(after_equals.trim().trim_end_matches('}').trim().to_owned());
     }
 
     None
@@ -514,10 +449,10 @@ fn generate_cargo_update_command(packages: &[String]) -> String {
 }
 
 fn shell_word(value: &str) -> String {
-    if value.bytes().all(|byte| {
-        byte.is_ascii_alphanumeric()
-            || matches!(byte, b'_' | b'-' | b'.' | b'/')
-    }) {
+    if value
+        .bytes()
+        .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-' | b'.' | b'/'))
+    {
         value.to_owned()
     } else {
         shell_single_quote(value)
@@ -528,19 +463,11 @@ fn shell_single_quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\\''"))
 }
 
-fn update_release_script(
-    root: &Path,
-    framework_commands: &[String],
-) -> Result<()> {
+fn update_release_script(root: &Path, framework_commands: &[String]) -> Result<()> {
     let release_script = metadata::release_dir(root).join("release.sh");
 
     let original = fs::read_to_string(&release_script)
-        .with_context(|| {
-            format!(
-                "failed to read {}",
-                release_script.display()
-            )
-        })?;
+        .with_context(|| format!("failed to read {}", release_script.display()))?;
 
     let function_start = original
         .find("rsync_framework()")
@@ -558,28 +485,36 @@ fn update_release_script(
 
     for command in framework_commands {
         for line in command.lines() {
+            let line = line.trim_end();
+
+            if line.is_empty() {
+                continue;
+            }
+
             function.push_str("    ");
-            function.push_str(line.trim_end());
+            function.push_str(line);
             function.push('\n');
         }
     }
 
     function.push('}');
 
-    let mut updated =
-        String::with_capacity(original.len() + function.len());
+    let mut updated = String::with_capacity(original.len() + function.len());
 
     updated.push_str(&original[..function_start]);
     updated.push_str(&function);
     updated.push_str(&original[body_end..]);
 
+    let updated = updated
+        .lines()
+        .map(str::trim_end)
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let updated = format!("{updated}\n");
+
     fs::write(&release_script, updated)
-        .with_context(|| {
-            format!(
-                "failed to write {}",
-                release_script.display()
-            )
-        })?;
+        .with_context(|| format!("failed to write {}", release_script.display()))?;
 
     Ok(())
 }
@@ -628,12 +563,7 @@ fn find_function_end(content: &str, body_start: usize) -> Option<usize> {
 
 fn verify_tag_does_not_exist(root: &Path, tag: &str) -> Result<()> {
     let local = Command::new("git")
-        .args([
-            "rev-parse",
-            "-q",
-            "--verify",
-            &format!("refs/tags/{tag}"),
-        ])
+        .args(["rev-parse", "-q", "--verify", &format!("refs/tags/{tag}")])
         .current_dir(root)
         .output()
         .context("failed to check local release tag")?;
@@ -677,15 +607,10 @@ fn signing_key() -> Result<PathBuf> {
     }
 
     let home = dirs_home()?;
-    let path = home
-        .join(".ssh")
-        .join("lingting_gateway_ed25519");
+    let path = home.join(".ssh").join("lingting_gateway_ed25519");
 
     if !path.is_file() {
-        bail!(
-            "release signing key does not exist: {}",
-            path.display()
-        );
+        bail!("release signing key does not exist: {}", path.display());
     }
 
     Ok(path)
@@ -710,10 +635,7 @@ fn verify_release_files(root: &Path) -> Result<()> {
         metadata::public_key_path(root),
     ] {
         if !path.is_file() {
-            bail!(
-                "required release file does not exist: {}",
-                path.display()
-            );
+            bail!("required release file does not exist: {}", path.display());
         }
     }
 
@@ -733,8 +655,7 @@ fn commit_metadata(root: &Path) -> Result<()> {
 
     git::run(root, &["diff", "--cached", "--check"])?;
 
-    let staged =
-        git::output(root, &["diff", "--cached", "--name-only"])?;
+    let staged = git::output(root, &["diff", "--cached", "--name-only"])?;
 
     if staged.trim().is_empty() {
         bail!("release produced no Git changes");
@@ -742,27 +663,14 @@ fn commit_metadata(root: &Path) -> Result<()> {
 
     git::run(
         root,
-        &[
-            "commit",
-            "-m",
-            "chore(release): update release metadata",
-        ],
+        &["commit", "-m", "chore(release): update release metadata"],
     )?;
 
     Ok(())
 }
 
 fn create_tag(root: &Path, tag: &str) -> Result<()> {
-    git::run(
-        root,
-        &[
-            "tag",
-            "-a",
-            tag,
-            "-m",
-            &format!("Release {tag}"),
-        ],
-    )?;
+    git::run(root, &["tag", "-a", tag, "-m", &format!("Release {tag}")])?;
 
     Ok(())
 }

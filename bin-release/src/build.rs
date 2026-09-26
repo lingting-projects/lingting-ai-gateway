@@ -1,10 +1,10 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
-use crate::metadata::{self, ReleaseInfo};
 use crate::Platform;
+use crate::metadata::{self, ReleaseInfo};
 
 pub fn run(platform: Platform, slim: bool) -> Result<()> {
     let root = crate::git::repository_root()?;
@@ -62,24 +62,19 @@ fn prepare_react_ui(root: &Path, info: &ReleaseInfo) -> Result<()> {
             .with_context(|| format!("failed to stat {}", lri.display()))?;
 
         if metadata.file_type().is_symlink() {
-            fs::remove_file(&lri)
-                .with_context(|| format!("failed to remove {}", lri.display()))?;
+            fs::remove_file(&lri).with_context(|| format!("failed to remove {}", lri.display()))?;
         } else if metadata.is_dir() {
             fs::remove_dir_all(&lri)
                 .with_context(|| format!("failed to remove {}", lri.display()))?;
         } else {
-            fs::remove_file(&lri)
-                .with_context(|| format!("failed to remove {}", lri.display()))?;
+            fs::remove_file(&lri).with_context(|| format!("failed to remove {}", lri.display()))?;
         }
     }
 
     fs::create_dir_all(&ui_root)
         .with_context(|| format!("failed to create {}", ui_root.display()))?;
 
-    create_symlink(
-        &repository.join("src"),
-        &lri,
-    )?;
+    create_symlink(&repository.join("src"), &lri)?;
 
     install_frontend_dependencies(&ui_root)?;
 
@@ -115,11 +110,7 @@ fn create_symlink(target: &Path, link: &Path) -> Result<()> {
 fn install_frontend_dependencies(ui_root: &Path) -> Result<()> {
     require_command("pnpm")?;
 
-    run_command(
-        ui_root,
-        "pnpm",
-        &["install", "--frozen-lockfile"],
-    )
+    run_command(ui_root, "pnpm", &["install", "--frozen-lockfile"])
 }
 
 fn build_ts_sdk(root: &Path) -> Result<()> {
@@ -141,29 +132,15 @@ fn build_ts_sdk(root: &Path) -> Result<()> {
     )
 }
 
-fn build_server(
-    root: &Path,
-    platform: Platform,
-    slim: bool,
-) -> Result<()> {
-    let (target, output_name, rustflags) =
-        build_target(platform, slim)?;
+fn build_server(root: &Path, platform: Platform, slim: bool) -> Result<()> {
+    let (target, output_name, rustflags) = build_target(platform, slim)?;
 
-    println!(
-        "==> Building server: target={}, slim={}",
-        target, slim
-    );
+    println!("==> Building server: target={}, slim={}", target, slim);
 
     let mut command = Command::new("cargo");
 
     command.current_dir(root);
-    command.args([
-        "build",
-        "--locked",
-        "--release",
-        "--target",
-        target,
-    ]);
+    command.args(["build", "--locked", "--release", "--target", target]);
 
     if let Some(rustflags) = rustflags {
         command.env("RUSTFLAGS", rustflags);
@@ -171,16 +148,10 @@ fn build_server(
 
     let status = command
         .status()
-        .with_context(|| {
-            format!(
-                "failed to execute cargo build for target {target}"
-            )
-        })?;
+        .with_context(|| format!("failed to execute cargo build for target {target}"))?;
 
     if !status.success() {
-        bail!(
-            "cargo build failed for target {target}"
-        );
+        bail!("cargo build failed for target {target}");
     }
 
     let source = root
@@ -194,16 +165,12 @@ fn build_server(
         });
 
     if !source.is_file() {
-        bail!(
-            "built server artifact does not exist: {}",
-            source.display()
-        );
+        bail!("built server artifact does not exist: {}", source.display());
     }
 
     let dist = root.join("dist");
 
-    fs::create_dir_all(&dist)
-        .with_context(|| format!("failed to create {}", dist.display()))?;
+    fs::create_dir_all(&dist).with_context(|| format!("failed to create {}", dist.display()))?;
 
     let destination = dist.join(output_name);
 
@@ -253,11 +220,7 @@ fn build_target(
             bail!("macOS does not support the slim build")
         }
 
-        Platform::Macos => Ok((
-            "x86_64-apple-darwin",
-            "lingting-ai-gateway-macos",
-            None,
-        )),
+        Platform::Macos => Ok(("x86_64-apple-darwin", "lingting-ai-gateway-macos", None)),
     }
 }
 
@@ -274,27 +237,15 @@ fn require_command(command: &str) -> Result<()> {
     Ok(())
 }
 
-fn run_command(
-    root: &Path,
-    program: &str,
-    args: &[&str],
-) -> Result<()> {
+fn run_command(root: &Path, program: &str, args: &[&str]) -> Result<()> {
     let status = Command::new(program)
         .args(args)
         .current_dir(root)
         .status()
-        .with_context(|| {
-            format!(
-                "failed to execute `{program} {}`",
-                args.join(" ")
-            )
-        })?;
+        .with_context(|| format!("failed to execute `{program} {}`", args.join(" ")))?;
 
     if !status.success() {
-        bail!(
-            "command failed: `{program} {}`",
-            args.join(" ")
-        );
+        bail!("command failed: `{program} {}`", args.join(" "));
     }
 
     Ok(())

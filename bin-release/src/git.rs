@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
@@ -11,27 +11,21 @@ pub fn command(root: &Path, program: &str, args: &[&str]) -> Result<Output> {
         .args(args)
         .current_dir(root)
         .output()
-        .with_context(|| {
-            format!(
-                "failed to execute {program} in {}",
-                root.display()
-            )
-        })?;
+        .with_context(|| format!("failed to execute {program} in {}", root.display()))?;
 
     if !output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
 
         bail!(
-        "command failed: `{program} {}`\nstdout:\n{}\nstderr:\n{}",
-        args.join(" "),
-        stdout.trim(),
-        stderr.trim()
-    );
+            "command failed: `{program} {}`\nstdout:\n{}\nstderr:\n{}",
+            args.join(" "),
+            stdout.trim(),
+            stderr.trim()
+        );
     }
 
     Ok(output)
-
 }
 
 pub fn output(root: &Path, args: &[&str]) -> Result<String> {
@@ -41,12 +35,10 @@ pub fn output(root: &Path, args: &[&str]) -> Result<String> {
         .context("git output is not valid UTF-8")?
         .trim()
         .to_owned())
-
 }
 
 pub fn repository_root() -> Result<PathBuf> {
-    let current_dir =
-        std::env::current_dir().context("failed to get current directory")?;
+    let current_dir = std::env::current_dir().context("failed to get current directory")?;
 
     let output = Command::new("git")
         .args(["rev-parse", "--show-toplevel"])
@@ -56,9 +48,9 @@ pub fn repository_root() -> Result<PathBuf> {
 
     if !output.status.success() {
         bail!(
-        "current directory is not inside a Git repository: {}",
-        current_dir.display()
-    );
+            "current directory is not inside a Git repository: {}",
+            current_dir.display()
+        );
     }
 
     let root = String::from_utf8(output.stdout)
@@ -67,7 +59,6 @@ pub fn repository_root() -> Result<PathBuf> {
         .to_owned();
 
     Ok(PathBuf::from(root))
-
 }
 
 pub fn require_clean_tree(repo: &Path) -> Result<()> {
@@ -78,7 +69,6 @@ pub fn require_clean_tree(repo: &Path) -> Result<()> {
     }
 
     Ok(())
-
 }
 
 pub fn origin_url(repo: &Path) -> Result<String> {
@@ -101,12 +91,7 @@ pub fn remote_branch_commit(repo: &Path, branch: &str) -> Result<String> {
         repo,
         &["rev-parse", &format!("refs/remotes/origin/{branch}")],
     )
-        .with_context(|| {
-            format!(
-                "failed to resolve origin/{branch} in {}",
-                repo.display()
-            )
-        })
+    .with_context(|| format!("failed to resolve origin/{branch} in {}", repo.display()))
 }
 
 pub fn normalize_url(url: &str) -> String {
@@ -124,7 +109,6 @@ pub fn normalize_url(url: &str) -> String {
         }
         _ => url.to_owned(),
     }
-
 }
 
 pub fn ensure_origin(repo: &Path, expected: &str) -> Result<()> {
@@ -132,15 +116,14 @@ pub fn ensure_origin(repo: &Path, expected: &str) -> Result<()> {
 
     if normalize_url(&actual) != normalize_url(expected) {
         bail!(
-        "unexpected Git origin for {}\nexpected: {}\nactual: {}",
-        repo.display(),
-        expected,
-        actual
-    );
+            "unexpected Git origin for {}\nexpected: {}\nactual: {}",
+            repo.display(),
+            expected,
+            actual
+        );
     }
 
     Ok(())
-
 }
 
 pub fn ensure_local_matches_remote(repo: &Path, branch: &str) -> Result<()> {
@@ -149,15 +132,14 @@ pub fn ensure_local_matches_remote(repo: &Path, branch: &str) -> Result<()> {
 
     if local != remote {
         bail!(
-        "local HEAD does not match origin/{branch} in {}\nlocal: {}\nremote: {}",
-        repo.display(),
-        local,
-        remote
-    );
+            "local HEAD does not match origin/{branch} in {}\nlocal: {}\nremote: {}",
+            repo.display(),
+            local,
+            remote
+        );
     }
 
     Ok(())
-
 }
 
 pub fn ensure_commit(repo: &Path, expected: &str) -> Result<()> {
@@ -165,15 +147,14 @@ pub fn ensure_commit(repo: &Path, expected: &str) -> Result<()> {
 
     if actual != expected {
         bail!(
-        "Git commit mismatch in {}\nexpected: {}\nactual: {}",
-        repo.display(),
-        expected,
-        actual
-    );
+            "Git commit mismatch in {}\nexpected: {}\nactual: {}",
+            repo.display(),
+            expected,
+            actual
+        );
     }
 
     Ok(())
-
 }
 
 pub fn fetch_commit(repo: &Path, commit: &str) -> Result<()> {
@@ -188,10 +169,7 @@ pub fn checkout_detached(repo: &Path, commit: &str) -> Result<()> {
 
 pub fn clone(repository: &str, destination: &Path) -> Result<()> {
     if destination.exists() {
-        bail!(
-"Git destination already exists: {}",
-destination.display()
-);
+        bail!("Git destination already exists: {}", destination.display());
     }
 
     let destination = destination.to_string_lossy();
@@ -203,5 +181,4 @@ destination.display()
         .success()
         .then_some(())
         .with_context(|| format!("failed to clone {repository}"))
-
 }

@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::fs;
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -61,11 +61,7 @@ pub fn sign(info_file: &Path, signature_file: &Path, key_file: &Path) -> Result<
     Ok(())
 }
 
-pub fn verify(
-    info_file: &Path,
-    signature_file: &Path,
-    public_key_file: &Path,
-) -> Result<()> {
+pub fn verify(info_file: &Path, signature_file: &Path, public_key_file: &Path) -> Result<()> {
     if !info_file.is_file() {
         bail!("release metadata does not exist: {}", info_file.display());
     }

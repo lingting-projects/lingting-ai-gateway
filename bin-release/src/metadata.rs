@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use chrono::{SecondsFormat, Utc};
 use std::collections::BTreeMap;
 use std::fs;
@@ -22,11 +22,7 @@ pub struct ReleaseInfo {
 }
 
 impl ReleaseInfo {
-    pub fn new(
-        tag: String,
-        framework: ReleaseSource,
-        react_ui: ReleaseSource,
-    ) -> Self {
+    pub fn new(tag: String, framework: ReleaseSource, react_ui: ReleaseSource) -> Self {
         let now = Utc::now();
 
         Self {

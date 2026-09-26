@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -7,14 +7,12 @@ use crate::git;
 use crate::metadata::{self, ReleaseInfo};
 use crate::signing;
 
-const GATEWAY_REPOSITORY: &str =
-    "https://github.com/lingting-projects/lingting-ai-gateway.git";
+const GATEWAY_REPOSITORY: &str = "https://github.com/lingting-projects/lingting-ai-gateway.git";
 
 const FRAMEWORK_REPOSITORY: &str =
     "https://github.com/lingting-projects/lingting-rust-framework.git";
 
-const REACT_UI_REPOSITORY: &str =
-    "https://github.com/lingting/lingting-react-ui.git";
+const REACT_UI_REPOSITORY: &str = "https://github.com/lingting/lingting-react-ui.git";
 
 pub fn run() -> Result<()> {
     let root = git::repository_root()?;
@@ -97,15 +95,7 @@ fn verify_release_files(root: &Path) -> Result<()> {
 fn verify_tag(root: &Path, info: &ReleaseInfo) -> Result<()> {
     let expected_tag = &info.tag;
 
-    let actual_tag = git::output(
-        root,
-        &[
-            "describe",
-            "--tags",
-            "--exact-match",
-            "HEAD",
-        ],
-    )?;
+    let actual_tag = git::output(root, &["describe", "--tags", "--exact-match", "HEAD"])?;
 
     if actual_tag.trim() != expected_tag {
         bail!(
@@ -135,10 +125,7 @@ fn verify_framework_metadata(info: &ReleaseInfo) -> Result<()> {
         bail!("framework branch is empty");
     }
 
-    validate_sha1(
-        &info.framework.commit,
-        "framework commit",
-    )?;
+    validate_sha1(&info.framework.commit, "framework commit")?;
 
     Ok(())
 }
@@ -160,22 +147,14 @@ fn verify_react_ui_metadata(info: &ReleaseInfo) -> Result<()> {
         bail!("react-ui branch is empty");
     }
 
-    validate_sha1(
-        &info.react_ui.commit,
-        "react-ui commit",
-    )?;
+    validate_sha1(&info.react_ui.commit, "react-ui commit")?;
 
     Ok(())
 }
 
 fn verify_cargo_metadata(root: &Path) -> Result<()> {
     let output = Command::new("cargo")
-        .args([
-            "metadata",
-            "--locked",
-            "--format-version",
-            "1",
-        ])
+        .args(["metadata", "--locked", "--format-version", "1"])
         .current_dir(root)
         .output()
         .context("failed to execute cargo metadata")?;
@@ -201,11 +180,7 @@ fn verify_signature(root: &Path) -> Result<()> {
 }
 
 fn validate_sha1(value: &str, name: &str) -> Result<()> {
-    if value.len() != 40
-        || !value
-        .bytes()
-        .all(|byte| byte.is_ascii_hexdigit())
-    {
+    if value.len() != 40 || !value.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         bail!("invalid {name}: {value}");
     }
 
