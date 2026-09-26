@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -276,13 +276,11 @@ fn generate_framework_commands(
     let content = fs::read_to_string(&cargo_toml)
         .with_context(|| format!("failed to read {}", cargo_toml.display()))?;
 
-    let lines = content.lines().collect::<Vec<_>>();
-
     let mut in_workspace_dependencies = false;
     let mut framework_lines = Vec::new();
     let mut framework_packages = Vec::new();
 
-    for line in lines {
+    for line in content.lines() {
         let trimmed = line.trim();
 
         if trimmed.starts_with('[') && trimmed.ends_with(']') {
@@ -291,11 +289,9 @@ fn generate_framework_commands(
             continue;
         }
 
-        if !in_workspace_dependencies {
-            continue;
-        }
-
-        if !trimmed.starts_with("framework-") {
+        if !in_workspace_dependencies
+            || !trimmed.starts_with("framework-")
+        {
             continue;
         }
 
@@ -380,7 +376,9 @@ fn build_git_dependency_line(
 ) -> String {
     let leading_len = original_line
         .len()
-        - original_line.trim_start_matches(char::is_whitespace).len();
+        - original_line
+        .trim_start_matches(char::is_whitespace)
+        .len();
 
     let leading = &original_line[..leading_len];
     let trimmed = original_line.trim();
@@ -419,7 +417,10 @@ fn build_git_dependency_line(
     format!("{leading}{dependency}")
 }
 
-fn extract_inline_attribute(value: &str, attribute: &str) -> Option<String> {
+fn extract_inline_attribute(
+    value: &str,
+    attribute: &str,
+) -> Option<String> {
     let marker = format!("{attribute}");
 
     let mut search_start = 0usize;
@@ -480,14 +481,22 @@ fn extract_inline_attribute(value: &str, attribute: &str) -> Option<String> {
                 }
                 ',' if depth == 0 => {
                     return Some(
-                        after_equals[..offset].trim().to_owned()
+                        after_equals[..offset]
+                            .trim()
+                            .to_owned(),
                     );
                 }
                 _ => {}
             }
         }
 
-        return Some(after_equals.trim().trim_end_matches('}').trim().to_owned());
+        return Some(
+            after_equals
+                .trim()
+                .trim_end_matches('}')
+                .trim()
+                .to_owned(),
+        );
     }
 
     None
@@ -550,7 +559,7 @@ fn update_release_script(
     for command in framework_commands {
         for line in command.lines() {
             function.push_str("    ");
-            function.push_str(line);
+            function.push_str(line.trim_end());
             function.push('\n');
         }
     }
