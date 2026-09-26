@@ -12,7 +12,7 @@ pub async fn provider_list() -> Result<Vec<ProviderDetailVO>> {
     ProviderManager::new()?.list_detail().await
 }
 
-/// 供应商创建，返回仅此一次可见的明文 key。
+/// 供应商创建
 #[web_api_post(path = "/___/provider/create")]
 pub async fn provider_create(Json(params): Json<ProviderCreatePO>) -> Result<ProviderVO> {
     let service = ProviderService::new()?;
@@ -22,8 +22,7 @@ pub async fn provider_create(Json(params): Json<ProviderCreatePO>) -> Result<Pro
         .await?
         .ok_or_else(|| anyhow!("供应商创建后查询不到记录：{id}"))?;
 
-    let mut vo = ProviderVO::from(provider);
-    vo.api_key = params.api_key;
+    let vo = ProviderVO::from(provider);
     async_run(Some(id)).await?;
     Ok(vo)
 }
