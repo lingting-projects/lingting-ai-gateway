@@ -71,6 +71,10 @@ jobs:
           workspaces: ". -> target"
           key: release-${{ matrix.name }}
 
+      - name: Prepare release environment
+        shell: bash
+        run: bash .release/ci_prerelease.sh
+
       - name: Build
         shell: bash
         env:
@@ -110,8 +114,6 @@ jobs:
 
       - name: Prepare release
         shell: bash
-        env:
-          RELEASE_VERSION: ${{ github.ref_name }}
         run: bash .release/ci_release.sh
 
       - name: Publish

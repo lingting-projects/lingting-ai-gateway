@@ -13,9 +13,10 @@ if [[ "$TARGET" == windows-* ]]; then
     NAME="${NAME}.exe"
 fi
 
-OUTPUT="dist/release/${NAME}"
+OUTPUT_DIR="dist/release"
+OUTPUT="${OUTPUT_DIR}/${NAME}"
 
-mkdir -p dist/release
+mkdir -p "$OUTPUT_DIR"
 cp "$SOURCE" "$OUTPUT"
 
 if command -v sha256sum >/dev/null 2>&1; then
@@ -23,3 +24,5 @@ if command -v sha256sum >/dev/null 2>&1; then
 else
     shasum -a 256 "$OUTPUT" > "${OUTPUT}.sha256"
 fi
+
+echo "Package complete: $NAME"
