@@ -59,16 +59,14 @@ jobs:
         env:
           RUST_TARGET: ${{ matrix.target }}
           BUILD_OUTPUT_DIR: dist/bin
-        run: ./scripts/build_current.sh
+        run: bash ./scripts/build_current.sh
 
       - name: Package
         shell: bash
         env:
           RELEASE_TARGET: ${{ matrix.name }}
           RELEASE_VERSION: ${{ github.ref_name }}
-        run: |
-          chmod +x .release/ci_package.sh
-          .release/ci_package.sh
+        run: bash .release/ci_package.sh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -97,9 +95,7 @@ jobs:
         shell: bash
         env:
           RELEASE_VERSION: ${{ github.ref_name }}
-        run: |
-          chmod +x .release/ci_release.sh
-          .release/ci_release.sh
+        run: bash .release/ci_release.sh
 
       - name: Publish
         uses: softprops/action-gh-release@v2
