@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
       ],
       alias: {
         "@": resolve(import.meta.dirname, "src"),
-        "@lri": resolve(import.meta.dirname, "lri"),
+        "@lri": "lingting-react-ui",
       },
     },
     fmt: {
