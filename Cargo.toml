@@ -105,3 +105,20 @@ pglite-oxide = "=0.5.1"
 virtual-net = "=0.702.0-alpha.3"
 clap = { version = "4", features = ["derive"] }
 libc = { version = "0.2.189" }
+
+# 性能优先
+[profile.release]
+# LLVM 优化级别。
+# 保持默认的最高性能优化，不为了体积牺牲运行时性能。
+opt-level = 3
+# 跨 crate 优化。
+# Thin LTO 通常能取得不错的体积/性能收益，同时比 fat LTO 更容易接受编译时间。
+lto = "thin"
+# 减少 codegen unit，让 LLVM 有更多机会进行跨模块优化。
+# 代价是 release 编译时间增加。
+codegen-units = 1
+# 由 Cargo/LLVM 在 release 构建时直接移除符号信息。
+# 不需要在 build_current.sh 中额外执行 strip。
+strip = "symbols"
+# 必须保留 unwind，因为项目需要 std::panic::catch_unwind。
+panic = "unwind"
