@@ -1450,7 +1450,9 @@ dependencies = [
 
 [[package]]
 name = "framework-core"
-version = "26.8.14"
+version = "26.8.150"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "370165f58f8f56e7f04ec463d2abecb00a47e78f61d5c6d14390ab9f63a5f490"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1475,7 +1477,9 @@ dependencies = [
 
 [[package]]
 name = "framework-datetime"
-version = "26.8.14"
+version = "26.8.150"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47f7796140d691360e6e4cb70575394f8f0f1af546c5e5d23db1c833c9d2adab"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -1486,7 +1490,9 @@ dependencies = [
 
 [[package]]
 name = "framework-proc-auto"
-version = "26.8.14"
+version = "26.8.150"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61e7c3814dbf43ac4d6d78a6e9e0228d28ca8978a25303d6cd5956c1ab3f6154"
 dependencies = [
  "framework-proc-core",
  "proc-macro2",
@@ -1496,7 +1502,9 @@ dependencies = [
 
 [[package]]
 name = "framework-proc-core"
-version = "26.8.14"
+version = "26.8.150"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b594e3d097d3846e0a05d602c57e6d50af0be26bed35341d3fa2ed8b9686876"
 dependencies = [
  "inventory",
  "serde",
@@ -1508,7 +1516,9 @@ dependencies = [
 
 [[package]]
 name = "framework-proc-ts"
-version = "26.8.14"
+version = "26.8.150"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "768f54eb99bad71a6ef7cd7a3bcb38e609a61dcb0d6e5468fb5a7d12d079b5a6"
 dependencies = [
  "framework-proc-core",
  "proc-macro2",
@@ -1518,7 +1528,9 @@ dependencies = [
 
 [[package]]
 name = "framework-proc-web"
-version = "26.8.14"
+version = "26.8.150"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "308420e209733207d1e204e9a36bc3576907ac0311171f7626ec27e2d9450923"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1527,7 +1539,9 @@ dependencies = [
 
 [[package]]
 name = "framework-web"
-version = "26.8.14"
+version = "26.8.150"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfdb43e662b43f4544035d45d8a81393f8916266bb7d11f424a3e900d752907f"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1544,7 +1558,9 @@ dependencies = [
 
 [[package]]
 name = "framework-web-axum"
-version = "26.8.14"
+version = "26.8.150"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d84909e1c2a3721cb81c870626fd24c566a79d5583e74bcf44654894b18bcc4c"
 dependencies = [
  "anyhow",
  "axum",

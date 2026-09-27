@@ -22,13 +22,13 @@ rust-version = "1.98.0"
 license = "MIT"
 
 [workspace.dependencies]
-framework-core = { path = "../lingting-rust-framework/framework-core" }
-framework-datetime = { path = "../lingting-rust-framework/framework-datetime" }
-framework-proc-auto = { path = "../lingting-rust-framework/framework-proc-auto" }
-framework-proc-core = { path = "../lingting-rust-framework/framework-proc-core" }
-framework-proc-ts = { path = "../lingting-rust-framework/framework-proc-ts" }
-framework-web = { path = "../lingting-rust-framework/framework-web", features = ["collect"] }
-framework-web-axum = { path = "../lingting-rust-framework/framework-web-axum", features = ["collect"] }
+framework-core = { version = "26.8.150" }
+framework-datetime = { version = "26.8.150" }
+framework-proc-auto = { version = "26.8.150" }
+framework-proc-core = { version = "26.8.150" }
+framework-proc-ts = { version = "26.8.150" }
+framework-web = { version = "26.8.150", features = ["collect"] }
+framework-web-axum = { version = "26.8.150", features = ["collect"] }
 
 # Internal crates
 lib-core = { path = "crates/lib-core" }
