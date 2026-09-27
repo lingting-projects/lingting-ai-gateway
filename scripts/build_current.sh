@@ -8,6 +8,8 @@ cd "$ROOT_DIR"
 TARGET="${RUST_TARGET:-}"
 PROFILE="${CARGO_PROFILE:-release}"
 
+cargo run -p lib-web --example build_ts --features ts-export
+
 if [ -n "$TARGET" ]; then
     cargo build \
         --locked \

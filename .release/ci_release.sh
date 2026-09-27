@@ -2,8 +2,6 @@
 
 set -e
 
-RELEASE_DIR="dist/release"
-
-cd "$RELEASE_DIR"
+cd dist/release
 
 cat ./*.sha256 > SHA256SUMS
