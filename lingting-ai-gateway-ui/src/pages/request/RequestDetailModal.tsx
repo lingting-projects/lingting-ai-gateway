@@ -17,13 +17,13 @@ type RequestDetailModalProps<T extends Record<string, unknown>> = {
  * 请求日志详情弹窗：全字段展示，复杂字段以默认折叠的代码块展示。
  */
 export function RequestDetailModal<T extends Record<string, unknown>>({
-                                                                        columns,
-                                                                        data,
-                                                                        onOpenChange,
-                                                                        open,
-                                                                        sections,
-                                                                        title,
-                                                                      }: RequestDetailModalProps<T>) {
+  columns,
+  data,
+  onOpenChange,
+  open,
+  sections,
+  title,
+}: RequestDetailModalProps<T>) {
   return (
     <Modal
       footer={null}
@@ -34,7 +34,7 @@ export function RequestDetailModal<T extends Record<string, unknown>>({
       width={1200}
     >
       <Flex gap="middle" vertical>
-        <ProDescriptions<T> column={2} columns={columns} dataSource={data}/>
+        <ProDescriptions<T> column={2} columns={columns} dataSource={data} />
         {sections.length > 0 && (
           <Collapse
             items={sections.map((section) => ({

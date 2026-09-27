@@ -19,7 +19,7 @@ export function ProviderModelList({ detail }: ProviderModelListProps) {
   const models = detail.models;
 
   const renderItem = useCallback(
-    (model: (typeof models)[number]) => <ModelItem model={model}/>,
+    (model: (typeof models)[number]) => <ModelItem model={model} />,
     [],
   );
 

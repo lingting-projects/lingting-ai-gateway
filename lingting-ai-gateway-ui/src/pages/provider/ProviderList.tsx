@@ -31,13 +31,13 @@ type ProviderListProps = {
  * 供应商列表：标题搜索与刷新，卡片展示名称、模型数量、启用状态与优先级。
  */
 export function ProviderList({
-                               details,
-                               loading,
-                               onRefresh,
-                               onSelect,
-                               refreshing,
-                               selectedId,
-                             }: ProviderListProps) {
+  details,
+  loading,
+  onRefresh,
+  onSelect,
+  refreshing,
+  selectedId,
+}: ProviderListProps) {
   const [keyword, setKeyword] = useState("");
   const [syncingId, setSyncingId] = useState<string | null>(null);
 
@@ -76,13 +76,13 @@ export function ProviderList({
             <Typography.Text ellipsis strong>
               {provider.displayName}
             </Typography.Text>
-            <DictTag dict={ENABLED_DICT} value={provider.enabled}/>
+            <DictTag dict={ENABLED_DICT} value={provider.enabled} />
           </Flex>
           <Flex align="center" gap="small" justify="space-between">
             <Flex align="center" gap="small">
               <Typography.Text type="secondary">模型 {models.length}</Typography.Text>
               <Button
-                icon={<ReloadOutlined/>}
+                icon={<ReloadOutlined />}
                 loading={syncingId === detail.id}
                 onClick={(event) => {
                   event.stopPropagation();
@@ -108,16 +108,16 @@ export function ProviderList({
         className="provider-list-search"
         onChange={(event) => setKeyword(event.target.value)}
         placeholder="搜索供应商或模型"
-        prefix={<SearchOutlined/>}
+        prefix={<SearchOutlined />}
         value={keyword}
       />
       <Button
-        icon={<ReloadOutlined/>}
+        icon={<ReloadOutlined />}
         loading={refreshing}
         onClick={onRefresh}
         tooltip="刷新供应商列表"
       />
-      <ProviderCreateModal onCreated={onRefresh}/>
+      <ProviderCreateModal onCreated={onRefresh} />
     </Flex>
   );
 

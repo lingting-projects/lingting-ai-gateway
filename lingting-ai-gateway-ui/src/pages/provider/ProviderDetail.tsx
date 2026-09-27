@@ -24,12 +24,12 @@ export function ProviderDetail({ detail, enabledCount, onChanged, total }: Provi
     }
     return [
       {
-        children: <ProviderBasicInfo detail={detail} key={detail.id} onChanged={onChanged}/>,
+        children: <ProviderBasicInfo detail={detail} key={detail.id} onChanged={onChanged} />,
         key: "basic",
         label: "基础信息",
       },
       {
-        children: <ProviderModelList detail={detail} key={detail.id}/>,
+        children: <ProviderModelList detail={detail} key={detail.id} />,
         key: "model",
         label: "模型列表",
       },
@@ -38,7 +38,7 @@ export function ProviderDetail({ detail, enabledCount, onChanged, total }: Provi
 
   return (
     <>
-      {!detail && <ProviderOverview enabledCount={enabledCount} total={total}/>}
+      {!detail && <ProviderOverview enabledCount={enabledCount} total={total} />}
       {detail && (
         <ProCard className="provider-detail-card" ghost={true}>
           <Tabs

@@ -82,7 +82,7 @@ export function ApiKeyMain() {
             <Typography.Text className="api-key-hash" ellipsis>
               {record.keyHash}
             </Typography.Text>
-            <Copyable value={record.keyHash}/>
+            <Copyable value={record.keyHash} />
           </Flex>
         ),
         search: false,
@@ -93,7 +93,7 @@ export function ApiKeyMain() {
         dict: ENABLED_SEARCH_DICT,
         render: (_dom, record) => (
           <Flex align="center" gap="small">
-            <DictTag dict={ENABLED_DICT} value={record.enabled}/>
+            <DictTag dict={ENABLED_DICT} value={record.enabled} />
             <LinkButton
               hidden={record.enabled}
               onClick={() => handleToggleEnabled(record)}
@@ -125,7 +125,7 @@ export function ApiKeyMain() {
         dataIndex: "option",
         render: (_dom, record) => (
           <Flex gap="small">
-            <LinkButton onClick={() => setEditing(record)} text="编辑"/>
+            <LinkButton onClick={() => setEditing(record)} text="编辑" />
             <LinkButton
               confirm={{
                 description: "删除后使用该密钥的请求会立即失败。",
@@ -161,13 +161,13 @@ export function ApiKeyMain() {
           <ApiKeySyncModal
             key="sync"
             onSuccess={reload}
-            trigger={<Button icon={<SyncOutlined/>} text="同步"/>}
+            trigger={<Button icon={<SyncOutlined />} text="同步" />}
           />,
           <ApiKeyEditModal
             key="create"
             onCreated={setSecret}
             onSuccess={reload}
-            trigger={<Button icon={<PlusOutlined/>} text="新增" type="primary"/>}
+            trigger={<Button icon={<PlusOutlined />} text="新增" type="primary" />}
           />,
         ]}
       />
@@ -178,7 +178,7 @@ export function ApiKeyMain() {
         open={Boolean(editing)}
         record={editing ?? undefined}
       />
-      <ApiKeySecretModal onClose={() => setSecret(undefined)} secret={secret}/>
+      <ApiKeySecretModal onClose={() => setSecret(undefined)} secret={secret} />
     </>
   );
 }

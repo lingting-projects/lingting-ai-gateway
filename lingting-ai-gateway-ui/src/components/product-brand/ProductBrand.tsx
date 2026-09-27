@@ -22,7 +22,7 @@ export function ProductBrand({ icon, title }: ProductBrandProps) {
   return (
     <Flex align="center" className="product-brand" gap={12} justify="center">
       <Flex align="center" className="product-brand-icon" justify="center">
-        {icon && <Avatar shape="square" size={30} src={icon}/>}
+        {icon && <Avatar shape="square" size={30} src={icon} />}
       </Flex>
       {showTitle && (
         <Typography.Text className="product-brand-title" ellipsis strong>

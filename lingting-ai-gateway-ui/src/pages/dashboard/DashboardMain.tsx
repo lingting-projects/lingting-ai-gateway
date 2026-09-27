@@ -155,8 +155,8 @@ export function DashboardMain() {
           <RangePicker onChange={handleCustomRangeChange} value={customRange} />
         )}
       </Flex>
-      <DashboardStatCards query={query} rangeTime={rangeTime}/>
-      <DashboardTokenChart query={query} rangeTime={rangeTime}/>
+      <DashboardStatCards query={query} rangeTime={rangeTime} />
+      <DashboardTokenChart query={query} rangeTime={rangeTime} />
     </Flex>
   );
 }

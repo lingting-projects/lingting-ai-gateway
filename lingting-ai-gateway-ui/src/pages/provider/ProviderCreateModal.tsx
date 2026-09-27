@@ -29,7 +29,7 @@ export function ProviderCreateModal({ onCreated }: ProviderCreateModalProps) {
         }
       }}
       title="添加供应商"
-      trigger={<Button icon={<PlusOutlined/>} type={"primary"} text="添加" tooltip="添加供应商"/>}
+      trigger={<Button icon={<PlusOutlined />} type={"primary"} text="添加" tooltip="添加供应商" />}
     >
       <ProFormText
         label="标识"

@@ -25,14 +25,14 @@ type ModelDefaultListProps = {
  * 默认模型配置列表：标题右侧刷新入口，搜索框筛选模型名称与展示名称。
  */
 export function ModelDefaultList({
-                                   loading,
-                                   models,
-                                   onRefresh,
-                                   onSelect,
-                                   refreshing,
-                                   selected,
-                                   targetModel,
-                                 }: ModelDefaultListProps) {
+  loading,
+  models,
+  onRefresh,
+  onSelect,
+  refreshing,
+  selected,
+  targetModel,
+}: ModelDefaultListProps) {
   const [keyword, setKeyword] = useState("");
 
   const filter = useCallback(
@@ -68,7 +68,7 @@ export function ModelDefaultList({
       <Flex align="center" gap="small" justify="space-between">
         <Typography.Text strong>默认模型配置</Typography.Text>
         <Button
-          icon={<ReloadOutlined/>}
+          icon={<ReloadOutlined />}
           loading={refreshing}
           onClick={onRefresh}
           tooltip="刷新默认模型配置"
@@ -78,7 +78,7 @@ export function ModelDefaultList({
         allowClear
         onChange={(event) => setKeyword(event.target.value)}
         placeholder="搜索模型"
-        prefix={<SearchOutlined/>}
+        prefix={<SearchOutlined />}
         value={keyword}
       />
     </Flex>

@@ -25,13 +25,13 @@ type ApiKeyEditModalProps = {
  * API Key 弹窗：新增与编辑共用，编辑时启用状态沿用记录当前值（列表提供快捷切换）。
  */
 export function ApiKeyEditModal({
-                                  onCreated,
-                                  onOpenChange,
-                                  onSuccess,
-                                  open,
-                                  record,
-                                  trigger,
-                                }: ApiKeyEditModalProps) {
+  onCreated,
+  onOpenChange,
+  onSuccess,
+  open,
+  record,
+  trigger,
+}: ApiKeyEditModalProps) {
   const editing = Boolean(record);
 
   return (
@@ -66,7 +66,7 @@ export function ApiKeyEditModal({
         placeholder="请输入名称"
         rules={[{ message: "请输入名称", required: true }]}
       />
-      <ProFormTextArea label="备注" name="remark" placeholder="请输入备注"/>
+      <ProFormTextArea label="备注" name="remark" placeholder="请输入备注" />
     </ModalForm>
   );
 }

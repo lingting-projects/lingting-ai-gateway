@@ -31,8 +31,8 @@ export function ApiKeySecretModal({ onClose, secret }: ApiKeySecretModalProps) {
       closable={false}
       footer={
         <Flex gap="small" justify="end">
-          <Button onClick={handleCopy} text="复制" type="primary"/>
-          <Button onClick={onClose} text="关闭"/>
+          <Button onClick={handleCopy} text="复制" type="primary" />
+          <Button onClick={onClose} text="关闭" />
         </Flex>
       }
       keyboard

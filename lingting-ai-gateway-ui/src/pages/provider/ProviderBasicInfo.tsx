@@ -128,8 +128,8 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
             </Checkbox>
           ) : (
             <Flex align="center" gap="small">
-              <DictTag dict={ENABLED_DICT} value={provider.enabled}/>
-              <LinkButton onClick={handleToggleEnabled} text={provider.enabled ? "禁用" : "启用"}/>
+              <DictTag dict={ENABLED_DICT} value={provider.enabled} />
+              <LinkButton onClick={handleToggleEnabled} text={provider.enabled ? "禁用" : "启用"} />
             </Flex>
           ),
         title: "启用状态",
@@ -154,14 +154,14 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
     <ProCard>
       <Flex className="provider-basic-info" gap="middle" vertical>
         <Flex gap="small">
-          <Button hidden={editing} icon={<EditOutlined/>} onClick={handleEdit} text="编辑"/>
+          <Button hidden={editing} icon={<EditOutlined />} onClick={handleEdit} text="编辑" />
           <Button
             confirm={{
               description: "删除后该供应商的模型配置会一并移除。",
               title: "确认删除该供应商？",
             }}
             danger
-            icon={<DeleteOutlined/>}
+            icon={<DeleteOutlined />}
             onConfirm={handleDelete}
             text="删除"
           />
@@ -179,8 +179,8 @@ export function ProviderBasicInfo({ detail, onChanged }: ProviderBasicInfoProps)
         />
         {editing && (
           <Flex gap="small">
-            <Button loading={submitting} onClick={handleSubmit} text="提交" type="primary"/>
-            <Button onClick={handleCancel} text="取消"/>
+            <Button loading={submitting} onClick={handleSubmit} text="提交" type="primary" />
+            <Button onClick={handleCancel} text="取消" />
           </Flex>
         )}
       </Flex>

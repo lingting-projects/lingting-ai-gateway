@@ -25,13 +25,13 @@ type ModelRedirectModalProps = {
  * 模型映射弹窗：新增与编辑共用，提交成功后关闭并回调刷新。
  */
 export function ModelRedirectModal({
-                                     onOpenChange,
-                                     onSuccess,
-                                     open,
-                                     redirect,
-                                     targetOptions,
-                                     trigger,
-                                   }: ModelRedirectModalProps) {
+  onOpenChange,
+  onSuccess,
+  open,
+  redirect,
+  targetOptions,
+  trigger,
+}: ModelRedirectModalProps) {
   const editing = Boolean(redirect);
 
   return (

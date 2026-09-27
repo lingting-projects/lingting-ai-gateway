@@ -13,10 +13,10 @@ export function ProviderOverview({ enabledCount, total }: ProviderOverviewProps)
   return (
     <Flex className="provider-overview" gap="middle">
       <ProCard className="provider-overview-card">
-        <Statistic title="供应商数量" value={total}/>
+        <Statistic title="供应商数量" value={total} />
       </ProCard>
       <ProCard className="provider-overview-card">
-        <Statistic title="可用供应商数量" value={enabledCount}/>
+        <Statistic title="可用供应商数量" value={enabledCount} />
       </ProCard>
     </Flex>
   );

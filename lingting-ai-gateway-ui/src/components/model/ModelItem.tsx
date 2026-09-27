@@ -53,8 +53,8 @@ export function ModelItem({ model, onClick, selected }: ModelItemProps) {
           </Typography.Text>
         </Flex>
         <Flex align="center" className="model-item-tags" gap="small">
-          <DictTag dict={REASONING_DICT} value={model.reasoning}/>
-          <DictTag dict={ENABLED_DICT} value={model.enabled}/>
+          <DictTag dict={REASONING_DICT} value={model.reasoning} />
+          <DictTag dict={ENABLED_DICT} value={model.enabled} />
         </Flex>
       </Flex>
       <Flex align="center" gap="small" justify="space-between">

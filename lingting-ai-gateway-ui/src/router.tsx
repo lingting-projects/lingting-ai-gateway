@@ -50,7 +50,7 @@ export const menuRoutes: readonly MenuRouteDefinition[] = [
   },
   {
     component: IntegrationMain,
-    icon: <ApiOutlined/>,
+    icon: <ApiOutlined />,
     path: "integration",
     title: "集成",
   },

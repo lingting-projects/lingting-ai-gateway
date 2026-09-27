@@ -37,15 +37,15 @@ type ModelRedirectListProps = {
  * 模型映射列表：标题右侧刷新与新增入口，搜索框筛选映射源与映射目标，卡片尾部提供编辑与删除。
  */
 export function ModelRedirectList({
-                                    loading,
-                                    onRefresh,
-                                    onSelect,
-                                    redirects,
-                                    refreshing,
-                                    selected,
-                                    targetOptions,
-                                    targetModel,
-                                  }: ModelRedirectListProps) {
+  loading,
+  onRefresh,
+  onSelect,
+  redirects,
+  refreshing,
+  selected,
+  targetOptions,
+  targetModel,
+}: ModelRedirectListProps) {
   const [keyword, setKeyword] = useState("");
   const [editing, setEditing] = useState<ProviderModelRedirectVO | null>(null);
 
@@ -92,7 +92,7 @@ export function ModelRedirectList({
       >
         <Flex align="center" className="model-redirect-content" gap="small">
           <Typography.Text ellipsis>{redirect.source}</Typography.Text>
-          <ArrowRightOutlined className="model-redirect-arrow"/>
+          <ArrowRightOutlined className="model-redirect-arrow" />
           <Typography.Text ellipsis strong>
             {redirect.target}
           </Typography.Text>
@@ -104,7 +104,7 @@ export function ModelRedirectList({
           vertical
         >
           <LinkButton
-            icon={<EditOutlined/>}
+            icon={<EditOutlined />}
             onClick={() => setEditing(redirect)}
             text="编辑"
             tooltip="编辑模型映射"
@@ -112,7 +112,7 @@ export function ModelRedirectList({
           <LinkButton
             confirm={{ description: "删除后该映射立即失效。", title: "确认删除该映射？" }}
             danger
-            icon={<DeleteOutlined/>}
+            icon={<DeleteOutlined />}
             onConfirm={() => handleDelete(redirect)}
             text="删除"
             tooltip="删除模型映射"
@@ -129,7 +129,7 @@ export function ModelRedirectList({
         <Typography.Text strong>模型映射</Typography.Text>
         <Flex gap="small">
           <Button
-            icon={<ReloadOutlined/>}
+            icon={<ReloadOutlined />}
             loading={refreshing}
             onClick={onRefresh}
             tooltip="刷新模型映射"
@@ -137,7 +137,7 @@ export function ModelRedirectList({
           <ModelRedirectModal
             onSuccess={onRefresh}
             targetOptions={targetOptions}
-            trigger={<Button icon={<PlusOutlined/>} tooltip="新增模型映射"/>}
+            trigger={<Button icon={<PlusOutlined />} tooltip="新增模型映射" />}
           />
         </Flex>
       </Flex>
@@ -145,7 +145,7 @@ export function ModelRedirectList({
         allowClear
         onChange={(event) => setKeyword(event.target.value)}
         placeholder="搜索映射源或映射目标"
-        prefix={<SearchOutlined/>}
+        prefix={<SearchOutlined />}
         value={keyword}
       />
     </Flex>

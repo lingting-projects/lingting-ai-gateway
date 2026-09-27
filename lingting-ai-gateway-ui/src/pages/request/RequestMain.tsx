@@ -60,7 +60,7 @@ export function RequestMain() {
     const v: ExTableProps<RequestMainDetailVO>["expandable"] = {
       childrenColumnName: "________children",
       expandedRowRender: (record) => (
-        <RequestSubTable onDetail={handleSubDetail} subs={record?.children || []}/>
+        <RequestSubTable onDetail={handleSubDetail} subs={record?.children || []} />
       ),
       rowExpandable: (record) => !!record?.children?.length,
     };
@@ -88,7 +88,7 @@ export function RequestMain() {
         polling={polling}
         search={{ filterType: "light" }}
         toolBarRender={() => [
-          <AutoRefreshControl key="auto-refresh" onChange={setAutoRefresh} setting={autoRefresh}/>,
+          <AutoRefreshControl key="auto-refresh" onChange={setAutoRefresh} setting={autoRefresh} />,
         ]}
       />
       <RequestDetailModal<RequestMainVO>

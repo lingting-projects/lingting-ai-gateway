@@ -36,7 +36,7 @@ const App = () => {
       routeType={"hash"}
       baseItems={[
         <ProductBrand
-          icon={<img alt={PRODUCT_TITLE} src={PRODUCT_ICON}/>}
+          icon={<img alt={PRODUCT_TITLE} src={PRODUCT_ICON} />}
           key="product-brand"
           title={PRODUCT_TITLE}
         />,
@@ -53,6 +53,6 @@ const App = () => {
 
 createRoot(root).render(
   <StrictMode>
-    <App/>
+    <App />
   </StrictMode>,
 );

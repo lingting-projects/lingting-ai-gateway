@@ -106,8 +106,8 @@ export function DashboardTokenChart({ query, rangeTime }: DashboardTokenChartPro
 
         <Spin spinning={isFetching}>
           <Flex gap="middle" vertical>
-            <TokenLineChart data={points} formatValue={formatTokenCount}/>
-            <TokenLineChart data={ratioPoints} formatValue={formatPercent}/>
+            <TokenLineChart data={points} formatValue={formatTokenCount} />
+            <TokenLineChart data={ratioPoints} formatValue={formatPercent} />
           </Flex>
         </Spin>
       </Flex>
