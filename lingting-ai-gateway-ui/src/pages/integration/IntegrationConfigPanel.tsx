@@ -27,11 +27,7 @@ export function IntegrationConfigPanel({
       className="integration-config-panel"
       extra={
         agent && (
-          <IntegrationSyncButton
-            agent={agent}
-            key={agent.key}
-            serverTargets={serverTargets}
-          />
+          <IntegrationSyncButton agent={agent} key={agent.key} serverTargets={serverTargets}/>
         )
       }
       loading={loading}

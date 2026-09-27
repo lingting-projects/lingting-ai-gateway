@@ -80,11 +80,7 @@ export function buildSyncTargets(
   serverTargets: IntegrationSyncTarget[],
   cache: IntegrationSyncCache,
 ): IntegrationSyncTarget[] {
-  return uniqueTargets([
-    ...serverTargets,
-    ...cache.history,
-    ...(cache.last ? [cache.last] : []),
-  ]);
+  return uniqueTargets([...serverTargets, ...cache.history, ...(cache.last ? [cache.last] : [])]);
 }
 
 /** 记录本次同步目标并返回更新后的缓存：更新「上次使用」，非服务端来源的目录并入历史。 */

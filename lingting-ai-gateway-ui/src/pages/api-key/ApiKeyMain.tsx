@@ -7,8 +7,8 @@ import {
   Copyable,
   DictTag,
   type ExDictProps,
-  type ExTableColumn,
   ExTable,
+  type ExTableColumn,
   formatTimestamp,
   LinkButton,
 } from "@lri";
