@@ -197,7 +197,7 @@ export function createRequestMainColumns(
       search: false,
       title: "首包时间",
     },
-    { dataIndex: ["request", "sessionId"], search: false, title: "会话ID" },
+    { dataIndex: ["request", "sessionId"], search: false, title: "会话ID", copyable: true },
     { dataIndex: ["request", "errorType"], search: false, title: "错误类型" },
     { dataIndex: ["request", "errorMessage"], ellipsis: true, search: false, title: "错误信息" },
     { dataIndex: "id", hideInTable: true, title: "ID" },

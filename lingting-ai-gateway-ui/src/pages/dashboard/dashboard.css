@@ -28,3 +28,7 @@
 .dashboard-filter-select {
   @apply min-w-48;
 }
+
+.dashboard-filter-input {
+  @apply w-56;
+}
