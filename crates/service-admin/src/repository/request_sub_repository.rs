@@ -304,12 +304,43 @@ fn push_request_sub_conditions<'a>(
 }
 
 /// 追加仪表盘统计筛选条件；筛选值一律参数绑定，数组为空时不追加条件。
-fn push_dashboard_sub_conditions(query: &mut QueryBuilder<Postgres>, conditions: &DashboardQO) {
+///
+/// 子请求表没有会话与凭证字段，按主请求日志的同一字段过滤。
+fn push_dashboard_sub_conditions<'a>(
+    query: &mut QueryBuilder<'a, Postgres>,
+    conditions: &'a DashboardQO,
+) {
     query.push(" WHERE 1 = 1");
     query.ge("start_time", conditions.start_time);
     query.le("start_time", conditions.end_time);
+    push_dashboard_sub_scope(query, conditions);
     query.in_array("provider_id", conditions.provider_ids.as_deref());
     query.in_array("model", conditions.models.as_deref());
+}
+
+/// 追加来自主请求日志的会话与凭证筛选条件。
+fn push_dashboard_sub_scope<'a>(
+    query: &mut QueryBuilder<'a, Postgres>,
+    conditions: &'a DashboardQO,
+) {
+    push_dashboard_sub_scope_field(query, "session_id", conditions.session_id.as_deref());
+    push_dashboard_sub_scope_field(query, "credential_id", conditions.credential_id.as_deref());
+}
+
+/// 按主请求日志的指定列过滤子请求：`column` 必须是调用方控制的可信列名。
+fn push_dashboard_sub_scope_field<'a>(
+    query: &mut QueryBuilder<'a, Postgres>,
+    column: &str,
+    value: Option<&'a str>,
+) {
+    if let Some(value) = value {
+        query
+            .push(" AND main_request_id IN (SELECT id FROM request_main WHERE ")
+            .push(column)
+            .push(" = ")
+            .push_bind(value)
+            .push(")");
+    }
 }
 
 /// 当前电脑时区相对 UTC 的偏移毫秒数；pglite 无时区数据，因此由本地时钟提供。

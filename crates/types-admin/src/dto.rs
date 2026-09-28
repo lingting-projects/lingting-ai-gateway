@@ -578,13 +578,18 @@ pub struct ProviderModelSyncResult {
 
 /// 仪表盘统计筛选条件。
 ///
-/// 主请求表没有供应商字段，`provider_ids` 只对子请求统计生效。
+/// 主请求表没有供应商字段，`provider_ids` 只对子请求统计生效；
+/// 子请求表没有会话与凭证字段，`session_id`、`credential_id` 通过主请求日志过滤子请求统计。
 #[auto_type]
 pub struct DashboardQO {
     /// 筛选的供应商 ID；为空表示不限。
     pub provider_ids: Option<Vec<i64>>,
     /// 筛选的模型名；为空表示不限。
     pub models: Option<Vec<String>>,
+    /// 筛选的会话 ID，精确匹配；为空表示不限。
+    pub session_id: Option<String>,
+    /// 筛选的凭证 ID，精确匹配；为空表示不限。
+    pub credential_id: Option<String>,
     /// 筛选开始时间（毫秒时间戳，大于等于），为空表示不限。
     pub start_time: Option<i64>,
     /// 筛选结束时间（毫秒时间戳，小于等于），为空表示不限。

@@ -236,9 +236,14 @@ fn push_request_main_conditions<'a>(
 }
 
 /// 追加仪表盘统计筛选条件；主请求表没有供应商字段，忽略 `provider_ids`。
-fn push_dashboard_main_conditions(query: &mut QueryBuilder<Postgres>, conditions: &DashboardQO) {
+fn push_dashboard_main_conditions<'a>(
+    query: &mut QueryBuilder<'a, Postgres>,
+    conditions: &'a DashboardQO,
+) {
     query.push(" WHERE 1 = 1");
     query.ge("start_time", conditions.start_time);
     query.le("start_time", conditions.end_time);
+    query.eq("session_id", conditions.session_id.as_deref());
+    query.eq("credential_id", conditions.credential_id.as_deref());
     query.in_array("model", conditions.models.as_deref());
 }
