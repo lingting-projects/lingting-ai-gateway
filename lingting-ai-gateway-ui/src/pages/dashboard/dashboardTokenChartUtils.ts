@@ -24,15 +24,15 @@ type MetricAccumulator = {
   numerator: number;
 };
 
-/** Token 用量指标：总、缓存、读、写。 */
+/** Token 用量指标：总、缓存、输入、输出。 */
 const TOKEN_METRICS: TokenMetric[] = [
   { label: "总", numerator: (row) => Number(row.total) },
   { label: "缓存", numerator: (row) => Number(row.cacheRead) + Number(row.cacheWrite) },
-  { label: "读", numerator: (row) => Number(row.input) },
-  { label: "写", numerator: (row) => Number(row.output) },
+  { label: "输入", numerator: (row) => Number(row.input) },
+  { label: "输出", numerator: (row) => Number(row.output) },
 ];
 
-/** 缓存占比指标：缓存读占总读、缓存写占总写。 */
+/** 缓存占比指标：缓存读占总输入、缓存写占总输出。 */
 const CACHE_RATIO_METRICS: TokenMetric[] = [
   {
     denominator: (row) => Number(row.input),
@@ -144,8 +144,8 @@ function resolveGroup(
  * 无分组：
  *   "总"
  *   "缓存"
- *   "读"
- *   "写"
+ *   "输入"
+ *   "输出"
  *
  * 供应商分组：
  *   "OpenAI · 总"
@@ -221,8 +221,8 @@ function buildPoints(
    *
    *   A · 总
    *   A · 缓存
-   *   A · 读
-   *   A · 写
+   *   A · 输入
+   *   A · 输出
    *
    * 那么就只生成这一组 series。
    */
@@ -305,7 +305,7 @@ function resolveAccumulatorValue(accumulator: MetricAccumulator | undefined): nu
   return (accumulator.numerator / accumulator.denominator) * 100;
 }
 
-/** Token 用量折线数据点：总、缓存、读、写。 */
+/** Token 用量折线数据点：总、缓存、输入、输出。 */
 export function buildTokenPoints(
   rows: DashboardTokenFilterVO[],
   withProvider: boolean,
@@ -315,7 +315,7 @@ export function buildTokenPoints(
   return buildPoints(rows, TOKEN_METRICS, withProvider, withModel, rangeTime);
 }
 
-/** 缓存占比折线数据点：缓存读占总读、缓存写占总写。 */
+/** 缓存占比折线数据点：缓存读占总输入、缓存写占总输出。 */
 export function buildCacheRatioPoints(
   rows: DashboardTokenFilterVO[],
   withProvider: boolean,

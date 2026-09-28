@@ -67,16 +67,17 @@ function RequestStatCard({ data, loading, subTitle, title }: RequestStatCardProp
   );
 }
 
-/** Token 统计卡片：总数、缓存（含占比）、读、写。 */
+/** Token 统计卡片：总、缓存（含占比）、输入（含缓存读占输入的百分比）、输出。 */
 function TokenStatCard({ data, loading, subTitle, title }: TokenStatCardProps) {
   const total = Number(data?.total ?? 0);
   const cache = cacheTokens(data);
+  const cacheReadPercent = formatCachePercent(data?.cacheRead, data?.input);
 
   return (
     <ProCard className="dashboard-stat-card" loading={loading} subTitle={subTitle} title={title}>
       <Row gutter={[16, 16]}>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="总数" value={formatTokenCount(total)} />
+          <Statistic title="总" value={formatTokenCount(total)} />
         </Col>
         <Col span={STAT_COL_SPAN}>
           <Statistic
@@ -86,10 +87,14 @@ function TokenStatCard({ data, loading, subTitle, title }: TokenStatCardProps) {
           />
         </Col>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="读" value={formatTokenCount(data?.input)} />
+          <Statistic
+            suffix={`(${cacheReadPercent})`}
+            title="输入"
+            value={formatTokenCount(data?.input)}
+          />
         </Col>
         <Col span={STAT_COL_SPAN}>
-          <Statistic title="写" value={formatTokenCount(data?.output)} />
+          <Statistic title="输出" value={formatTokenCount(data?.output)} />
         </Col>
       </Row>
     </ProCard>

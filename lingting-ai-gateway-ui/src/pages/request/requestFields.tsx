@@ -41,7 +41,6 @@ const TOKEN_DETAILS: { key: keyof RequestTokenFields; label: string }[] = [
   { key: "outputTokens", label: "输出" },
   { key: "cacheReadTokens", label: "缓存读" },
   { key: "cacheWriteTokens", label: "缓存写" },
-  { key: "inferenceTokens", label: "推理" },
 ];
 
 const TOKEN_DETAIL_FIELDS: { key: keyof RequestTokenFields; title: string }[] = [
@@ -82,7 +81,7 @@ export function formatRequestDuration(value?: string | null) {
   return millis >= 1000 ? `${(millis / 1000).toFixed(2)} s` : `${millis} ms`;
 }
 
-/** Token 列：第一行总 / 缓存 / 缓存占比，第二行明细只保留非零项。 */
+/** Token 列：第一行总 / 缓存 / 缓存占比 / 推理（非零时），第二行明细只保留非零项，并在缓存读后附其占输入的百分比。 */
 export function renderTokenSummary(record?: RequestTokenFields) {
   if (!record) {
     return <>-</>;
@@ -90,10 +89,24 @@ export function renderTokenSummary(record?: RequestTokenFields) {
 
   const total = Number(record.totalTokens);
   const cache = Number(record.cacheReadTokens) + Number(record.cacheWriteTokens);
-  const summary = `总 ${formatTokenCount(total)} · 缓存 ${formatTokenCount(cache)} · ${formatCachePercent(cache, total)}`;
-  const details = TOKEN_DETAILS.filter((item) => Number(record[item.key]) > 0).map(
-    (item) => `${item.label} ${formatTokenCount(record[item.key])}`,
-  );
+  const inference = Number(record.inferenceTokens);
+  const summary = [
+    `总 ${formatTokenCount(total)}`,
+    `缓存 ${formatTokenCount(cache)}`,
+    formatCachePercent(cache, total),
+    inference > 0 ? `推理 ${formatTokenCount(inference)}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const details = TOKEN_DETAILS.filter((item) => Number(record[item.key]) > 0).flatMap((item) => {
+    const detail = `${item.label} ${formatTokenCount(record[item.key])}`;
+
+    if (item.key !== "cacheReadTokens") {
+      return [detail];
+    }
+
+    return [detail, formatCachePercent(record.cacheReadTokens, record.inputTokens)];
+  });
 
   return (
     <Flex className="request-token" gap={2} vertical>
