@@ -74,6 +74,7 @@ export function ApiKeyMain() {
 
   const columns = useMemo<ExTableColumn<ApiKeyVO>[]>(
     () => [
+      { dataIndex: "id", title: "凭证ID" },
       { dataIndex: "name", title: "名称" },
       {
         dataIndex: "keyHash",
