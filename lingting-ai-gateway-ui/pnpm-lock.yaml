@@ -75,8 +75,8 @@ importers:
         specifier: ~11.11.1
         version: 11.11.2
       lingting-react-ui:
-        specifier: 2026.9.262
-        version: 2026.9.262(@ant-design/icons@6.3.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@ant-design/pro-components@3.1.14-7(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2))(@marsidev/react-turnstile@1.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-query@5.101.4(react@19.2.8))(@tanstack/react-router@1.170.38(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-store@0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(clsx@2.1.1)(dayjs@1.11.21)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2026.9.263
+        version: 2026.9.263(@ant-design/icons@6.3.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@ant-design/pro-components@3.1.14-7(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2))(@marsidev/react-turnstile@1.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-query@5.101.4(react@19.2.8))(@tanstack/react-router@1.170.38(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-store@0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(clsx@2.1.1)(dayjs@1.11.21)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: ~19.2.7
         version: 19.2.8
@@ -2781,8 +2781,8 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
-  lingting-react-ui@2026.9.262:
-    resolution: {integrity: sha512-OVXjbm+ouIzirlNP28/3IDmGfFLVUmSzBXFek2UTPzHtF/pEDdSZk3lweJQgHD/Z51QLnoDOYaoqv/gVSPcvqQ==}
+  lingting-react-ui@2026.9.263:
+    resolution: {integrity: sha512-8nQ5jrErGwniIPFO1jxspuZ99wl3iwId0koPA7IDkxjfoBYgK+bGqO/ARg7Pr3YmblEzJnPwwUw9qVfXMy0PiA==}
     peerDependencies:
       '@ant-design/icons': ~6.3.2
       '@ant-design/pro-components': ^3.1.14-6
@@ -5894,7 +5894,7 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
-  lingting-react-ui@2026.9.262(@ant-design/icons@6.3.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@ant-design/pro-components@3.1.14-7(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2))(@marsidev/react-turnstile@1.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-query@5.101.4(react@19.2.8))(@tanstack/react-router@1.170.38(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-store@0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(clsx@2.1.1)(dayjs@1.11.21)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  lingting-react-ui@2026.9.263(@ant-design/icons@6.3.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@ant-design/pro-components@3.1.14-7(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2))(@marsidev/react-turnstile@1.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-query@5.101.4(react@19.2.8))(@tanstack/react-router@1.170.38(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-store@0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(clsx@2.1.1)(dayjs@1.11.21)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@ant-design/icons': 6.3.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@ant-design/pro-components': 3.1.14-7(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2)
