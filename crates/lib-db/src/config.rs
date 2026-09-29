@@ -1,12 +1,8 @@
-use std::net::{SocketAddr, SocketAddrV4};
 use std::path::PathBuf;
-use std::time::Duration;
 
 use anyhow::{Context, Result};
-use log::log;
 use pglite_oxide::PgliteServer;
 use sqlx::PgPool;
-use sqlx::postgres::PgPoolOptions;
 
 /// 嵌入式数据库配置。
 #[derive(Debug, Clone)]

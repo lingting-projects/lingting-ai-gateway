@@ -1,6 +1,5 @@
 //! [OI] 接口使用的工具方法。
 
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::Result;

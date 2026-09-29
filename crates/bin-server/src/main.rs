@@ -6,7 +6,7 @@ use std::process::ExitCode;
 use std::sync::Arc;
 
 use crate::arguments::{Arguments, Command};
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use framework_web_axum::axum_builder;
 use lib_core::{Directorys, init_logging};
 use lib_db::{DbConfig, DbContext};

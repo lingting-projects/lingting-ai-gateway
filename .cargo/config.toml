@@ -1,7 +1,5 @@
 [build]
 rustflags = [
-    # 必须大写命名
-    "-A", "non_upper_case_globals",
     "-A", "unused_mut",
     # 忽略驼峰
     "-A", "non_snake_case",
