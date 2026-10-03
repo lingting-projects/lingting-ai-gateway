@@ -20,8 +20,13 @@ export default defineConfig(({ mode }) => {
       // LRI 新增 peer 依赖时必须同步补齐。匹配基于包名，深层导入（如 react/jsx-runtime、
       // antd/es/form）已由包名覆盖，无需单列。
       dedupe: [
+        "@ant-design/cssinjs",
         "@ant-design/icons",
+        "@ant-design/plots",
         "@ant-design/pro-components",
+        "@ant-design/x",
+        "@ant-design/x-markdown",
+        "@ant-design/x-sdk",
         "@marsidev/react-turnstile",
         "@tanstack/react-query",
         "@tanstack/react-router",
