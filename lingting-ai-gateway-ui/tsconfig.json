@@ -17,8 +17,8 @@
     "types": ["vite/client"],
     "paths": {
       "@/*": ["./src/*"],
-      "@lri": ["./node_modules/lingting-react-ui"],
-      "@lri/*": ["./node_modules/lingting-react-ui/*"]
+      "@lri": ["./lri"],
+      "@lri/*": ["./lri/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"],

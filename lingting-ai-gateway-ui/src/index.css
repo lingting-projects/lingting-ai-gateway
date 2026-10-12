@@ -4,13 +4,13 @@
 @source "../lri";
 
 @layer base {
-    html,
-    body,
-    #root {
-        @apply h-full min-h-full w-full min-w-full;
-    }
+  html,
+  body,
+  #root {
+    @apply h-full min-h-full w-full min-w-full;
+  }
 
-    body {
-        @apply m-0 overflow-hidden;
-    }
+  body {
+    @apply m-0 overflow-hidden;
+  }
 }
