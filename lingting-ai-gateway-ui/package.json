@@ -28,7 +28,7 @@
     "d3": "~7.9.0",
     "dayjs": "~1.11.21",
     "highlight.js": "~11.11.1",
-    "lingting-react-ui": "2026.9.263",
+    "lingting-react-ui": "2026.9.264",
     "react": "~19.2.7",
     "react-dom": "~19.2.7",
     "simple-icons": "~16.28.0",
@@ -45,6 +45,7 @@
     "tailwindcss": "~4.1.18",
     "typescript": "~5.9.3",
     "vite": "catalog:",
+    "vite-plugin-resolve-barrels": "~0.2.2",
     "vite-plus": "catalog:"
   },
   "volta": {

@@ -75,8 +75,8 @@ importers:
         specifier: ~11.11.1
         version: 11.11.2
       lingting-react-ui:
-        specifier: 2026.9.263
-        version: 2026.9.263(@ant-design/icons@6.3.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@ant-design/pro-components@3.1.14-7(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2))(@marsidev/react-turnstile@1.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-query@5.101.4(react@19.2.8))(@tanstack/react-router@1.170.38(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-store@0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(clsx@2.1.1)(dayjs@1.11.21)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2026.9.264
+        version: 2026.9.264(c13c5448a297d966de4549c781d504e2)
       react:
         specifier: ~19.2.7
         version: 19.2.8
@@ -120,6 +120,9 @@ importers:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.6
         version: '@voidzero-dev/vite-plus-core@0.2.6(@types/node@22.13.17)(esbuild@0.28.1)(jiti@2.7.0)(typescript@5.9.3)'
+      vite-plugin-resolve-barrels:
+        specifier: ~0.2.2
+        version: 0.2.2(@voidzero-dev/vite-plus-core@0.2.6(@types/node@22.13.17)(esbuild@0.28.1)(jiti@2.7.0)(typescript@5.9.3))
       vite-plus:
         specifier: 'catalog:'
         version: 0.2.6(@types/node@22.13.17)(@voidzero-dev/vite-plus-core@0.2.6(@types/node@22.13.17)(esbuild@0.28.1)(jiti@2.7.0)(typescript@5.9.3))(esbuild@0.28.1)(jiti@2.7.0)(typescript@5.9.3)
@@ -2781,11 +2784,16 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
-  lingting-react-ui@2026.9.263:
-    resolution: {integrity: sha512-8nQ5jrErGwniIPFO1jxspuZ99wl3iwId0koPA7IDkxjfoBYgK+bGqO/ARg7Pr3YmblEzJnPwwUw9qVfXMy0PiA==}
+  lingting-react-ui@2026.9.264:
+    resolution: {integrity: sha512-cGosUWfkKnl2gjh3Z9a0BuzogoqvNdxhGe4IJhOAUkXbmV5GMaeFp6pjTnr3YLW0kRqoeIJSWkAhml+4OsQzAA==}
     peerDependencies:
+      '@ant-design/cssinjs': ^2.1.2
       '@ant-design/icons': ~6.3.2
+      '@ant-design/plots': ~2.6.8
       '@ant-design/pro-components': ^3.1.14-6
+      '@ant-design/x': ~2.8.0
+      '@ant-design/x-markdown': ~2.8.0
+      '@ant-design/x-sdk': ~2.8.0
       '@marsidev/react-turnstile': ~1.6.1
       '@tanstack/react-query': ~5.101.2
       '@tanstack/react-router': ^1.170.18
@@ -3235,6 +3243,11 @@ packages:
   uuid@14.0.2:
     resolution: {integrity: sha512-xZe/16rV4aa+HGSOCiY2YeLT1OybRLrrkL/Rqaq7p7GMVXjFh+6wN4oMYgjFmnSnhY8t6Xpdl2l9qmnHYuMHwQ==}
     hasBin: true
+
+  vite-plugin-resolve-barrels@0.2.2:
+    resolution: {integrity: sha512-s5N8BWR7LvUaBtr3OQwgjN2F/qf/kW2O/8LbJuH0Y1u20HgxHwqaxsuEAogP2ORnyDgv8Np4tElsi+k4xXzlHA==}
+    peerDependencies:
+      vite: ^7.0.0 || ^8.0.0
 
   vite-plus@0.2.6:
     resolution: {integrity: sha512-fFX8GLENhtzvnE4NmTPC8INRxjD2kZKcqUW0p7jOdawmHTNZqM5FiieyWOG6WH1a/axu9FCsbUNb918grfzDTw==}
@@ -5894,10 +5907,15 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
-  lingting-react-ui@2026.9.263(@ant-design/icons@6.3.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@ant-design/pro-components@3.1.14-7(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2))(@marsidev/react-turnstile@1.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-query@5.101.4(react@19.2.8))(@tanstack/react-router@1.170.38(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-store@0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(clsx@2.1.1)(dayjs@1.11.21)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  lingting-react-ui@2026.9.264(c13c5448a297d966de4549c781d504e2):
     dependencies:
+      '@ant-design/cssinjs': 2.1.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@ant-design/icons': 6.3.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@ant-design/plots': 2.6.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@ant-design/pro-components': 3.1.14-7(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2)
+      '@ant-design/x': 2.8.0(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@ant-design/x-markdown': 2.8.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@ant-design/x-sdk': 2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@marsidev/react-turnstile': 1.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-query': 5.101.4(react@19.2.8)
       '@tanstack/react-router': 1.170.38(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -6352,6 +6370,10 @@ snapshots:
       base64-arraybuffer: 1.0.2
 
   uuid@14.0.2: {}
+
+  vite-plugin-resolve-barrels@0.2.2(@voidzero-dev/vite-plus-core@0.2.6(@types/node@22.13.17)(esbuild@0.28.1)(jiti@2.7.0)(typescript@5.9.3)):
+    dependencies:
+      vite: '@voidzero-dev/vite-plus-core@0.2.6(@types/node@22.13.17)(esbuild@0.28.1)(jiti@2.7.0)(typescript@5.9.3)'
 
   vite-plus@0.2.6(@types/node@22.13.17)(@voidzero-dev/vite-plus-core@0.2.6(@types/node@22.13.17)(esbuild@0.28.1)(jiti@2.7.0)(typescript@5.9.3))(esbuild@0.28.1)(jiti@2.7.0)(typescript@5.9.3):
     dependencies:
