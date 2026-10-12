@@ -2,7 +2,6 @@ import { resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite-plus";
-import { resolveBarrelsPlugin } from "vite-plugin-resolve-barrels";
 
 export default defineConfig(({ mode }) => {
   const isDesktopBuild = mode === "desktop";
@@ -11,10 +10,6 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
-      resolveBarrelsPlugin({
-        directories: ["node_modules/lingting-react-ui/dist"],
-        rootDir: "node_modules/lingting-react-ui/dist",
-      }),
     ],
     resolve: {
       // LRI 以源码符号链接引入，其第三方依赖只会从 lri/node_modules 解析。pnpm 会为 LRI 的 peerDependencies 自动安装独立副本，

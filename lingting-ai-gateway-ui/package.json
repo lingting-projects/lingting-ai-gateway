@@ -45,7 +45,6 @@
     "tailwindcss": "~4.1.18",
     "typescript": "~5.9.3",
     "vite": "catalog:",
-    "vite-plugin-resolve-barrels": "~0.2.2",
     "vite-plus": "catalog:"
   },
   "volta": {

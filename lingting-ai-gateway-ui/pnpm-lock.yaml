@@ -111,6 +111,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ~5.1.1
         version: 5.1.4(@voidzero-dev/vite-plus-core@0.2.6(@types/node@22.13.17)(esbuild@0.28.1)(jiti@2.7.0)(typescript@5.9.3))(supports-color@10.2.2)
+      rollup-plugin-visualizer:
+        specifier: ^7.1.1
+        version: 7.1.1
       tailwindcss:
         specifier: ~4.1.18
         version: 4.1.18
@@ -1982,6 +1985,10 @@ packages:
     resolution: {integrity: sha512-Cxwpt2SfTzTtXcfOlzGEee8O+c+MmUgGrNiBcXnuWxuFJHe6a5Hz7qwhwe5OgaSYI0IJvkLqWX1ASG+cJOkEiA==}
     engines: {node: '>=10'}
 
+  ansi-styles@6.2.3:
+    resolution: {integrity: sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==}
+    engines: {node: '>=12'}
+
   antd-style@4.1.0:
     resolution: {integrity: sha512-vnPBGg0OVlSz90KRYZhxd89aZiOImTiesF+9MQqN8jsLGZUQTjbP04X9jTdEfsztKUuMbBWg/RmB/wHTakbtMQ==}
     peerDependencies:
@@ -2023,6 +2030,10 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
+  bundle-name@4.1.1:
+    resolution: {integrity: sha512-DdH81/zPLVS11EUgWq3tEu/xn+EzljlMYooDNdzWEnFha3R3NBMpMV1UqYIpjYHV/SgpFKMIX1Oh7o06SjM/oA==}
+    engines: {node: '>=18'}
+
   callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
@@ -2050,6 +2061,10 @@ packages:
 
   china-division@2.7.0:
     resolution: {integrity: sha512-4uUPAT+1WfqDh5jytq7omdCmHNk3j+k76zEG/2IqaGcYB90c2SwcixttcypdsZ3T/9tN1TTpBDoeZn+Yw/qBEA==}
+
+  cliui@9.0.1:
+    resolution: {integrity: sha512-k7ndgKhwoQveBL+/1tqGJYNz097I7WOvwbmmU2AR5+magtbjPWQTS1C5vzGkBC8Ym8UWRzfKUzUUqFLypY4Q+w==}
+    engines: {node: '>=20'}
 
   clsx@1.2.1:
     resolution: {integrity: sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==}
@@ -2299,6 +2314,18 @@ packages:
   decode-named-character-reference@1.3.0:
     resolution: {integrity: sha512-GtpQYB283KrPp6nRw50q3U9/VfOutZOe103qlN7BPP6Ad27xYnOIWv4lPzo8HCAL+mMZofJ9KEy30fq6MfaK6Q==}
 
+  default-browser-id@5.0.1:
+    resolution: {integrity: sha512-x1VCxdX4t+8wVfd1so/9w+vQ4vx7lKd2Qp5tDRutErwmR85OgmfX7RlLRMWafRMY7hbEiXIbudNrjOAPa/hL8Q==}
+    engines: {node: '>=18'}
+
+  default-browser@5.5.1:
+    resolution: {integrity: sha512-m1pAzaJgZ/gssEqlOhJkPJp8Xly7QyW6xcrkUa2KKcDeDSEMP7X8xipU3snUcfisTQx0w1AGae+9UtJSfVnXGw==}
+    engines: {node: '>=18'}
+
+  define-lazy-prop@3.0.0:
+    resolution: {integrity: sha512-N+MeXYoqr3pOgn8xfyRPREN7gHakLYjhsHhWGT3fWAiL4IkAt0iDw14QiiEm2bE30c5XX5q0FtAA3CK5f9/BUg==}
+    engines: {node: '>=12'}
+
   define-property@1.0.0:
     resolution: {integrity: sha512-cZTYKFWspt9jZsMscWo8sc/5lbPC9Q0N5nBLgb+Yd915iL3udB1uFgS3B8YCx66UVHq018DAVFoee7x+gxggeA==}
     engines: {node: '>=0.10.0'}
@@ -2335,6 +2362,9 @@ packages:
 
   electron-to-chromium@1.5.430:
     resolution: {integrity: sha512-e1QEj72Y4zd8RlNZVmoTg+iCOSVwpk05IOiiQwdrkwCSVlZfPthevErhE+nckGd2YbsXfp1SkisznhGVIXP2NQ==}
+
+  emoji-regex@10.6.0:
+    resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
 
   enhanced-resolve@5.23.0:
     resolution: {integrity: sha512-yJN/BOOLxcOW2aQgeif9mSnaUB8KtvmMMp56oA1kx1CRfBKbhZm2pJ+NBY+3eOboHxix8lfjWpHE0Ei5U8RbSA==}
@@ -2445,6 +2475,10 @@ packages:
   gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
     engines: {node: '>=6.9.0'}
+
+  get-caller-file@2.0.5:
+    resolution: {integrity: sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==}
+    engines: {node: 6.* || 8.* || >= 10.*}
 
   get-east-asian-width@1.7.0:
     resolution: {integrity: sha512-XjH1AECxf0giL2V1aU8vKyRR2ppRUb5c0EvT7zuJTokQ74bNo52zOtghqdWIqrhUD79fo3x0WfKZdOqxF6LG1Q==}
@@ -2564,6 +2598,11 @@ packages:
     resolution: {integrity: sha512-bv5z95W0dDtLfKwDfkTNxaRxmISBD3eQBKJeVxv2AQ7MjuUnDNG7cIQqvFtMOUYhsILWHhMayWdoGqNqYYYjww==}
     engines: {node: '>= 0.4'}
 
+  is-docker@3.0.0:
+    resolution: {integrity: sha512-eljcgEDlEns/7AXFosB5K/2nCM4P7FQPkGc/DWLy5rmFEWvZayGrik1d9/QIY5nJ4f9YsVvBkA6kJpHn9rISdQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    hasBin: true
+
   is-extglob@2.1.1:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
     engines: {node: '>=0.10.0'}
@@ -2575,6 +2614,15 @@ packages:
   is-hexadecimal@2.0.1:
     resolution: {integrity: sha512-DgZQp241c8oO6cA1SbTEWiXeoxV42vlcJxgH+B3hi1AiqqKruZR3ZGF8In3fj4+/y/7rHvlOZLZtgJ/4ttYGZg==}
 
+  is-in-ssh@1.0.0:
+    resolution: {integrity: sha512-jYa6Q9rH90kR1vKB6NM7qqd1mge3Fx4Dhw5TVlK1MUBqhEOuCagrEHMevNuCcbECmXZ0ThXkRm+Ymr51HwEPAw==}
+    engines: {node: '>=20'}
+
+  is-inside-container@1.0.0:
+    resolution: {integrity: sha512-KIYLCCJghfHZxqjYBE7rEy0OBuTd5xCHS7tHVgvCLkx7StIoaxwNW3hCALgEUjFfeRk+MG/Qxmp/vtETEF3tRA==}
+    engines: {node: '>=14.16'}
+    hasBin: true
+
   is-mobile@5.0.0:
     resolution: {integrity: sha512-Tz/yndySvLAEXh+Uk8liFCxOwVH6YutuR74utvOcu7I9Di+DwM0mtdPVZNaVvvBUM2OXxne/NhOs1zAO7riusQ==}
 
@@ -2585,6 +2633,10 @@ packages:
   is-number@7.0.0:
     resolution: {integrity: sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==}
     engines: {node: '>=0.12.0'}
+
+  is-wsl@3.1.1:
+    resolution: {integrity: sha512-e6rvdUCiQCAuumZslxRJWR/Doq4VpPR82kqclvcS0efgt430SlGIk05vdCN58+VrzgtIcfNODjozVielycD4Sw==}
+    engines: {node: '>=16'}
 
   isbot@5.2.2:
     resolution: {integrity: sha512-iQcBXcd+Rv/pkubRyGh2utW2j1oPG5hZY6TUhVPpqK4G+o3IbxpJNx04hgksjc/N7GK5pEorUxDeg31cFgEk/w==}
@@ -2875,6 +2927,10 @@ packages:
     resolution: {integrity: sha512-XrsrhT5sybtKI6wakr2SPOlGZWWYbUXZ7a0jT8/QOeAPau+1X/bSegNe5YR75oJmEZQbKningirmGOEJCIk61Q==}
     engines: {node: '>=12.20.0'}
 
+  open@11.0.4:
+    resolution: {integrity: sha512-++Zlftm0kVLPmzC06t6epuWmcRMDbI4z5P3NNX979WA/k23+NtSOynEGzsVfZwguKw2mi5umVgnBlJQMwRz4Pg==}
+    engines: {node: '>=20'}
+
   oxc-parser@0.144.0:
     resolution: {integrity: sha512-eacM4wMgGWXctHubY262yo+50E76qtQBqe+uK73YEV1IT3qP12Acbnf9Nc8t+agIAdnko9iVT4KF83/d0EjY5w==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -2953,6 +3009,10 @@ packages:
     resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
     engines: {node: '>=12'}
 
+  picomatch@4.0.7:
+    resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
+    engines: {node: '>=12'}
+
   pngjs@7.0.0:
     resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
     engines: {node: '>=14.19.0'}
@@ -2966,6 +3026,10 @@ packages:
   postcss@8.5.15:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
     engines: {node: ^10 || ^12 || >=14}
+
+  powershell-utils@0.2.1:
+    resolution: {integrity: sha512-C+y9x90UElAddDZmV4qOx9W53B61PO7cIqWz2dQsWlwswuq4mr8NEwytdGKboYbQlGZ3awrkTeNvcZiZNHnQ8A==}
+    engines: {node: '>=20'}
 
   pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
@@ -3043,8 +3107,25 @@ packages:
   robust-predicates@3.0.3:
     resolution: {integrity: sha512-NS3levdsRIUOmiJ8FZWCP7LG3QpJyrs/TE0Zpf1yvZu8cAJJ6QMW92H1c7kWpdIHo8RvmLxN/o2JXTKHp74lUA==}
 
+  rollup-plugin-visualizer@7.1.1:
+    resolution: {integrity: sha512-ThaGiHTU8XW02OkK80TrTHATraJmM9OAduU4otal+7gyXLpYEtmGBLfx5kW+EHvvLwn03YGW2NnwKUIqsYlJAA==}
+    engines: {node: '>=22'}
+    hasBin: true
+    peerDependencies:
+      rolldown: 1.x || ^1.0.0-beta || ^1.0.0-rc
+      rollup: 2.x || 3.x || 4.x
+    peerDependenciesMeta:
+      rolldown:
+        optional: true
+      rollup:
+        optional: true
+
   roughjs@4.6.6:
     resolution: {integrity: sha512-ZUz/69+SYpFN/g/lUlo2FXcIjRkSu3nDarreVdGGndHEBJ6cXPdKguS8JGxwj5HA5xIbVKSmLgr5b3AWxtRfvQ==}
+
+  run-applescript@7.1.0:
+    resolution: {integrity: sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q==}
+    engines: {node: '>=18'}
 
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
@@ -3106,6 +3187,10 @@ packages:
     resolution: {integrity: sha512-LbrmJOMUSdEVxIKvdcJzQC+nQhe8FUZQTXQy6+I75skNgn3OoQ0DZA8YnFa7gp8tqtL3KPf1kmo0R5DoApeSGQ==}
     engines: {node: '>=0.10.0'}
 
+  source-map@0.8.0:
+    resolution: {integrity: sha512-d8EqvL+k/SOXCreS/SUzg2ciyHqBBLcN/yuRjFsbvVhHTE2pgei7oAhmPM7kWFbkX6OSMQfUq4KbkF3au9lhYQ==}
+    engines: {node: '>= 12'}
+
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
 
@@ -3120,6 +3205,10 @@ packages:
 
   string-convert@0.2.1:
     resolution: {integrity: sha512-u/1tdPl4yQnPBjnVrmdLo9gtuLvELKsAoRapekWggdiQNvvvum+jYF329d84NAa660KQw7pB2n36KrIKVoXa3A==}
+
+  string-width@7.2.0:
+    resolution: {integrity: sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ==}
+    engines: {node: '>=18'}
 
   string-width@8.2.2:
     resolution: {integrity: sha512-GaPUh5gfdrYzqeVNZvUfT23vYYxXzKYidUcnMtJg/3rxRV63EFZy3k6xfKlmfeJD0176lnUV/Usr3XcwSvFzpg==}
@@ -3313,6 +3402,10 @@ packages:
     engines: {node: '>= 0.10.0'}
     hasBin: true
 
+  wrap-ansi@9.0.2:
+    resolution: {integrity: sha512-42AtmgqjV+X1VpdOfyTGOYRi0/zsoLqtXQckTmqTeybT+BDIbM/Guxo7x3pE2vtpr1ok6xRqM9OpBe+Jyoqyww==}
+    engines: {node: '>=18'}
+
   ws@8.21.3:
     resolution: {integrity: sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw==}
     engines: {node: '>=10.0.0'}
@@ -3325,12 +3418,28 @@ packages:
       utf-8-validate:
         optional: true
 
+  wsl-utils@1.0.1:
+    resolution: {integrity: sha512-c16PKLIRxBYpR3jSWsdS7SFp0COm5SOQdiFjY818dYFHJbMGuLBszpF07LBWmOS1uzrHa9VGdynsEgoeKy0oOQ==}
+    engines: {node: '>=20'}
+
+  y18n@5.0.8:
+    resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
+    engines: {node: '>=10'}
+
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
   yaml@1.10.3:
     resolution: {integrity: sha512-vIYeF1u3CjlhAFekPPAk2h/Kv4T3mAkMox5OymRiJQB0spDP10LHvt+K7G9Ny6NuuMAb25/6n1qyUjAcGNf/AA==}
     engines: {node: '>= 6'}
+
+  yargs-parser@22.0.0:
+    resolution: {integrity: sha512-rwu/ClNdSMpkSrUb+d6BRsSkLUq1fmfsY6TOpYzTwvwkg1/NRG85KBy3kq++A8LKQwX6lsu+aWad+2khvuXrqw==}
+    engines: {node: ^20.19.0 || ^22.12.0 || >=23}
+
+  yargs@18.2.0:
+    resolution: {integrity: sha512-9OpKOLeaoNFecEp7P6iYbzze/5CqWoH7N3SMs/6y1XF4nMvFMspEGZzJ6uFi9MmQwXhyzqYoSEKO3tvA3Z/o2w==}
+    engines: {node: ^20.19.0 || ^22.12.0 || >=23}
 
   yuku-codegen@0.5.48:
     resolution: {integrity: sha512-p7HxD5Xl4jzDzqMrGePAOeSHmRY4g58h4HuGq15weQFPxuPWd/W6e7nqp/+Lea6JfpOdBwJOAyXFqIZ/J9Zfnw==}
@@ -5105,6 +5214,8 @@ snapshots:
 
   ansi-styles@5.2.0: {}
 
+  ansi-styles@6.2.3: {}
+
   antd-style@4.1.0(@types/react@19.2.18)(antd@6.6.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2):
     dependencies:
       '@ant-design/cssinjs': 2.1.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -5207,6 +5318,10 @@ snapshots:
       node-releases: 2.0.56
       update-browserslist-db: 1.3.3(browserslist@4.29.0)
 
+  bundle-name@4.1.1:
+    dependencies:
+      run-applescript: 7.1.0
+
   callsites@3.1.0: {}
 
   caniuse-lite@1.0.30001810: {}
@@ -5225,6 +5340,12 @@ snapshots:
   character-reference-invalid@2.0.1: {}
 
   china-division@2.7.0: {}
+
+  cliui@9.0.1:
+    dependencies:
+      string-width: 7.2.0
+      strip-ansi: 7.2.0
+      wrap-ansi: 9.0.2
 
   clsx@1.2.1: {}
 
@@ -5493,6 +5614,15 @@ snapshots:
     dependencies:
       character-entities: 2.0.2
 
+  default-browser-id@5.0.1: {}
+
+  default-browser@5.5.1:
+    dependencies:
+      bundle-name: 4.1.1
+      default-browser-id: 5.0.1
+
+  define-lazy-prop@3.0.0: {}
+
   define-property@1.0.0:
     dependencies:
       is-descriptor: 1.0.4
@@ -5530,6 +5660,8 @@ snapshots:
       domhandler: 5.0.3
 
   electron-to-chromium@1.5.430: {}
+
+  emoji-regex@10.6.0: {}
 
   enhanced-resolve@5.23.0:
     dependencies:
@@ -5642,6 +5774,8 @@ snapshots:
   function-bind@1.1.2: {}
 
   gensync@1.0.0-beta.2: {}
+
+  get-caller-file@2.0.5: {}
 
   get-east-asian-width@1.7.0: {}
 
@@ -5759,6 +5893,8 @@ snapshots:
       is-accessor-descriptor: 1.0.2
       is-data-descriptor: 1.0.1
 
+  is-docker@3.0.0: {}
+
   is-extglob@2.1.1: {}
 
   is-glob@4.0.3:
@@ -5767,6 +5903,12 @@ snapshots:
 
   is-hexadecimal@2.0.1: {}
 
+  is-in-ssh@1.0.0: {}
+
+  is-inside-container@1.0.0:
+    dependencies:
+      is-docker: 3.0.0
+
   is-mobile@5.0.0: {}
 
   is-number@3.0.0:
@@ -5774,6 +5916,10 @@ snapshots:
       kind-of: 3.2.2
 
   is-number@7.0.0: {}
+
+  is-wsl@3.1.1:
+    dependencies:
+      is-inside-container: 1.0.0
 
   isbot@5.2.2: {}
 
@@ -5999,6 +6145,15 @@ snapshots:
 
   obug@2.2.1: {}
 
+  open@11.0.4:
+    dependencies:
+      default-browser: 5.5.1
+      define-lazy-prop: 3.0.0
+      is-in-ssh: 1.0.0
+      is-inside-container: 1.0.0
+      powershell-utils: 0.2.1
+      wsl-utils: 1.0.1
+
   oxc-parser@0.144.0:
     dependencies:
       '@oxc-project/types': 0.144.0
@@ -6122,6 +6277,8 @@ snapshots:
 
   picomatch@4.0.4: {}
 
+  picomatch@4.0.7: {}
+
   pngjs@7.0.0: {}
 
   points-on-curve@0.2.0: {}
@@ -6136,6 +6293,8 @@ snapshots:
       nanoid: 3.3.12
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  powershell-utils@0.2.1: {}
 
   pretty-format@27.5.1:
     dependencies:
@@ -6211,12 +6370,21 @@ snapshots:
 
   robust-predicates@3.0.3: {}
 
+  rollup-plugin-visualizer@7.1.1:
+    dependencies:
+      open: 11.0.4
+      picomatch: 4.0.7
+      source-map: 0.8.0
+      yargs: 18.2.0
+
   roughjs@4.6.6:
     dependencies:
       hachure-fill: 0.5.2
       path-data-parser: 0.1.0
       points-on-curve: 0.2.0
       points-on-path: 0.2.1
+
+  run-applescript@7.1.0: {}
 
   run-parallel@1.2.0:
     dependencies:
@@ -6262,6 +6430,8 @@ snapshots:
 
   source-map@0.5.7: {}
 
+  source-map@0.8.0: {}
+
   space-separated-tokens@2.0.2: {}
 
   stackback@0.0.2: {}
@@ -6271,6 +6441,12 @@ snapshots:
   strictdom@1.0.1: {}
 
   string-convert@0.2.1: {}
+
+  string-width@7.2.0:
+    dependencies:
+      emoji-regex: 10.6.0
+      get-east-asian-width: 1.7.0
+      strip-ansi: 7.2.0
 
   string-width@8.2.2:
     dependencies:
@@ -6471,11 +6647,35 @@ snapshots:
       define-property: 1.0.0
       is-number: 3.0.0
 
+  wrap-ansi@9.0.2:
+    dependencies:
+      ansi-styles: 6.2.3
+      string-width: 7.2.0
+      strip-ansi: 7.2.0
+
   ws@8.21.3: {}
+
+  wsl-utils@1.0.1:
+    dependencies:
+      is-wsl: 3.1.1
+      powershell-utils: 0.2.1
+
+  y18n@5.0.8: {}
 
   yallist@3.1.1: {}
 
   yaml@1.10.3: {}
+
+  yargs-parser@22.0.0: {}
+
+  yargs@18.2.0:
+    dependencies:
+      cliui: 9.0.1
+      escalade: 3.2.0
+      get-caller-file: 2.0.5
+      string-width: 8.2.2
+      y18n: 5.0.8
+      yargs-parser: 22.0.0
 
   yuku-codegen@0.5.48:
     dependencies:
